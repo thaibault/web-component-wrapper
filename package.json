@@ -1,6 +1,6 @@
 {
   "name": "web-component-wrapper",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "CC-BY-3.0",
   "description": "Generic web-component base class and framework specific wrapper.",
   "homepage": "https://torben.website/web-component-wrapper",
@@ -88,7 +88,6 @@
         ]
       }
     },
-
     "module": {
       "optimizer": {
         "babelMinify": {
@@ -97,7 +96,6 @@
         }
       }
     },
-
     "target:export": {
       "module": {
         "preprocessor": {
