@@ -18,8 +18,6 @@
 */
 // region imports
 import Tools, {globalContext, PlainObject} from 'clientnode'
-import {ValueOf} from 'clientnode/type'
-
 import {
     any,
     array,
@@ -39,7 +37,9 @@ import {
     shape,
     string,
     symbol
-} from '../property-types'
+} from 'clientnode/property-types'
+import {ValueOf} from 'clientnode/type'
+
 import {Output, PropertyTypes} from '../types'
 // endregion
 // region polyfills
