@@ -21,7 +21,7 @@ import Tools from 'clientnode'
 import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
 
-import Web from './Web'
+import Web from '../index'
 // endregion
 /*
     1. Render react component with properties (defined in web-component) and
