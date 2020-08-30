@@ -15,7 +15,7 @@
 */
 // region imports
 // endregion
-describe('react-input-material', () => {
+describe('web-component-wrapper', () => {
     // region mockup
     // endregion
     // region tests

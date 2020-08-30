@@ -5,9 +5,6 @@
   "description": "Generic web-component base class and framework specific wrapper.",
   "homepage": "https://torben.website/web-component-wrapper",
   "documentationWebsite": {
-    "languages": [
-      "enUS"
-    ],
     "tagline": "Encapsulate your components as web-components.",
     "trackingCode": "TODO"
   },
