@@ -20,6 +20,7 @@
   "files": [
     "adapter",
     "index.ts",
+    "React.js",
     "type.ts"
   ],
   "main": "index.js",
@@ -86,6 +87,12 @@
           "jsdom",
           "node"
         ]
+      }
+    },
+    "injection": {
+      "entry": {
+        "index": "./index",
+        "React": "./adapter/React"
       }
     },
     "module": {
