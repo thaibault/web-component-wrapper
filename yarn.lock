@@ -3257,9 +3257,9 @@ cli-table3@^0.5.0:
     colors "^1.1.2"
 
 clientnode@*:
-  version "3.0.509"
-  resolved "https://registry.yarnpkg.com/clientnode/-/clientnode-3.0.509.tgz#a18ca588f00bbe49736b884e5cd1a350b5cb849a"
-  integrity sha512-qJInUA+vc+yjGcMq/Q42/eQNuv1f9/cNwuJHCLti7Kvf4CYaVKjjoce2n/481pCpi0IqKgX2rek7k0/sNSbJng==
+  version "3.0.510"
+  resolved "https://registry.yarnpkg.com/clientnode/-/clientnode-3.0.510.tgz#c08bf31b16581ca2aa644cef721042fb5ad48d11"
+  integrity sha512-/tBxYGKaKtJIt5NNZCkOwg6vk8Id81w3cRQcbZn8X8VB/8bln3JQYrGTk7YEmskKsluVDuUUxByxzzMJtToxig==
 
 cliui@^4.0.0:
   version "4.1.0"
@@ -3962,9 +3962,9 @@ ejs@*:
     jake "^10.6.1"
 
 electron-to-chromium@^1.3.47, electron-to-chromium@^1.3.523:
-  version "1.3.556"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.556.tgz#d2a8fed6b93051c5c27d182c43c7bc4d88b77afb"
-  integrity sha512-g5cGpg6rOCXxyfaLCQIWz9Fx+raFfbZ6sc4QLfvvaiCERBzY6YD6rh5d12QN++bEF1Tm9osYnxP37lbN/92j4A==
+  version "1.3.557"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.557.tgz#00cafeed4397a6a9d1036911e434bc7404dc5e7c"
+  integrity sha512-M2p3nWulBqSEIisykYUVYnaSuRikHvxv8Wf209/Vg/sjrOew12hBQv2JvNGy+i+eDeJU9uQ3dbUbCCQ/CkudEg==
 
 elliptic@^6.5.3:
   version "6.5.3"
@@ -9224,9 +9224,9 @@ webidl-conversions@^6.1.0:
   integrity sha512-qBIvFLGiBpLjfwmYAaHPXsn+ho5xZnGvyGvsarywGNc8VyQJUMHJ8OBKGGrPER0okBeMDaan4mNBlgBROxuI8w==
 
 weboptimizer@*:
-  version "2.0.712"
-  resolved "https://registry.yarnpkg.com/weboptimizer/-/weboptimizer-2.0.712.tgz#69b8d85a682b43fd7dec4a7e1bc32d75b66cb1ce"
-  integrity sha512-pYE7YU7HQKXrefdvul5kDGQj22Gzs+GdRl7z/B3d7ZuGzGxr4vEWHhfq5UGFQIAvo+fsilMz7AM+XpK6niiZbw==
+  version "2.0.713"
+  resolved "https://registry.yarnpkg.com/weboptimizer/-/weboptimizer-2.0.713.tgz#36a7ca36cb51e453c580584eec7090250fe7a1e3"
+  integrity sha512-IxO93md81UQzdX23eh5BrDMg3ONfrhDZYr2hHByTqGYo+aqOgkb2HK0iukZKZD9p3D2YbnTxdpMOoVSxrg5/vQ==
   dependencies:
     "@babel/core" "*"
     "@babel/plugin-proposal-class-properties" "*"
