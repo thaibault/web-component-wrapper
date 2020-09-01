@@ -91,7 +91,7 @@
     },
     "injection": {
       "entry": {
-        "index": "./index",
+        "index": "./index.ts",
         "React": "./adapter/React"
       }
     },
