@@ -102,6 +102,12 @@
           "__evaluate__": "self.debug ? {bundle: null, module: null} : {bundle: {transform: {removeConsole: false}}, module: {removeConsole: false}}"
         }
       },
+      "preprocessor": {
+        "javaScript": {
+          "#": "Pre-process environment specific module.",
+          "exclude": "!filePath.includes('clientnode/property-types') && isFilePathInDependencies(filePath)"
+        }
+      },
       "replacements": {
         "#": "Pre-process environment specific module.",
         "normal": {
