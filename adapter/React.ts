@@ -18,10 +18,12 @@
 */
 // region imports
 import Tools from 'clientnode'
+import {Mapping} from 'clientnode/type'
 import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
 
 import Web from '../index'
+import {ReactWebComponent} from '../type'
 // endregion
 /*
     1. Render react component with properties (defined in web-component) and
@@ -41,7 +43,7 @@ import Web from '../index'
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     readonly self:typeof ReactWeb = ReactWeb
 
-    _content:typeof Component = 'div'
+    _content:string|typeof Component = 'div'
     // region helper
     /**
      * Updates current component instance and reflects newly determined
@@ -51,8 +53,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     reflectInstanceProperties():void {
         if (this.properties.ref.current) {
             this.instance = this.properties.ref
-            if (this.instance.current.properties)
-                this.reflectProperties(this.instance.current.properties, false)
+            if (
+                (this.instance as {current:ReactWebComponent}).current
+                    .properties
+            )
+                this.reflectProperties(
+                    (this.instance as {current:ReactWebComponent}).current
+                        .properties as Mapping<any>,
+                    false
+                )
         }
     }
     // endregion

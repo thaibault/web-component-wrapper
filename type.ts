@@ -18,8 +18,9 @@
 // region imports
 import PropertyTypes from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
+import {Component} from 'react'
 
-import {ReactWeb} from './adapter/ReactWeb'
+import ReactWeb from './adapter/React'
 // endregion
 // region exports
 export type Output = Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
@@ -28,10 +29,14 @@ export type WebComponentAPI = {
     register:(tagName:string) => void;
 }
 export interface ReactWebComponent extends Component {
-    static readonly output?:Output;
-    static readonly propertiesToReflectAsAttributes?:Mapping<boolean>;
-    static readonly propertyTypes?:Mapping<ValueOf<PropertyTypes>>;
-    static readonly propTypes?:Mapping<ValueOf<PropertyTypes>>;
+    properties?:Mapping<any>;
+
+    self:{
+        readonly output?:Output;
+        readonly propertiesToReflectAsAttributes?:Map<string, boolean>;
+        readonly propertyTypes?:Mapping<ValueOf<typeof PropertyTypes>>;
+        readonly propTypes?:Mapping<ValueOf<typeof PropertyTypes>>;
+    }
 }
 // endregion
 // region vim modline

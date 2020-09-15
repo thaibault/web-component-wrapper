@@ -17,8 +17,8 @@
     endregion
 */
 // region imports
-import Tools, {globalContext, PlainObject} from 'clientnode'
-import {
+import Tools, {globalContext} from 'clientnode'
+import PropertyTypes, {
     any,
     array,
     arrayOf,
@@ -38,13 +38,14 @@ import {
     string,
     symbol
 } from 'clientnode/property-types'
-import {ValueOf} from 'clientnode/type'
+import {Mapping, ValueOf} from 'clientnode/type'
+import {Component} from 'react'
 
-import {Output, PropertyTypes} from '../types'
+import {Output, ReactWebComponent} from './type'
 // endregion
 // region polyfills
 // Polyfill for template strings in dynamic function constructs in simple cases
-const Function:typeof Function = (
+const Function:typeof global.Function = (
     Tools.maximalSupportedInternetExplorerVersion === 0
 ) ?
     globalContext.Function :
@@ -63,7 +64,7 @@ const Function:typeof Function = (
         }
         parameter[parameter.length - 1] = code
         return new globalContext.Function(...parameter)
-    }
+    } as typeof global.Function
 // endregion
 /**
  * Generic web component to render a content against instance specific values.
@@ -114,16 +115,17 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     batchPropertyUpdates:boolean = true
     batchUpdates:boolean = true
     ignoreAttributeUpdates:boolean = false
-    instance:null|{current?:object} = null
+    instance:null|{current?:ReactWebComponent} = null
     output:Output = {}
     outputEventNames:Array<string> = []
-    properties:object = {}
-    root:TElement
+    properties:Mapping<any> = {}
+    root:ShadowRoot|Web<TElement>
     readonly self:typeof Web = Web
 
-    _propertiesToReflectAsAttributes:Mapping<boolean> = new Map()
-    _propertyTypes:PropertyTypes = {}
-    _content:string = ''
+    _content:string|typeof Component = ''
+    _propertiesToReflectAsAttributes:Map<string, boolean> =
+        new Map<string, boolean>()
+    _propertyTypes:typeof PropertyTypes = {}
     // endregion
     // region live cycle hooks
     /**
@@ -135,7 +137,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.root = this.self.useShadowDOM ?
             (
                 (!('attachShadow' in this) && 'ShadyDOM' in window) ?
-                    window.ShadyDOM.wrap(this) :
+                    (
+                        window as unknown as
+                            {ShadyDOM:{wrap:(domNode:HTMLElement) =>
+                                HTMLElement
+                            }}
+                    ).ShadyDOM.wrap(this) :
                     this
             ).attachShadow({mode: 'open'}) :
             this
@@ -195,7 +202,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Forwards "_propertiesToReflectAsAttributes" property value.
      * @returns Property value.
      */
-    get propertiesToReflectAsAttributes():Mapping<boolean> {
+    get propertiesToReflectAsAttributes():Map<string, boolean> {
         return this._propertiesToReflectAsAttributes
     }
     /**
@@ -203,7 +210,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param value - New value to set.
      * @returns Nothing.
      */
-    set propertiesToReflectAsAttributes(value:Mapping<boolean>):void {
+    set propertiesToReflectAsAttributes(value:Map<string, boolean>) {
         this._propertiesToReflectAsAttributes = value
         this.reflectProperties(this.properties)
     }
@@ -250,7 +257,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Just forwards internal property types.
      * @returns Internal "propertyTypes" property value.
      */
-    get propertyTypes():WebComponentAttributeEvaluationTypes {
+    get propertyTypes():typeof PropertyTypes {
         return this._propertyTypes
     }
     /**
@@ -259,7 +266,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param value - New property types configuration.
      * @returns Nothing.
      */
-    set propertyTypes(value:PropertyTypes):void {
+    set propertyTypes(value:typeof PropertyTypes) {
         this._propertyTypes = value
         this.updateAllAttributeEvaluations()
         this.render()
@@ -268,7 +275,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Just forwards internal content to render.
      * @returns Internal content property value.
      */
-    get content():string {
+    get content():string|typeof Component {
         return this._content
     }
     /**
@@ -277,7 +284,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param value - New content to render.
      * @returns Nothing.
      */
-    set content(value:string):void {
+    set content(value:string|typeof Component) {
         this._content = value
         this.render()
     }
@@ -414,9 +421,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         break
                     case number:
                         if (typeof value === 'number' && !isNaN(value)) {
-                            value = `${value}`
-                            if (this.getAttribute(name) !== value)
-                                this.setAttribute(name, value)
+                            const valueAsString:string = `${value}`
+                            if (this.getAttribute(name) !== valueAsString)
+                                this.setAttribute(name, valueAsString)
                         } else if (this.hasAttribute(name))
                             this.removeAttribute(name)
                         break
@@ -495,7 +502,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             Object.prototype.hasOwnProperty.call(this.output, name) &&
             Tools.isFunction(this.output[name])
         )
-            this.reflectProperties(this.output[name](...parameter))
+            this.reflectProperties((this.output[name] as Function)(
+                ...parameter
+            ))
         else if (
             parameter.length > 0 &&
             parameter[0] !== null &&
@@ -518,7 +527,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     evaluateStringOrNullAndSetAsProperty(name:string, value:string):void {
         name = Tools.stringDelimitedToCamelCase(name)
         if (Object.prototype.hasOwnProperty.call(this._propertyTypes, name)) {
-            const type:ValueOf<PropertyTypes> = this._propertyTypes[name]
+            const type:ValueOf<typeof PropertyTypes> =
+                this._propertyTypes[name]
             if (value === null && ![boolean, 'boolean'].includes(type)) {
                 delete this.properties[name]
                 return
@@ -620,7 +630,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     render():void {
-        let renderer:Function
+        let renderer:Function|undefined
         const scopeNames:Array<string> = Object.keys(this)
         try {
             renderer = new Function(

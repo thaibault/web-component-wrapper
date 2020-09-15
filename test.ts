@@ -14,8 +14,10 @@
     endregion
 */
 // region imports
+import Web from './index'
 // endregion
 describe('web-component-wrapper', () => {
+    console.log('TODO', Web)
     // region mockup
     // endregion
     // region tests
