@@ -55,6 +55,8 @@
     "@types/jsdom": "*",
     "@types/loader-utils": "*",
     "@types/node": "*",
+    "@types/react": "*",
+    "@types/react-dom": "*",
     "@typescript-eslint/eslint-plugin": "*",
     "@typescript-eslint/parser": "*",
     "babel-eslint": "*",
