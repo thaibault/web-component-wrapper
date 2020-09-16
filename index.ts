@@ -125,7 +125,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     _content:string|typeof Component = ''
     _propertiesToReflectAsAttributes:Map<string, boolean> =
         new Map<string, boolean>()
-    _propertyTypes:typeof PropertyTypes = {}
+    _propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> = {}
     // endregion
     // region live cycle hooks
     /**
@@ -257,7 +257,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Just forwards internal property types.
      * @returns Internal "propertyTypes" property value.
      */
-    get propertyTypes():typeof PropertyTypes {
+    get propertyTypes():Mapping<ValueOf<typeof PropertyTypes>> {
         return this._propertyTypes
     }
     /**
@@ -266,7 +266,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param value - New property types configuration.
      * @returns Nothing.
      */
-    set propertyTypes(value:typeof PropertyTypes) {
+    set propertyTypes(value:Mapping<ValueOf<typeof PropertyTypes>>) {
         this._propertyTypes = value
         this.updateAllAttributeEvaluations()
         this.render()
@@ -338,7 +338,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         for (const [name, type] of Object.entries(this._propertyTypes))
             if (
                 !Object.prototype.hasOwnProperty.call(this.properties, name) &&
-                ['output', func].includes(this._propertyTypes[name])
+                func === this._propertyTypes[name]
             ) {
                 this.outputEventNames.push(name)
                 this.properties[name] = (...parameter:Array<any>):void => {
@@ -529,7 +529,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (Object.prototype.hasOwnProperty.call(this._propertyTypes, name)) {
             const type:ValueOf<typeof PropertyTypes> =
                 this._propertyTypes[name]
-            if (value === null && ![boolean, 'boolean'].includes(type)) {
+            if (value === null && boolean === type) {
                 delete this.properties[name]
                 return
             }
