@@ -34,7 +34,7 @@ export interface ReactWebComponent extends Component {
     self:{
         readonly output?:Output;
         readonly propertiesToReflectAsAttributes?:Map<string, boolean>;
-        readonly propTypes?:{[key in keyof any]:ValueOf<typeof PropertyTypes>};
+        readonly propTypes?:Mapping<ValueOf<typeof PropertyTypes>>;
     }
 }
 // endregion
