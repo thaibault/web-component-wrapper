@@ -68,6 +68,7 @@ const Function:typeof global.Function = (
 // endregion
 /**
  * Generic web component to render a content against instance specific values.
+ * @property static:content - Content template to render on property changes.
  * @property static:observedAttributes - Attribute names to observe for
  * changes.
  * @property static:useShadowDOM - Configures if a shadow dom should be used
@@ -101,10 +102,10 @@ const Function:typeof global.Function = (
  * set as attributes when they are set/updated.
  * @property _propertyTypes - Configuration defining how to convert attributes
  * into properties and reflect property changes back to attributes.
- * @property _content - Content template to render on property changes.
  */
 export class Web<TElement = HTMLElement> extends HTMLElement {
     // region properties
+    static readonly content:string|typeof Component = ''
     static readonly observedAttributes:Array<string> = []
     static useShadowDOM:boolean = false
 
@@ -122,7 +123,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     root:ShadowRoot|Web<TElement>
     readonly self:typeof Web = Web
 
-    _content:string|typeof Component = ''
     _propertiesToReflectAsAttributes:Map<string, boolean> =
         new Map<string, boolean>()
     _propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> = {}
@@ -269,23 +269,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     set propertyTypes(value:Mapping<ValueOf<typeof PropertyTypes>>) {
         this._propertyTypes = value
         this.updateAllAttributeEvaluations()
-        this.render()
-    }
-    /**
-     * Just forwards internal content to render.
-     * @returns Internal content property value.
-     */
-    get content():string|typeof Component {
-        return this._content
-    }
-    /**
-     * Sets new content to render into internal property and triggers a
-     * re-rendering.
-     * @param value - New content to render.
-     * @returns Nothing.
-     */
-    set content(value:string|typeof Component) {
-        this._content = value
         this.render()
     }
     // endregion
@@ -634,12 +617,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const scopeNames:Array<string> = Object.keys(this)
         try {
             renderer = new Function(
-                ...scopeNames, `return \`${this._content}\``
+                ...scopeNames, `return \`${this.self.content}\``
             )
         } catch (error) {
             console.warn(
-                `Faild to compile template "${this._content}" with scope ` +
-                `variables "${scopeNames.join('", "')}": "` +
+                `Faild to compile template "${this.self.content}" with scope` +
+                ` variables "${scopeNames.join('", "')}": "` +
                 `${Tools.represent(error)}".`
             )
         }
@@ -651,7 +634,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             } catch (error) {
                 console.warn(
                     'Faild to evaluate render function with template "' +
-                    `${this._content}" with scope variables "` +
+                    `${this.self.content}" with scope variables "` +
                     `${scopeNames.join('", "')}": "${Tools.represent(error)}".`
                 )
             }
