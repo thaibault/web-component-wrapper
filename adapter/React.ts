@@ -36,14 +36,14 @@ import {ReactWebComponent} from '../type'
 */
 /**
  * Adapter for exposing a react component as web-component.
- * @property self - Back-reference to this class.
+ * @property static:content - React component to wrap.
  *
- * @property _content - React component to wrap.
+ * @property self - Back-reference to this class.
  */
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
-    readonly self:typeof ReactWeb = ReactWeb
+    static readonly content:string|typeof Component = 'div'
 
-    _content:string|typeof Component = 'div'
+    readonly self:typeof ReactWeb = ReactWeb
     // region helper
     /**
      * Updates current component instance and reflects newly determined
@@ -84,7 +84,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (!this.instance)
             this.instance = this.properties.ref
         ReactDOM.render(
-            React.createElement(this._content, this.properties), this.root
+            React.createElement(this.self.content, this.properties), this.root
         )
         /*
             NOTE: Update current instance if we have a newly created one
