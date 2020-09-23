@@ -32,6 +32,7 @@ export interface ReactStaticWebComponent {
     readonly output?:Output
     readonly propertiesToReflectAsAttributes?:Map<string, boolean>
     readonly propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
+    readonly wrapped?:Component
 }
 export interface ReactWebComponent {
     properties?:Mapping<any>
