@@ -29,13 +29,14 @@ export type WebComponentAPI = {
     register:(tagName:string) => void;
 }
 export interface ReactStaticWebComponent {
-    readonly output?:Output
-    readonly propertiesToReflectAsAttributes?:Map<string, boolean>
-    readonly propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
-    readonly wrapped?:Component
+    output?:Output
+    propertiesToReflectAsAttributes?:Map<string, boolean>
+    propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
+    wrapped?:Component
 }
 export interface ReactWebComponent {
     properties?:Mapping<any>
+    state?:Mapping<any>
 }
 // endregion
 // region vim modline
