@@ -33,10 +33,8 @@ export interface ReactStaticWebComponent {
     readonly propertiesToReflectAsAttributes?:Map<string, boolean>
     readonly propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
 }
-export interface ReactWebComponent extends Component {
+export interface ReactWebComponent {
     properties?:Mapping<any>
-
-    self:ReactStaticWebComponent
 }
 // endregion
 // region vim modline
