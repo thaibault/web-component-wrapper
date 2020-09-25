@@ -18,8 +18,8 @@
     "webcomponent"
   ],
   "files": [
-    "adapter",
     "index.ts",
+    "React.ts",
     "React.js",
     "type.ts"
   ],
@@ -94,7 +94,7 @@
     "injection": {
       "entry": {
         "index": "./index.ts",
-        "React": "./adapter/React"
+        "React": "./React.ts"
       }
     },
     "module": {
