@@ -28,7 +28,7 @@ export type WebComponentAPI = {
     component:ReactWeb;
     register:(tagName:string) => void;
 }
-export interface ReactStaticWebComponent {
+export interface StaticReactWebComponent {
     output?:Output
     propertiesToReflectAsAttributes?:Map<string, boolean>
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
