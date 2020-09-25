@@ -20,7 +20,7 @@ import PropertyTypes from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
 import {Component, FunctionComponent} from 'react'
 
-import ReactWeb from './adapter/React'
+import ReactWeb from './React'
 // endregion
 // region exports
 export type Output = Mapping<true|((...parameter:Array<any>) => Mapping<any>)>

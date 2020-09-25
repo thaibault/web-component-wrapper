@@ -22,8 +22,8 @@ import {Mapping} from 'clientnode/type'
 import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
 
-import Web from '../index'
-import {ReactWebComponent} from '../type'
+import Web from './index'
+import {ReactWebComponent} from './type'
 // endregion
 /*
     1. Render react component with properties (defined in web-component) and
