@@ -24,10 +24,6 @@ import ReactWeb from './React'
 // endregion
 // region exports
 export type Output = Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
-export type WebComponentAPI = {
-    component:ReactWeb;
-    register:(tagName:string) => void;
-}
 export interface StaticReactWebComponent {
     output?:Output
     propertiesToReflectAsAttributes?:Map<string, boolean>
@@ -37,6 +33,10 @@ export interface StaticReactWebComponent {
 export interface WebComponentAdapter<Properties = Mapping<any>, State = Mapping<any>> {
     properties?:Properties
     state?:State
+}
+export type WebComponentAPI = {
+    component:ReactWeb;
+    register:(tagName:string) => void;
 }
 // endregion
 // region vim modline
