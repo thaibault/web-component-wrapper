@@ -86,7 +86,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         ReactDOM.render(
             React.createElement(this.self.content, this.properties), this.root
         )
-        console.log('TODO', this.properties.ref)
         /*
             NOTE: Update current instance if we have a newly created one
             otherwise check after current queue has been finished.
