@@ -18,7 +18,7 @@
 // region imports
 import PropertyTypes from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
-import {Component, FunctionComponent} from 'react'
+import {ComponentType} from 'react'
 
 import ReactWeb from './React'
 // endregion
@@ -28,7 +28,7 @@ export interface StaticReactWebComponent {
     output?:Output
     propertiesToReflectAsAttributes?:Map<string, boolean>
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
-    wrapped?:Component|FunctionComponent<any>
+    wrapped?:ComponentType<any>
 }
 export interface WebComponentAdapter<Properties = Mapping<any>, State = Mapping<any>> {
     properties?:Properties
