@@ -34,9 +34,9 @@ export interface StaticReactWebComponent {
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
     wrapped?:Component|FunctionComponent<any>
 }
-export interface ReactWebComponent {
-    properties?:Mapping<any>
-    state?:Mapping<any>
+export interface WebComponentAdapter<Properties = Mapping<any>, State = Mapping<any>> {
+    properties?:Properties
+    state?:State
 }
 // endregion
 // region vim modline
