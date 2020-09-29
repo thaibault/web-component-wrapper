@@ -41,7 +41,7 @@ import PropertyTypes, {
 import {Mapping, ValueOf} from 'clientnode/type'
 import {Component} from 'react'
 
-import {Output, ReactWebComponent} from './type'
+import {Output, WebComponentAdapter} from './type'
 // endregion
 // region polyfills
 // Polyfill for template strings in dynamic function constructs in simple cases
@@ -116,7 +116,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     batchPropertyUpdates:boolean = true
     batchUpdates:boolean = true
     ignoreAttributeUpdates:boolean = false
-    instance:null|{current?:ReactWebComponent} = null
+    instance:null|{current?:WebComponentAdapter} = null
     output:Output = {}
     outputEventNames:Array<string> = []
     properties:Mapping<any> = {}

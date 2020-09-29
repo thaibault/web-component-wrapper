@@ -23,7 +23,7 @@ import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
 
 import Web from './index'
-import {ReactWebComponent} from './type'
+import {WebComponentAdapter} from './type'
 // endregion
 /*
     1. Render react component with properties (defined in web-component) and
@@ -54,11 +54,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.properties.ref.current) {
             this.instance = this.properties.ref
             if (
-                (this.instance as {current:ReactWebComponent}).current
+                (this.instance as {current:WebComponentAdapter}).current
                     .properties
             )
                 this.reflectProperties(
-                    (this.instance as {current:ReactWebComponent}).current
+                    (this.instance as {current:WebComponentAdapter}).current
                         .properties as Mapping<any>,
                     false
                 )
