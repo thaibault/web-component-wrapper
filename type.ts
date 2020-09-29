@@ -35,8 +35,8 @@ export interface WebComponentAdapter<Properties = Mapping<any>, State = Mapping<
     state?:State
 }
 export type WebComponentAPI = {
-    component:ReactWeb;
-    register:(tagName:string) => void;
+    component:ReactWeb
+    register:(tagName:string) => void
 }
 // endregion
 // region vim modline
