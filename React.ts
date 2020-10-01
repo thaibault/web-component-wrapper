@@ -19,7 +19,7 @@
 // region imports
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
-import React, {Component} from 'react'
+import React, {Component, forwardRef, useImperativeHandle} from 'react'
 import ReactDOM from 'react-dom'
 
 import Web from './index'
@@ -44,6 +44,18 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     static readonly content:string|typeof Component = 'div'
 
     readonly self:typeof ReactWeb = ReactWeb
+    // region live cycle hooks
+    /**
+     * Initializes host dom content by attaching a shadow dom to it.
+     * @returns Nothing.
+     */
+    constructor() {
+        super()
+        // TODO apply ref if missing yet.
+        this.content.displayName = 'GenericAnimate'
+        this.content = forwardRef(this.content)
+    }
+    // endregion
     // region helper
     /**
       * Forward named slots as properties to component.
