@@ -36,7 +36,6 @@ export interface WebComponentAdapter<Properties = Mapping<any>, State = Mapping<
 }
 export type WebComponentAPI = {
     component:ReactWeb
-    name:string
     register:(tagName:string) => void
 }
 // endregion
