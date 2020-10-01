@@ -122,6 +122,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     properties:Mapping<any> = {}
     root:ShadowRoot|Web<TElement>
     readonly self:typeof Web = Web
+    slots:Mapping<Node> & {default?:Array<Node>} = {}
 
     _propertiesToReflectAsAttributes:Map<string, boolean> =
         new Map<string, boolean>()
@@ -194,6 +195,28 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.batchedAttributeUpdateRunning = false
         this.batchedPropertyUpdateRunning = false
         this.batchedUpdateRunning = false
+
+        const slots:NodeList = this.querySelectorAll('[slot]')
+        for (let slot of Array.from(slots))
+            this.slots[
+                (
+                    (slot as HTMLElement).getAttribute &&
+                    (slot as HTMLElement).getAttribute('slot') &&
+                    ((slot as HTMLElement).getAttribute('slot') as string)
+                        .trim()
+                ) ?
+                    (
+                        (slot as HTMLElement).getAttribute('slot') as string
+                    ).trim() :
+                    slot.nodeName
+            ] = slot.cloneNode(true)
+        if (this.slots.default)
+            this.slots.default = [this.slots.default as unknown as Node]
+        else if (this.childNodes.length > 0)
+            this.slots.default = Array.from(this.childNodes)
+        else
+            this.slots.default = []
+
         this.render()
     }
     // endregion

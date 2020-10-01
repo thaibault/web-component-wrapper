@@ -46,6 +46,37 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     readonly self:typeof ReactWeb = ReactWeb
     // region helper
     /**
+      * Forward named slots as properties to component.
+      * @returns Nothing.
+      */
+    applySlotsToProperties():void {
+        for (let name in this.slots)
+            if (Object.prototype.hasOwnProperty.call(this.slots, name))
+                if (
+                    name === 'default' &&
+                    this.slots.default &&
+                    this.slots.default.length > 0 &&
+                    !Object.prototype.hasOwnProperty.call(
+                        this.properties, 'default'
+                    )
+                )
+                    this.properties.children = (
+                        this.slots.default.length === 1 &&
+                        this.slots.default[0].nodeType === Node.TEXT_NODE
+                    ) ?
+                        this.slots.default[0].nodeValue :
+                        React.createElement(
+                            'div',
+                            {dangerouslySetInnerHTML: {
+                                __html: this.slots.default
+                            }}
+                        )
+                else if (!Object.prototype.hasOwnProperty.call(
+                    this.properties, name
+                ))
+                    this.properties[name] = this.slots[name]
+    }
+    /**
      * Updates current component instance and reflects newly determined
      * properties.
      * @returns Nothing.
@@ -83,6 +114,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         this.properties.ref = React.createRef()
         if (!this.instance)
             this.instance = this.properties.ref
+
+        this.applySlotsToProperties()
+
         ReactDOM.render(
             React.createElement(this.self.content, this.properties), this.root
         )
