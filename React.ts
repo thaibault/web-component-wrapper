@@ -19,7 +19,9 @@
 // region imports
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
-import React, {Component, forwardRef, useImperativeHandle} from 'react'
+import React, {
+    Component, forwardRef, ReactElement, useImperativeHandle
+} from 'react'
 import ReactDOM from 'react-dom'
 
 import Web from './index'
@@ -41,7 +43,8 @@ import {WebComponentAdapter} from './type'
  * @property self - Back-reference to this class.
  */
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
-    static readonly content:string|typeof Component = 'div'
+    static content:string|typeof Component = 'div'
+    static _name:string = 'ReactWebComponent'
 
     readonly self:typeof ReactWeb = ReactWeb
     // region live cycle hooks
@@ -51,9 +54,23 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     constructor() {
         super()
-        // TODO apply ref if missing yet.
-        this.content.displayName = 'GenericAnimate'
-        this.content = forwardRef(this.content)
+        // TODO detect ref components better? Add types.
+        if (
+            typeof this.self.content !== 'string' &&
+            !Object.prototype.hasOwnProperty.call(
+                this.self.content, 'displayName'
+            )
+        ) {
+            this.self.content.displayName = this.self._name
+            this.self.content = forwardRef((
+                properties, reference
+            ):ReactElement => {
+                useImperativeHandle(reference, ():WebComponentAdapter =>
+                    ({properties})
+                )
+                return React.createElement(this.self.content, properties)
+            })
+        }
     }
     // endregion
     // region helper
@@ -129,6 +146,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
         this.applySlotsToProperties()
 
+        console.log('RENDER', this.self.content)
         ReactDOM.render(
             React.createElement(this.self.content, this.properties), this.root
         )
