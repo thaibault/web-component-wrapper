@@ -47,13 +47,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     static _name:string = 'ReactWebComponent'
 
     readonly self:typeof ReactWeb = ReactWeb
-    // region live cycle hooks
+    // region live-cycle
     /**
-     * Initializes host dom content by attaching a shadow dom to it.
+     * Triggered when this component is mounted into the document. Event
+     * handlers will be attached and final render proceed.
      * @returns Nothing.
      */
-    constructor() {
-        super()
+    connectedCallback():void {
         // TODO detect ref components better? Add types.
         if (
             typeof this.self.content !== 'string' &&
@@ -71,6 +71,40 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 return React.createElement(this.self.content, properties)
             })
         }
+        super.connectedCallback()
+    }
+    /**
+     * Triggered when this component is unmounted into the document. Event
+     * handlers and state will be removed.
+     * @returns Nothing.
+     */
+    disconnectedCallback():void {
+        ReactDOM.unmountComponentAtNode(this.root)
+    }
+    /**
+     * Method which does the rendering job. Should be called when ever state
+     * changes should be projected to the hosts dom content.
+     * @returns Nothing.
+     */
+    render():void {
+        this.properties.ref = React.createRef()
+        if (!this.instance)
+            this.instance = this.properties.ref
+
+        this.applySlotsToProperties()
+
+        ReactDOM.render(
+            React.createElement(this.self.content, this.properties), this.root
+        )
+        /*
+            NOTE: Update current instance if we have a newly created one
+            otherwise check after current queue has been finished.
+        */
+        if (this.properties.ref.current)
+            this.reflectInstanceProperties()
+        else
+            Tools.timeout(this.reflectInstanceProperties.bind(this))
+
     }
     // endregion
     // region helper
@@ -123,42 +157,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     false
                 )
         }
-    }
-    // endregion
-    // region live-cycle
-    /**
-     * Triggered when this component is unmounted into the document. Event
-     * handlers and state will be removed.
-     * @returns Nothing.
-     */
-    disconnectedCallback():void {
-        ReactDOM.unmountComponentAtNode(this.root)
-    }
-    /**
-     * Method which does the rendering job. Should be called when ever state
-     * changes should be projected to the hosts dom content.
-     * @returns Nothing.
-     */
-    render():void {
-        this.properties.ref = React.createRef()
-        if (!this.instance)
-            this.instance = this.properties.ref
-
-        this.applySlotsToProperties()
-
-        console.log('RENDER', this.self.content)
-        ReactDOM.render(
-            React.createElement(this.self.content, this.properties), this.root
-        )
-        /*
-            NOTE: Update current instance if we have a newly created one
-            otherwise check after current queue has been finished.
-        */
-        if (this.properties.ref.current)
-            this.reflectInstanceProperties()
-        else
-            Tools.timeout(this.reflectInstanceProperties.bind(this))
-
     }
     // endregion
 }
