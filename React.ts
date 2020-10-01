@@ -20,7 +20,12 @@
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
 import React, {
-    Component, forwardRef, ReactElement, useImperativeHandle
+    ComponentType,
+    forwardRef,
+    memo as memorize,
+    ReactElement,
+    useCallback,
+    useImperativeHandle
 } from 'react'
 import ReactDOM from 'react-dom'
 
@@ -43,7 +48,7 @@ import {WebComponentAdapter} from './type'
  * @property self - Back-reference to this class.
  */
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
-    static content:string|typeof Component = 'div'
+    static content:string|ComponentType = 'div'
     static _name:string = 'ReactWebComponent'
 
     readonly self:typeof ReactWeb = ReactWeb
@@ -62,14 +67,21 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             )
         ) {
             this.self.content.displayName = this.self._name
-            this.self.content = forwardRef((
+            const wrapped:ComponentType = this.self.content
+
+            this.self.content = memorize(forwardRef((
                 properties, reference
             ):ReactElement => {
-                useImperativeHandle(reference, ():WebComponentAdapter =>
-                    ({properties})
+                useImperativeHandle(
+                    reference,
+                    useCallback(
+                        ():WebComponentAdapter => ({properties}),
+                        [properties]
+                    )
                 )
-                return React.createElement(this.self.content, properties)
-            })
+                return React.createElement(wrapped, properties)
+            }))
+            this.self.content.wrapped = wrapped
         }
         super.connectedCallback()
     }

@@ -39,7 +39,7 @@ import PropertyTypes, {
     symbol
 } from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
-import {Component} from 'react'
+import {ComponentType} from 'react'
 
 import {Output, WebComponentAdapter} from './type'
 // endregion
@@ -105,7 +105,7 @@ const Function:typeof global.Function = (
  */
 export class Web<TElement = HTMLElement> extends HTMLElement {
     // region properties
-    static readonly content:string|typeof Component = ''
+    static readonly content:string|ComponentType = ''
     static readonly observedAttributes:Array<string> = []
     static useShadowDOM:boolean = false
 
