@@ -562,6 +562,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 Tools.isFunction(parameter[0].persist)
             ) {
                 if ('currentTarget' in parameter[0])
+                    // TODO can we do some smart auto detection here?
                     console.log('TODO', parameter[0].currentTarget)
             } else
                 /*
