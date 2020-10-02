@@ -29,8 +29,8 @@ import {
     WebComponentConfiguration
 } from './type'
 // endregion
-export const wrapAsWebComponent = (
-    component:ComponentType,
+export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
+    component:Type,
     nameHint:string = 'NoName',
     configuration:WebComponentConfiguration = {}
 ):WebComponentAPI => {
@@ -46,8 +46,14 @@ export const wrapAsWebComponent = (
         nameHint.replace(/^(.*\/+)?([^\/]+)\.tsx$/, '$2')
     const propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> =
         configuration.propTypes || component.propTypes || {}
-    const allPropertyNames:Array<string> = Object.keys(propertyTypes)
+    const aliases:Mapping = configuration.aliases || component.aliases || {}
+    const allPropertyNames:Array<string> = Tools.arrayUnique(
+        Object.keys(propertyTypes)
+            .concat(Object.keys(aliases))
+            .concat(Object.values(aliases))
+    )
     class ConcreteComponent extends ReactWeb {
+        static aliases:Mapping = aliases
         static content:ComponentType = component
         static _name:string = name
         static readonly observedAttributes:Array<string> =

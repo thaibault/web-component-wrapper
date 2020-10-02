@@ -26,6 +26,7 @@ import ReactWeb from './React'
 export type EventToPropertyMapping =
     Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
 export interface WebComponentConfiguration {
+    aliases?:Mapping
     eventToPropertyMapping?:EventToPropertyMapping
     propertiesToReflectAsAttributes?:Map<string, boolean>
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
