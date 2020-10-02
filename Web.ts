@@ -227,7 +227,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     // endregion
     // region getter/setter
-    // TODO
+    /**
+     * Creats an index to match alias source and target against each other on
+     * constant runtime.
+     * @param name - Name to search an alternate name for.
+     * @returns Found alias or "null".
+     */
     getAlias(name:string):null|string {
         if (!this._aliasIndex) {
             this._aliasIndex = {...this.self.aliases}
