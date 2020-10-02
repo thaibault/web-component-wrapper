@@ -20,12 +20,18 @@
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
 import React, {
-    Component, forwardRef, ReactElement, useImperativeHandle
+    Attributes,
+    forwardRef,
+    memo as memorize,
+    ReactElement,
+    Ref,
+    useCallback,
+    useImperativeHandle
 } from 'react'
 import ReactDOM from 'react-dom'
 
-import Web from './index'
-import {WebComponentAdapter} from './type'
+import Web from './Web'
+import {ComponentType, WebComponentAdapter} from './type'
 // endregion
 /*
     1. Render react component with properties (defined in web-component) and
@@ -43,34 +49,77 @@ import {WebComponentAdapter} from './type'
  * @property self - Back-reference to this class.
  */
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
-    static content:string|typeof Component = 'div'
+    static content:string|ComponentType = 'div'
     static _name:string = 'ReactWebComponent'
 
     readonly self:typeof ReactWeb = ReactWeb
-    // region live cycle hooks
+    // region live-cycle
     /**
-     * Initializes host dom content by attaching a shadow dom to it.
+     * Triggered when this component is mounted into the document. Event
+     * handlers will be attached and final render proceed.
      * @returns Nothing.
      */
-    constructor() {
-        super()
-        // TODO detect ref components better? Add types.
+    connectedCallback():void {
         if (
-            typeof this.self.content !== 'string' &&
-            !Object.prototype.hasOwnProperty.call(
-                this.self.content, 'displayName'
-            )
+            this.self.content !== 'string' &&
+            !(this.self.content as ComponentType).webComponentAdapterWrapped
         ) {
-            this.self.content.displayName = this.self._name
-            this.self.content = forwardRef((
-                properties, reference
+            if (!(this.self.content as ComponentType).displayName)
+                (this.self.content as ComponentType).displayName =
+                    this.self._name
+
+            const wrapped:ComponentType = this.self.content as ComponentType
+
+            this.self.content = memorize(forwardRef((
+                properties:Attributes, reference:Ref<WebComponentAdapter>
             ):ReactElement => {
-                useImperativeHandle(reference, ():WebComponentAdapter =>
-                    ({properties})
+                useImperativeHandle(
+                    reference,
+                    useCallback(
+                        ():WebComponentAdapter => ({properties}),
+                        [properties]
+                    )
                 )
-                return React.createElement(this.self.content, properties)
-            })
+                return React.createElement(wrapped, properties)
+            })) as ComponentType
+            (this.self.content as ComponentType).wrapped = wrapped;
+            (this.self.content as ComponentType).webComponentAdapterWrapped =
+                true
         }
+        super.connectedCallback()
+    }
+    /**
+     * Triggered when this component is unmounted into the document. Event
+     * handlers and state will be removed.
+     * @returns Nothing.
+     */
+    disconnectedCallback():void {
+        ReactDOM.unmountComponentAtNode(this.root)
+    }
+    /**
+     * Method which does the rendering job. Should be called when ever state
+     * changes should be projected to the hosts dom content.
+     * @returns Nothing.
+     */
+    render():void {
+        this.properties.ref = React.createRef()
+        if (!this.instance)
+            this.instance = this.properties.ref
+
+        this.applySlotsToProperties()
+
+        ReactDOM.render(
+            React.createElement(this.self.content, this.properties), this.root
+        )
+        /*
+            NOTE: Update current instance if we have a newly created one
+            otherwise check after current queue has been finished.
+        */
+        if (this.properties.ref.current)
+            this.reflectInstanceProperties()
+        else
+            Tools.timeout(this.reflectInstanceProperties.bind(this))
+
     }
     // endregion
     // region helper
@@ -123,42 +172,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     false
                 )
         }
-    }
-    // endregion
-    // region live-cycle
-    /**
-     * Triggered when this component is unmounted into the document. Event
-     * handlers and state will be removed.
-     * @returns Nothing.
-     */
-    disconnectedCallback():void {
-        ReactDOM.unmountComponentAtNode(this.root)
-    }
-    /**
-     * Method which does the rendering job. Should be called when ever state
-     * changes should be projected to the hosts dom content.
-     * @returns Nothing.
-     */
-    render():void {
-        this.properties.ref = React.createRef()
-        if (!this.instance)
-            this.instance = this.properties.ref
-
-        this.applySlotsToProperties()
-
-        console.log('RENDER', this.self.content)
-        ReactDOM.render(
-            React.createElement(this.self.content, this.properties), this.root
-        )
-        /*
-            NOTE: Update current instance if we have a newly created one
-            otherwise check after current queue has been finished.
-        */
-        if (this.properties.ref.current)
-            this.reflectInstanceProperties()
-        else
-            Tools.timeout(this.reflectInstanceProperties.bind(this))
-
     }
     // endregion
 }

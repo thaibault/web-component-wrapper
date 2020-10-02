@@ -18,24 +18,31 @@
 // region imports
 import PropertyTypes from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
-import {ComponentType} from 'react'
+import {ComponentType as ReactComponentType} from 'react'
 
 import ReactWeb from './React'
 // endregion
 // region exports
-export type Output = Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
-export interface StaticReactWebComponent {
-    output?:Output
+export type EventToPropertyMapping =
+    Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
+export interface WebComponentConfiguration {
+    eventToPropertyMapping?:EventToPropertyMapping
     propertiesToReflectAsAttributes?:Map<string, boolean>
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
-    wrapped?:ComponentType<any>
 }
+export interface StaticWebComponent extends WebComponentConfiguration {
+    _name?:string
+    ___types?:{name?:{name?:string}}
+    webComponentAdapterWrapped?:boolean
+    wrapped?:ComponentType
+}
+export type ComponentType = ReactComponentType & StaticWebComponent
 export interface WebComponentAdapter<Properties = Mapping<any>, State = Mapping<any>> {
     properties?:Properties
     state?:State
 }
-export type WebComponentAPI = {
-    component:ReactWeb
+export type WebComponentAPI<WebComponent extends typeof ReactWeb = typeof ReactWeb> = {
+    component:WebComponent
     register:(tagName:string) => void
 }
 // endregion
