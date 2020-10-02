@@ -628,6 +628,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.setInternalPropertyValue(
                         name,
                         (...parameter:Array<any>):void => {
+                            /*
+                                TODO is this always intended? What if not
+                                explicitly defined via attribute -> this
+                                handler will never be attached.
+                            */
                             this.reflectEventToProperties(name, parameter)
                             if (callback)
                                 try {
