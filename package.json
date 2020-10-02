@@ -21,6 +21,8 @@
     "index.ts",
     "React.ts",
     "React.js",
+    "Web.ts",
+    "Web.js",
     "type.ts"
   ],
   "main": "index.js",

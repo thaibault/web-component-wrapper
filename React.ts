@@ -20,17 +20,18 @@
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
 import React, {
-    ComponentType,
+    Attributes,
     forwardRef,
     memo as memorize,
     ReactElement,
+    Ref,
     useCallback,
     useImperativeHandle
 } from 'react'
 import ReactDOM from 'react-dom'
 
-import Web from './index'
-import {WebComponentAdapter} from './type'
+import Web from './Web'
+import {ComponentType, WebComponentAdapter} from './type'
 // endregion
 /*
     1. Render react component with properties (defined in web-component) and
@@ -59,18 +60,18 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     connectedCallback():void {
-        // TODO detect ref components better? Add types.
         if (
-            typeof this.self.content !== 'string' &&
-            !Object.prototype.hasOwnProperty.call(
-                this.self.content, 'displayName'
-            )
+            this.self.content !== 'string' &&
+            !(this.self.content as ComponentType).webComponentAdapterWrapped
         ) {
-            this.self.content.displayName = this.self._name
-            const wrapped:ComponentType = this.self.content
+            if (!(this.self.content as ComponentType).displayName)
+                (this.self.content as ComponentType).displayName =
+                    this.self._name
+
+            const wrapped:ComponentType = this.self.content as ComponentType
 
             this.self.content = memorize(forwardRef((
-                properties, reference
+                properties:Attributes, reference:Ref<WebComponentAdapter>
             ):ReactElement => {
                 useImperativeHandle(
                     reference,
@@ -80,8 +81,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     )
                 )
                 return React.createElement(wrapped, properties)
-            }))
-            this.self.content.wrapped = wrapped
+            })) as ComponentType
+            (this.self.content as ComponentType).wrapped = wrapped;
+            (this.self.content as ComponentType).webComponentAdapterWrapped =
+                true
         }
         super.connectedCallback()
     }
