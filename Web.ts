@@ -95,7 +95,7 @@ const Function:typeof global.Function = (
  * @property ignoreAttributeUpdates - Indicates whether attribute updates
  * should be considered (usually only needed internally).
  * @property instance - Wrapped component instance.
- * @property outputEventNames - List of determined output event names.
+ * @property outputEventNames - Set of determined output event names.
  * @property properties - Holds currently evaluated properties.
  * @property root - Hosting dom node.
  * @property self - Back-reference to this class.
@@ -123,7 +123,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     ignoreAttributeUpdates:boolean = false
     instance:null|{current?:WebComponentAdapter} = null
     eventToPropertyMapping:EventToPropertyMapping = {}
-    outputEventNames:Array<string> = []
+    outputEventNames:Set<string> = new Set<string>()
     properties:Mapping<any> = {}
     root:ShadowRoot|Web<TElement>
     readonly self:typeof Web = Web
@@ -344,7 +344,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             NOTE: We only reflect properties by implicit determined events if
             their where no explicitly defined.
         */
-        this.outputEventNames = []
+        this.outputEventNames.clear()
         this.attachImplicitDefinedOutputEventHandler(
             !this.attachExplicitDefinedOutputEventHandler()
         )
@@ -360,7 +360,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         for (const name of Object.keys(this.eventToPropertyMapping))
             if (!Object.prototype.hasOwnProperty.call(this.properties, name)) {
                 result = true
-                this.outputEventNames.push(name)
+                this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
                     name,
                     (...parameter:Array<any>):void => {
@@ -387,7 +387,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 !Object.prototype.hasOwnProperty.call(this.properties, name) &&
                 func === this._propertyTypes[name]
             ) {
-                this.outputEventNames.push(name)
+                this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
                     name,
                     (...parameter:Array<any>):void => {
@@ -565,14 +565,19 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             if (
                 'persist' in parameter[0] &&
                 Tools.isFunction(parameter[0].persist)
-            ) {
-                if ('currentTarget' in parameter[0])
-                    // TODO can we do some smart auto detection here?
-                    console.log('TODO', parameter[0].currentTarget)
-            } else
+            )
+                // Update all known properties.
+                for (const name of Object.keys(this._propertyTypes)) {
+                    const currentValue:any = this.getPropertyValue(name)
+                    if (currentValue !== this.properties[name]) {
+                        console.log('TODO update', name, 'to', currentValue)
+                        this.setInternalPropertyValue(name, currentValue)
+                    }
+                }
+            else
                 /*
-                    Identified as some how though data back event (no synthetic
-                    event).
+                    Identified as some how throw data back event (no synthetic
+                    event; derived from a user triggered one).
                 */
                 this.reflectProperties(parameter[0])
         this.batchUpdates = oldBatchUpdatesConfiguration
@@ -633,12 +638,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.setInternalPropertyValue(
                         name,
                         (...parameter:Array<any>):void => {
-                            /*
-                                TODO is this always intended? What if not
-                                explicitly defined via attribute -> this
-                                handler will never be attached.
-                            */
-                            this.reflectEventToProperties(name, parameter)
+                            if (this.outputEventNames.has(name))
+                                this.reflectEventToProperties(name, parameter)
                             if (callback)
                                 try {
                                     callback.call(this, parameter)
@@ -651,6 +652,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                                         `: "${Tools.represent(error)}".`
                                     )
                                 }
+                            this.forwardEvent(name, parameter)
                         }
                     )
                     break
