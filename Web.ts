@@ -569,6 +569,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 // Update all known properties.
                 for (const name of Object.keys(this._propertyTypes)) {
                     const currentValue:any = this.getPropertyValue(name)
+                    console.log('TODO see prop', name, currentValue)
                     if (currentValue !== this.properties[name]) {
                         console.log('TODO update', name, 'to', currentValue)
                         this.setInternalPropertyValue(name, currentValue)
