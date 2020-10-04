@@ -108,8 +108,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
         this.applySlotsToProperties()
 
-        console.log('TODO properties', this.properties)
-
         ReactDOM.render(
             React.createElement(this.self.content, this.properties), this.root
         )
