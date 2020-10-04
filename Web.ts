@@ -561,26 +561,46 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             parameter.length > 0 &&
             parameter[0] !== null &&
             typeof parameter[0] === 'object'
-        )
+        ) {
+            /*
+                Identified as some how throw data back event (no synthetic
+                event; derived from a user triggered one) when following
+                condition does not hold.
+            */
+            let newProperties:Mapping<any> = parameter[0]
             if (
                 'persist' in parameter[0] &&
                 Tools.isFunction(parameter[0].persist)
-            )
-                // Update all known properties.
-                for (const name of Object.keys(this._propertyTypes)) {
-                    const currentValue:any = this.getPropertyValue(name)
-                    console.log('TODO see prop', name, currentValue, this.properties[name])
-                    if (currentValue !== this.properties[name]) {
-                        console.log('TODO update', name, 'to', currentValue)
-                        this.setInternalPropertyValue(name, currentValue)
+            ) {
+                newProperties = {}
+                for (const propertyName of Object.keys(this._propertyTypes))
+                    for (const name of [propertyName].concat(
+                        this.getAlias(propertyName) ?? []
+                    )) {
+                        let currentValue:any
+                        if (
+                            parameter[0].currentTarget &&
+                            Object.prototype.hasOwnProperty.call(
+                                parameter[0].currentTarget, name
+                            )
+                        )
+                            /*
+                                Update all known properties from event target
+                                instance.
+                            */
+                            currentValue = parameter[0].currentTarget[name]
+                        else
+                            /*
+                                Update all known properties from adapter
+                                instance.
+                            */
+                            currentValue = this.getPropertyValue(name)
+                        if (currentValue !== this.properties[name])
+                            newProperties[name] = currentValue
                     }
-                }
-            else
-                /*
-                    Identified as some how throw data back event (no synthetic
-                    event; derived from a user triggered one).
-                */
-                this.reflectProperties(parameter[0])
+            }
+            this.reflectProperties(newProperties)
+        }
         this.batchUpdates = oldBatchUpdatesConfiguration
     }
     /**
