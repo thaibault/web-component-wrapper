@@ -83,8 +83,7 @@
     "react": "*",
     "react-dom": "*"
   },
-  "#": "TODO should be false",
-  "sideEffects": true,
+  "sideEffects": false,
   "webOptimizer": {
     "commandLine": {
       "test": {
