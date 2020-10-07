@@ -134,20 +134,31 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     convertDomNodeIntoReactElement(
         domNode:Node, key?:string
     ):null|ReactElement {
-        if (domNode.nodeType === Node.TEXT_NODE)
-            return key && (domNode as Node).nodeValue ?
-                createElement(
-                    Fragment, {children: (domNode as Node).nodeValue, key}
-                ) :
-                null
+        if (domNode.nodeType === Node.TEXT_NODE) {
+            const value:string =
+                typeof (domNode as Node).nodeValue === 'string' ?
+                (domNode as Node).nodeValue.trim() :
+                ''
+            return (key && value) ?
+                createElement(Fragment, {children: value, key}) :
+                value ? value : null
+        }
         const type:typeof Web = (domNode as Web).constructor as typeof Web
         if (
             typeof type.content === 'object' &&
             (type.content as ComponentType).webComponentAdapterWrapped ===
                 'react'
-        )
-            // TODO what about nested properties?
-            return createElement(type.content, {key})
+        ) {
+            const properties = {key}
+            /*
+            for (const attribute of domNode.attributes)
+                properties[attribute.name] = attribute.value
+            console.log('TODO what about nested property:', properties)
+            */
+            // TODO what about children?
+            properties.children = domNode.nodeValue
+            return createElement(type.content, properties)
+        }
         return createElement(
             (domNode as HTMLElement).tagName.toLowerCase(),
             {
@@ -172,24 +183,27 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     !Object.prototype.hasOwnProperty.call(
                         this.properties, 'default'
                     )
-                )
-                    this.properties.children =
-                        (this.slots.default.length === 1) ?
+                ) {
+                    if (this.slots.default.length === 1)
+                        this.properties.children =
                             this.convertDomNodeIntoReactElement(
                                 this.slots.default[0]
-                            ) :
-                            this.slots.default
-                                .map((
-                                    node:Node, index:number
-                                ):null|ReactElement =>
-                                    this.convertDomNodeIntoReactElement(
-                                        node, index.toString()
-                                    )
+                            )
+                    else {
+                        let index:number = 1
+                        this.properties.children = []
+                        for (const node of this.slots.default) {
+                            const element:null|ReactElement =
+                                this.convertDomNodeIntoReactElement(
+                                    node, index.toString()
                                 )
-                                .filter((element:null|ReactElement):boolean =>
-                                    element !== null
-                                )
-                else if (!Object.prototype.hasOwnProperty.call(
+                            if (element) {
+                                this.properties.children.push(element)
+                                index += 1
+                            }
+                        }
+                    }
+                } else if (!Object.prototype.hasOwnProperty.call(
                     this.properties, name
                 ))
                     this.properties[name] = this.slots[name]
