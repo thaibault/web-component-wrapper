@@ -120,23 +120,32 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         */
         if (this.properties.ref.current)
             this.reflectInstanceProperties()
-        else
+        else 
             Tools.timeout(this.reflectInstanceProperties.bind(this))
 
     }
     // endregion
     // region helper
-    convertDomNodeIntoReactElement(domNode:Node):ReactElement {
+    /**
+     * Converts given html dom node into a react element.
+     * @param domNode - Node to convert.
+     * @returns Transformed react element.
+     */
+    convertDomNodeIntoReactElement(domNode:Node):ReactElement|string {
         if (domNode.nodeType === Node.TEXT_NODE)
-            return domNode.nodeValue
-        if (domNode.tagName.includes('-') && domNode.wrapped)
-        this.properties.children = React.createElement(
+            return (domNode as Node).nodeValue || ''
+        const type:typeof Web = (domNode as Web).constructor as typeof Web
+        if (
+            typeof type.content === 'object' &&
+            (type.content as ComponentType).webComponentAdapterWrapped ===
+                'react'
+        )
+            // TODO what about nested properties?
+            return React.createElement(type.content)
+        return React.createElement(
             Fragment,
             {dangerouslySetInnerHTML: {
-                __html: this.slots.default.maps((
-                    node:Node
-                ):string =>
-                    node.outerHTML || node.nodeValue).join('')
+                __html: (domNode as HTMLElement).outerHTML || ''
             }}
         )
     }
@@ -155,7 +164,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                         this.properties, 'default'
                     )
                 )
-                    this.propertes.children =
+                    this.properties.children =
                         (this.slots.default.length === 1) ?
                             this.convertDomNodeIntoReactElement(
                                 this.slots.default[0]
