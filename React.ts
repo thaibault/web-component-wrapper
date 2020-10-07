@@ -19,8 +19,10 @@
 // region imports 
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
-import React, {
+import {
     Attributes,
+    createElement,
+    createRef,
     forwardRef,
     Fragment,
     memo as memorize,
@@ -29,7 +31,7 @@ import React, {
     useCallback,
     useImperativeHandle
 } from 'react'
-import ReactDOM from 'react-dom'
+import {render, unmountComponentAtNode} from 'react-dom'
 
 import Web from './Web'
 import {ComponentType, WebComponentAdapter} from './type'
@@ -83,7 +85,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                         [properties]
                     )
                 )
-                return React.createElement(wrapped, properties)
+                return createElement(wrapped, properties)
             })) as ComponentType
             (this.self.content as ComponentType).wrapped = wrapped;
             (this.self.content as ComponentType).webComponentAdapterWrapped =
@@ -97,7 +99,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     disconnectedCallback():void {
-        ReactDOM.unmountComponentAtNode(this.root)
+        unmountComponentAtNode(this.root)
     }
     /**
      * Method which does the rendering job. Should be called when ever state
@@ -105,15 +107,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     render():void {
-        this.properties.ref = React.createRef()
+        this.properties.ref = createRef()
         if (!this.instance)
             this.instance = this.properties.ref
 
         this.applySlotsToProperties()
 
-        ReactDOM.render(
-            React.createElement(this.self.content, this.properties), this.root
-        )
+        render(createElement(this.self.content, this.properties), this.root)
         /*
             NOTE: Update current instance if we have a newly created one
             otherwise check after current queue has been finished.
@@ -131,9 +131,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @param domNode - Node to convert.
      * @returns Transformed react element.
      */
-    convertDomNodeIntoReactElement(domNode:Node):ReactElement|string {
+    convertDomNodeIntoReactElement(
+        domNode:Node, key?:string
+    ):null|ReactElement {
         if (domNode.nodeType === Node.TEXT_NODE)
-            return (domNode as Node).nodeValue || ''
+            return key && (domNode as Node).nodeValue ?
+                createElement(
+                    Fragment, {children: (domNode as Node).nodeValue, key}
+                ) :
+                null
         const type:typeof Web = (domNode as Web).constructor as typeof Web
         if (
             typeof type.content === 'object' &&
@@ -141,12 +147,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 'react'
         )
             // TODO what about nested properties?
-            return React.createElement(type.content)
-        return React.createElement(
-            Fragment,
-            {dangerouslySetInnerHTML: {
-                __html: (domNode as HTMLElement).outerHTML || ''
-            }}
+            return createElement(type.content, {key})
+        return createElement(
+            (domNode as HTMLElement).tagName.toLowerCase(),
+            {
+                dangerouslySetInnerHTML: {
+                    __html: (domNode as HTMLElement).innerHTML || ''
+                },
+                key
+            }
         )
     }
     /**
@@ -169,9 +178,17 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                             this.convertDomNodeIntoReactElement(
                                 this.slots.default[0]
                             ) :
-                            this.slots.default.map(
-                                this.convertDomNodeIntoReactElement.bind(this)
-                            )
+                            this.slots.default
+                                .map((
+                                    node:Node, index:number
+                                ):null|ReactElement =>
+                                    this.convertDomNodeIntoReactElement(
+                                        node, index.toString()
+                                    )
+                                )
+                                .filter((element:null|ReactElement):boolean =>
+                                    element !== null
+                                )
                 else if (!Object.prototype.hasOwnProperty.call(
                     this.properties, name
                 ))
