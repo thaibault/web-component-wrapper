@@ -34,7 +34,7 @@ export interface WebComponentConfiguration {
 export interface StaticWebComponent extends WebComponentConfiguration {
     _name?:string
     ___types?:{name?:{name?:string}}
-    webComponentAdapterWrapped?:boolean
+    webComponentAdapterWrapped?:string
     wrapped?:ComponentType
 }
 export type ComponentType = ReactComponentType & StaticWebComponent
