@@ -16,12 +16,13 @@
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
 */
-// region imports
+// region imports 
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
 import React, {
     Attributes,
     forwardRef,
+    Fragment,
     memo as memorize,
     ReactElement,
     Ref,
@@ -34,13 +35,15 @@ import Web from './Web'
 import {ComponentType, WebComponentAdapter} from './type'
 // endregion
 /*
+    Livecycle:
+
     1. Render react component with properties (defined in web-component) and
        start listing to "onChange" events.
-    2. Reflect components properties to web-components properties and
+    2. Reflect component properties to web-component properties and
        attributes (with prevented re-rendering caused by new properties).
-    3. Component triggers an "onChange" event (caused by some event) which
-       delivers updated properties to the web-component.
-    -> Starting with first point.
+    3. Component triggers an "onChange" event (caused by some react event)
+       which delivers updated properties to the web-component.
+       -> Starting with first step.
 */
 /**
  * Adapter for exposing a react component as web-component.
@@ -84,7 +87,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             })) as ComponentType
             (this.self.content as ComponentType).wrapped = wrapped;
             (this.self.content as ComponentType).webComponentAdapterWrapped =
-                true
+                'react'
         }
         super.connectedCallback()
     }
@@ -117,12 +120,35 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         */
         if (this.properties.ref.current)
             this.reflectInstanceProperties()
-        else
+        else 
             Tools.timeout(this.reflectInstanceProperties.bind(this))
 
     }
     // endregion
     // region helper
+    /**
+     * Converts given html dom node into a react element.
+     * @param domNode - Node to convert.
+     * @returns Transformed react element.
+     */
+    convertDomNodeIntoReactElement(domNode:Node):ReactElement|string {
+        if (domNode.nodeType === Node.TEXT_NODE)
+            return (domNode as Node).nodeValue || ''
+        const type:typeof Web = (domNode as Web).constructor as typeof Web
+        if (
+            typeof type.content === 'object' &&
+            (type.content as ComponentType).webComponentAdapterWrapped ===
+                'react'
+        )
+            // TODO what about nested properties?
+            return React.createElement(type.content)
+        return React.createElement(
+            Fragment,
+            {dangerouslySetInnerHTML: {
+                __html: (domNode as HTMLElement).outerHTML || ''
+            }}
+        )
+    }
     /**
       * Forward named slots as properties to component.
       * @returns Nothing.
@@ -138,17 +164,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                         this.properties, 'default'
                     )
                 )
-                    this.properties.children = (
-                        this.slots.default.length === 1 &&
-                        this.slots.default[0].nodeType === Node.TEXT_NODE
-                    ) ?
-                        this.slots.default[0].nodeValue :
-                        React.createElement(
-                            'div',
-                            {dangerouslySetInnerHTML: {
-                                __html: this.slots.default
-                            }}
-                        )
+                    this.properties.children =
+                        (this.slots.default.length === 1) ?
+                            this.convertDomNodeIntoReactElement(
+                                this.slots.default[0]
+                            ) :
+                            this.slots.default.map(
+                                this.convertDomNodeIntoReactElement.bind(this)
+                            )
                 else if (!Object.prototype.hasOwnProperty.call(
                     this.properties, name
                 ))
