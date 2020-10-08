@@ -27,6 +27,7 @@ export type EventToPropertyMapping =
     Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
 export interface WebComponentConfiguration {
     aliases?:Mapping
+    attachWebComponentAdapterIfNotExists?:boolean
     eventToPropertyMapping?:EventToPropertyMapping
     propertiesToReflectAsAttributes?:Map<string, boolean>
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>

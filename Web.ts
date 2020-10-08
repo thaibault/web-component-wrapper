@@ -98,7 +98,13 @@ const Function:typeof global.Function = (
  * @property outputEventNames - Set of determined output event names.
  * @property properties - Holds currently evaluated properties.
  * @property root - Hosting dom node.
+ * @property runDomConnectionAndRendringInSameEventQueue - Indicates whether
+ * we should render initial dom immediately after the component is connected to
+ * dom. Deactivating this allows wrapped components to detect their parents
+ * since their parent connected callback will be called before the children's
+ * render method.
  * @property self - Back-reference to this class.
+ * @property slots - Grabbed slots which where present in the connecting phase.
  *
  * @property _aliasIndex - Internal alias index to quickly match them in both
  * directions.
@@ -126,6 +132,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     outputEventNames:Set<string> = new Set<string>()
     properties:Mapping<any> = {}
     root:ShadowRoot|Web<TElement>
+    runDomConnectionAndRendringInSameEventQueue:boolean = false
     readonly self:typeof Web = Web
     slots:Mapping<Node> & {default?:Array<Node>} = {}
 
@@ -223,7 +230,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         else
             this.slots.default = []
 
-        this.render()
+        this.runDomConnectionAndRendringInSameEventQueue ?
+            this.render() :
+            Tools.timeout(this.render.bind(this))
     }
     // endregion
     // region getter/setter
