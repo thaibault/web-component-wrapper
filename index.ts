@@ -44,8 +44,10 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
         */
         component.___types?.name?.name ||
         nameHint.replace(/^(.*\/+)?([^\/]+)\.tsx$/, '$2')
+    if (!component.propTypes && configuration.propTypes)
+        component.propTypes = configuration.propTypes
     const propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> =
-        configuration.propTypes || component.propTypes || {}
+        component.propTypes || {}
     const aliases:Mapping = configuration.aliases || component.aliases || {}
     const allPropertyNames:Array<string> = Tools.arrayUnique(
         Object.keys(propertyTypes)
@@ -54,6 +56,11 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
     )
     class ConcreteComponent extends ReactWeb {
         static aliases:Mapping = aliases
+        static attachWebComponentAdapterIfNotExists:boolean =
+            typeof configuration.attachWebComponentAdapterIfNotExists ===
+                'boolean' ?
+                    configuration.attachWebComponentAdapterIfNotExists :
+                    true
         static content:ComponentType = component
         static _name:string = name
         static readonly observedAttributes:Array<string> =

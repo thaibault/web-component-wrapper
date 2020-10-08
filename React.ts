@@ -37,7 +37,7 @@ import Web from './Web'
 import {ComponentType, WebComponentAdapter} from './type'
 // endregion
 /*
-    Livecycle:
+    Live cycle:
 
     1. Render react component with properties (defined in web-component) and
        start listing to "onChange" events.
@@ -49,15 +49,26 @@ import {ComponentType, WebComponentAdapter} from './type'
 */
 /**
  * Adapter for exposing a react component as web-component.
+ * @property static:attachWebComponentAdapterIfNotExists - Indicates whether to
+ * wrap with a reference wrapper to get updated about internal state changes.
  * @property static:content - React component to wrap.
  *
+ * @property preparedSlots - Cache of yet converted slot elements to their
+ * react pendants.
  * @property self - Back-reference to this class.
+ * @property wrapMemorizingWrapper - Determines whether to wrap component with
+ * reacts memorizing wrapper to cache component render results.
  */
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
+    static attachWebComponentAdapterIfNotExists:boolean = true
     static content:string|ComponentType = 'div'
     static _name:string = 'ReactWebComponent'
 
+    preparedSlots:Mapping<null|ReactElement|string> & {
+        children?:Array<ReactElement|string>|null|ReactElement|string
+    } = {}
     readonly self:typeof ReactWeb = ReactWeb
+    wrapMemorizingWrapper:boolean = true
     // region live-cycle
     /**
      * Triggered when this component is mounted into the document. Event
@@ -65,33 +76,17 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     connectedCallback():void {
-        if (
-            this.self.content !== 'string' &&
-            !(this.self.content as ComponentType).webComponentAdapterWrapped
-        ) {
-            if (!(this.self.content as ComponentType).displayName)
-                (this.self.content as ComponentType).displayName =
-                    this.self._name
+        this.applyComponentWrapper()
 
-            const wrapped:ComponentType = this.self.content as ComponentType
-
-            this.self.content = memorize(forwardRef((
-                properties:Attributes, reference:Ref<WebComponentAdapter>
-            ):ReactElement => {
-                useImperativeHandle(
-                    reference,
-                    useCallback(
-                        ():WebComponentAdapter => ({properties}),
-                        [properties]
-                    )
-                )
-                return createElement(wrapped, properties)
-            })) as ComponentType
-            (this.self.content as ComponentType).wrapped = wrapped;
-            (this.self.content as ComponentType).webComponentAdapterWrapped =
-                'react'
-        }
         super.connectedCallback()
+
+        this.prepareSlots()
+
+        /*
+            We apply properties initially to allow wrapping components access
+            them during there slot preparations.
+        */
+        this.applySlotsToProperties()
     }
     /**
      * Triggered when this component is unmounted into the document. Event
@@ -107,11 +102,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     render():void {
-        this.properties.ref = createRef()
-        if (!this.instance)
-            this.instance = this.properties.ref
+        this.prepareProperties()
 
-        this.applySlotsToProperties()
+        /*
+            NOTE: We prevent a nested component from further rendering since
+            they will be rendered by their parent.
+        */
+        if (this.hasParentWithPreparedSlots())
+            return
 
         render(createElement(this.self.content, this.properties), this.root)
         /*
@@ -120,40 +118,76 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         */
         if (this.properties.ref.current)
             this.reflectInstanceProperties()
-        else 
+        else
             Tools.timeout(this.reflectInstanceProperties.bind(this))
 
     }
     // endregion
-    // region helper
+    // region handle slots
+    /**
+     * Converts given html dom nodes into a single react element or a react
+     * element list.
+     * @param domNodes - Nodes to convert.
+     * @returns Transformed react elements.
+     */
+    convertDomNodesIntoReactElements(
+        nodes:Array<Node>
+    ):Array<ReactElement|string>|null|ReactElement|string {
+        if (nodes.length === 1)
+            return this.convertDomNodeIntoReactElement(nodes[0])
+        let index:number = 1
+        const result:Array<ReactElement|string> = []
+        for (const node of nodes) {
+            const element:null|ReactElement|string =
+                this.convertDomNodeIntoReactElement(node, index.toString())
+            if (element) {
+                result.push(element)
+                index += 1
+            }
+        }
+        return result
+    }
     /**
      * Converts given html dom node into a react element.
-     * @param domNode - Node to convert.
+     * @param node - Node to convert.
      * @returns Transformed react element.
      */
     convertDomNodeIntoReactElement(
-        domNode:Node, key?:string
-    ):null|ReactElement {
-        if (domNode.nodeType === Node.TEXT_NODE)
-            return key && (domNode as Node).nodeValue ?
-                createElement(
-                    Fragment, {children: (domNode as Node).nodeValue, key}
-                ) :
-                null
-        const type:typeof Web = (domNode as Web).constructor as typeof Web
+        node:Node, key?:string
+    ):null|ReactElement|string {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const value:string = typeof (node as Node).nodeValue === 'string' ?
+                ((node as Node).nodeValue as string).trim() :
+                ''
+            return (key && value) ?
+                createElement(Fragment, {children: value, key}) :
+                value ? value : null
+        }
+        const type:typeof ReactWeb = (node as ReactWeb).constructor as
+            typeof ReactWeb
         if (
             typeof type.content === 'object' &&
-            (type.content as ComponentType).webComponentAdapterWrapped ===
-                'react'
-        )
-            // TODO what about nested properties?
-            return createElement(type.content, {key})
+            (
+                type.attachWebComponentAdapterIfNotExists === false ||
+                (type.content as ComponentType).webComponentAdapterWrapped ===
+                    'react'
+            )
+        ) {
+            /*
+                NOTE: Nested components are already instantiated so use their
+                properties.
+            */
+            const properties:Mapping<any> = (node as ReactWeb).properties ?? {}
+            if (!Object.prototype.hasOwnProperty.call(properties, 'key'))
+                properties.key = key
+            return createElement(type.content, properties)
+        }
         return createElement(
-            (domNode as HTMLElement).tagName.toLowerCase(),
+            (node as HTMLElement).tagName.toLowerCase(),
             {
-                dangerouslySetInnerHTML: {
-                    __html: (domNode as HTMLElement).innerHTML || ''
-                },
+                children: this.convertDomNodesIntoReactElements(
+                    Array.from(node.childNodes)
+                ),
                 key
             }
         )
@@ -163,36 +197,107 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
       * @returns Nothing.
       */
     applySlotsToProperties():void {
-        for (let name in this.slots)
+        for (const name in this.preparedSlots)
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    this.preparedSlots, name
+                ) &&
+                !Object.prototype.hasOwnProperty.call(this.properties, name)
+            )
+                this.properties[name] = this.preparedSlots[name]
+    }
+    /**
+     * Converts yet determined slots into react components and caches the
+     * result.
+     * @returns Nothing.
+     */
+    prepareSlots():void {
+        this.preparedSlots = {}
+        for (const name in this.slots)
             if (Object.prototype.hasOwnProperty.call(this.slots, name))
-                if (
-                    name === 'default' &&
-                    this.slots.default &&
-                    this.slots.default.length > 0 &&
-                    !Object.prototype.hasOwnProperty.call(
-                        this.properties, 'default'
+                if (name === 'default') {
+                    if (this.slots.default && this.slots.default.length > 0)
+                        this.preparedSlots.children =
+                            this.convertDomNodesIntoReactElements(
+                                this.slots.default
+                            )
+                } else
+                    this.preparedSlots[name] =
+                        this.convertDomNodeIntoReactElement(this.slots[name])
+    }
+    // endregion
+    // region helper
+    /**
+     * Applies missing forward ref and or memorizing wrapper to current react
+     * component.
+     * @returns Nothing.
+     */
+    applyComponentWrapper():void {
+        if (this.self.content === 'string')
+            return
+
+        const wrapped:ComponentType =
+            (this.self.content as ComponentType).wrapped ||
+            this.self.content as ComponentType
+
+        if (
+            this.self.attachWebComponentAdapterIfNotExists &&
+            !(this.self.content as ComponentType).webComponentAdapterWrapped
+        ) {
+            if (!(this.self.content as ComponentType).displayName)
+                (this.self.content as ComponentType).displayName =
+                    this.self._name
+
+            this.self.content = forwardRef((
+                properties:Attributes, reference:Ref<WebComponentAdapter>
+            ):ReactElement => {
+                useImperativeHandle(
+                    reference,
+                    useCallback(
+                        ():WebComponentAdapter => ({properties}), [properties]
                     )
                 )
-                    this.properties.children =
-                        (this.slots.default.length === 1) ?
-                            this.convertDomNodeIntoReactElement(
-                                this.slots.default[0]
-                            ) :
-                            this.slots.default
-                                .map((
-                                    node:Node, index:number
-                                ):null|ReactElement =>
-                                    this.convertDomNodeIntoReactElement(
-                                        node, index.toString()
-                                    )
-                                )
-                                .filter((element:null|ReactElement):boolean =>
-                                    element !== null
-                                )
-                else if (!Object.prototype.hasOwnProperty.call(
-                    this.properties, name
-                ))
-                    this.properties[name] = this.slots[name]
+                return createElement(wrapped, properties)
+            }) as ComponentType
+
+            if (this.wrapMemorizingWrapper)
+                this.self.content = memorize(this.self.content);
+
+            (this.self.content as ComponentType).wrapped = wrapped;
+            (this.self.content as ComponentType).webComponentAdapterWrapped =
+                'react'
+        } else if (this.wrapMemorizingWrapper) {
+            this.self.content = memorize(this.self.content as ComponentType);
+            (this.self.content as ComponentType).wrapped = wrapped
+        }
+    }
+    /**
+     * Prepares the properties object to render against current component.
+     * Creates a reference for being recognized of reacts internal state
+     * updates.
+     * @returns Nothing.
+     */
+    prepareProperties():void {
+        this.properties.ref = createRef()
+        if (!this.instance)
+            this.instance = this.properties.ref
+
+        this.applySlotsToProperties()
+        this.removeKnownUnwantedPropertyKeys(this.properties)
+    }
+    /**
+     * Determines whether their exist a parent which should trigger this
+     * component to render.
+     * @returns A boolean indicating whether their is such parent.
+     */
+    hasParentWithPreparedSlots():boolean {
+        let parent:Element|null = this.parentElement
+        while (parent) {
+            if ((parent as ReactWeb).preparedSlots)
+                return true
+            parent = parent.parentElement
+        }
+        return false
     }
     /**
      * Updates current component instance and reflects newly determined
@@ -212,6 +317,44 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     false
                 )
         }
+    }
+    /**
+     * Removes unwanted known and not specified properties from given
+     * properties object (usually added by dev-tools).
+     * @param properties - Properties object to trim.
+     * @returns Nothing.
+     */
+    removeKnownUnwantedPropertyKeys(properties:Mapping<any>):void {
+        if (typeof this.self.content === 'string')
+            return
+        // NOTE: Known root of errors caused by browsers dev-tools.
+        for (const name of ['isTrusted'])
+            if (
+                Object.prototype.hasOwnProperty.call(properties, name) &&
+                (
+                    (
+                        Object.prototype.hasOwnProperty.call(
+                            this.self.content, 'propTypes'
+                        ) &&
+                        !Object.prototype.hasOwnProperty.call(
+                            (this.self.content as ComponentType).propTypes,
+                            name
+                        )
+                    ) ||
+                    (
+                        Object.prototype.hasOwnProperty.call(
+                            this.self.content, 'wrapped'
+                        ) &&
+                        Object.prototype.hasOwnProperty.call(
+                            this.self.content.wrapped, 'propTypes'
+                        ) &&
+                        !Object.prototype.hasOwnProperty.call(
+                            this.self.content.wrapped!.propTypes, name
+                        )
+                    )
+                )
+            )
+                delete properties[name]
     }
     // endregion
 }
