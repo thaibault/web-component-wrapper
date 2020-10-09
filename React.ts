@@ -68,7 +68,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         children?:Array<ReactElement|string>|null|ReactElement|string
     } = {}
     readonly self:typeof ReactWeb = ReactWeb
-    wrapMemorizingWrapper:boolean = true
+    wrapMemorizingWrapper:boolean|null = null
     // region live-cycle
     /**
      * Triggered when this component is mounted into the document. Event
@@ -240,10 +240,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             (this.self.content as ComponentType).wrapped ||
             this.self.content as ComponentType
 
-        if (
-            this.self.attachWebComponentAdapterIfNotExists &&
-            !(this.self.content as ComponentType).webComponentAdapterWrapped
-        ) {
+        if ((this.self.content as ComponentType).webComponentAdapterWrapped) {
+            if (this.wrapMemorizingWrapper) {
+                this.self.content =
+                    memorize(this.self.content as ComponentType);
+                (this.self.content as ComponentType).wrapped = wrapped
+            }
+        } else if (this.self.attachWebComponentAdapterIfNotExists) {
             if (!(this.self.content as ComponentType).displayName)
                 (this.self.content as ComponentType).displayName =
                     this.self._name
@@ -260,7 +263,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 return createElement(wrapped, properties)
             }) as ComponentType
 
-            if (this.wrapMemorizingWrapper)
+            if (
+                this.wrapMemorizingWrapper ||
+                this.wrapMemorizingWrapper === null
+            )
                 this.self.content = memorize(this.self.content);
 
             (this.self.content as ComponentType).wrapped = wrapped;
