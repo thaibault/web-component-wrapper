@@ -15,12 +15,18 @@
 */
 // region imports
 import wrapAsWebComponent from './index'
+import React from './React'
+import Web from './Web'
+// TODO
 // endregion
-describe('web-component-wrapper', () => {
-    console.log('TODO', wrapAsWebComponent)
+describe('Web', () => {
     // region mockup
     // endregion
     // region tests
+    test('constructor', ():void => {
+        expect(Web).toHaveProperty('content')
+        expect(Web).toHaveProperty('observedAttributes')
+    })
     // endregion
 })
 // region vim modline
