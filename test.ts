@@ -14,21 +14,47 @@
     endregion
 */
 // region imports
+import {createElement, ReactElement} from 'react'
+
 import wrapAsWebComponent from './index'
 import React from './React'
 import Web from './Web'
-// TODO
+import {WebComponentAPI} from './type'
 // endregion
-describe('Web', () => {
-    // region mockup
-    // endregion
-    // region tests
+// region Web
+describe('Web', ():void => {
     test('constructor', ():void => {
         expect(Web).toHaveProperty('content')
         expect(Web).toHaveProperty('observedAttributes')
+
+        const web:Web = new Web()
+        expect(web).toHaveProperty('root', web)
     })
-    // endregion
 })
+// endregion
+// region React
+describe('React', ():void => {
+    test('constructor', ():void => {
+        expect(React).toHaveProperty('content')
+        expect(React).toHaveProperty('observedAttributes')
+
+        const react:React = new React()
+        expect(react).toHaveProperty('root', react)
+    })
+    // TODO
+})
+// endregion
+// region index
+describe('index', ():void => {
+    test('wrapAsWebComponent', ():void => {
+        const component:WebComponentAPI =
+            wrapAsWebComponent(():ReactElement => createElement('div'))
+        expect(component).toHaveProperty('component')
+        expect(component).toHaveProperty('register')
+    })
+    // TODO
+})
+// endregion
 // region vim modline
 // vim: set tabstop=4 shiftwidth=4 expandtab:
 // vim: foldmethod=marker foldmarker=region,endregion:

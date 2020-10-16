@@ -87,16 +87,12 @@
   "webOptimizer": {
     "commandLine": {
       "test": {
-        "environments": [
-          "jsdom",
-          "node"
-        ]
+        "environments": ["jsdom"]
       }
     },
     "injection": {
       "entry": {
-        "index": "./index.ts",
-        "React": "./React.ts"
+        "__evaluate__": "2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2].startsWith('test') ? './test.ts' : {index: './index.ts', React: './React.ts', Web: './Web.ts'}"
       }
     },
     "module": {
