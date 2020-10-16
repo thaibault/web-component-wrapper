@@ -27,7 +27,10 @@ describe('Web', ():void => {
         expect(Web).toHaveProperty('content')
         expect(Web).toHaveProperty('observedAttributes')
 
-        const web:Web = new Web()
+        customElements.define('test-web', Web)
+        document.body.appendChild(document.createElement('test-web'))
+        const web:Web = document.querySelector('test-web') as Web
+
         expect(web).toHaveProperty('root', web)
     })
 })
@@ -38,7 +41,10 @@ describe('React', ():void => {
         expect(React).toHaveProperty('content')
         expect(React).toHaveProperty('observedAttributes')
 
-        const react:React = new React()
+        customElements.define('test-react', React)
+        document.body.appendChild(document.createElement('test-react'))
+        const react:React = document.querySelector('test-react') as React
+
         expect(react).toHaveProperty('root', react)
     })
     // TODO
