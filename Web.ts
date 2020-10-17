@@ -43,29 +43,6 @@ import {ComponentType} from 'react'
 
 import {EventToPropertyMapping, WebComponentAdapter} from './type'
 // endregion
-// region polyfills
-// Polyfill for template strings in dynamic function constructs in simple cases
-const Function:typeof global.Function = (
-    Tools.maximalSupportedInternetExplorerVersion === 0
-) ?
-    globalContext.Function :
-    function(...parameter:Array<any>):Function {
-        let code:string = parameter[parameter.length - 1]
-        if (code.startsWith('return `') && code.endsWith('`')) {
-            // Handle avoidable template expression:
-            // Use raw code.
-            code = code.replace(/^(return )`\$\{(.+)\}`$/, '$1$2')
-            // Use plain string with single quotes.
-            code = code.replace(/^(return )`([^']+)`$/, "$1'$2'")
-            // Use plain string with double quotes.
-            code = code.replace(/^(return )`([^"]+)`$/, '$1"$2"')
-
-            // TODO replace new lines in replaced content: ".replace(/\\n+/g, ' ')"
-        }
-        parameter[parameter.length - 1] = code
-        return new globalContext.Function(...parameter)
-    } as typeof global.Function
-// endregion
 /**
  * Generic web component to render a content against instance specific values.
  * @property static:aliases - A mapping of property names to be treated as
