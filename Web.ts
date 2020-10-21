@@ -38,7 +38,7 @@ import PropertyTypes, {
     string,
     symbol
 } from 'clientnode/property-types'
-import {Mapping, ValueOf} from 'clientnode/type'
+import {EvaluationResult, Mapping, ValueOf} from 'clientnode/type'
 import {ComponentType} from 'react'
 
 import {EventToPropertyMapping, WebComponentAdapter} from './type'
@@ -632,22 +632,19 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     )
                     break
                 case func:
-                    let callback:Function
-                    try {
-                        callback = new Function('parameter', `return ${value}`)
-                    } catch (error) {
+                    const callback:Function|string =
+                        Tools.stringCompile(value, 'parameter')
+                    if (typeof callback === 'string')
                         console.warn(
-                            `'Failed to compile event handler "${name}" with` +
-                            ` expression "${value}": "` +
-                            `${Tools.represent(error)}".`
+                            `'Failed to process event handler "${name}": ` +
+                            `${callback}.`
                         )
-                    }
                     this.setInternalPropertyValue(
                         name,
                         (...parameter:Array<any>):void => {
                             if (this.outputEventNames.has(name))
                                 this.reflectEventToProperties(name, parameter)
-                            if (callback)
+                            if (typeof callback === 'function')
                                 try {
                                     callback.call(this, parameter)
                                 } catch (error) {
@@ -682,29 +679,24 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 case symbol:
                 default:
                     if (value) {
-                        let get:Function
-                        try {
-                            get = new Function(`return ${value}`)
-                        } catch (error) {
+                        const value:EvaluationResult =
+                            Tools.stringEvaluate(value, {}, this)
+                        if (value.compileError) {
                             console.warn(
-                                `Error occured during compiling given "` +
-                                `${name}" attribute configuration "${value}"` +
-                                `: "${Tools.represent(error)}".`
+                                'Error occurred during processing given ' +
+                                `attribute configuration "${name}": ` +
+                                value.compileError
                             )
                             break
                         }
-                        if (get)
-                            try {
-                                value = get.call(this)
-                            } catch (error) {
-                                console.warn(
-                                    `Error occured durring interpreting ` +
-                                    `given "${name}" attribute value "` +
-                                    `${value}": "${Tools.represent(error)}".`
-                                )
-                                break
-                            }
-                        this.setInternalPropertyValue(name, value)
+                        if (value.runtimeError) {
+                            console.warn(
+                                `Error occured durring processing given "` +
+                                `${name}" attribute: ${value.runtimeError}`
+                            )
+                            break
+                        }
+                        this.setInternalPropertyValue(name, value.result)
                     } else
                         this.setInternalPropertyValue(name, null)
                     break
