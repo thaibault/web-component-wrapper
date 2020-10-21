@@ -633,7 +633,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     break
                 case func:
                     const callback:Function|string =
-                        Tools.stringCompile(value, 'parameter')
+                        Tools.stringCompile(value, 'parameter')[1]
                     if (typeof callback === 'string')
                         console.warn(
                             `'Failed to process event handler "${name}": ` +
@@ -679,24 +679,27 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 case symbol:
                 default:
                     if (value) {
-                        const value:EvaluationResult =
+                        const evaluated:EvaluationResult =
                             Tools.stringEvaluate(value, {}, this)
-                        if (value.compileError) {
+                        if (
+                            (evaluated as {compileError:string}).compileError ||
+                            (evaluated as {runtimeError:string}).runtimeError
+                        ) {
                             console.warn(
                                 'Error occurred during processing given ' +
                                 `attribute configuration "${name}": ` +
-                                value.compileError
+                                (
+                                    evaluated as {compileError:string}
+                                ).compileError ||
+                                (
+                                    evaluated as {runtimeError:string}
+                                ).runtimeError
                             )
                             break
                         }
-                        if (value.runtimeError) {
-                            console.warn(
-                                `Error occured durring processing given "` +
-                                `${name}" attribute: ${value.runtimeError}`
-                            )
-                            break
-                        }
-                        this.setInternalPropertyValue(name, value.result)
+                        this.setInternalPropertyValue(
+                            name, (evaluated as {result:any}).result
+                        )
                     } else
                         this.setInternalPropertyValue(name, null)
                     break
@@ -709,31 +712,20 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     render():void {
-        let renderer:Function|undefined
-        const scopeNames:Array<string> = Object.keys(this)
-        try {
-            renderer = new Function(
-                ...scopeNames, `return \`${this.self.content}\``
-            )
-        } catch (error) {
+        const evaluated:EvaluationResult =
+            Tools.stringEvaluate(`\`${this.self.content}\``, this)
+        if (
+            (evaluated as {compileError:string}).compileError ||
+            (evaluated as {runtimeError:string}).runtimeError
+        ) {
             console.warn(
-                `Faild to compile template "${this.self.content}" with scope` +
-                ` variables "${scopeNames.join('", "')}": "` +
-                `${Tools.represent(error)}".`
+                `Faild to process template: ` +
+                (evaluated as {compileError:string}).compileError ||
+                (evaluated as {runtimeError:string}).runtimeError
             )
+            return
         }
-        if (renderer)
-            try {
-                this.root.innerHTML = renderer.call(
-                    this, ...Object.values(this)
-                )
-            } catch (error) {
-                console.warn(
-                    'Faild to evaluate render function with template "' +
-                    `${this.self.content}" with scope variables "` +
-                    `${scopeNames.join('", "')}": "${Tools.represent(error)}".`
-                )
-            }
+        this.root.innerHTML = (evaluated as {result:string}).result
     }
     // endregion
 }
