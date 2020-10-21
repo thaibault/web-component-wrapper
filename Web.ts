@@ -680,7 +680,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 default:
                     if (value) {
                         const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(value, {}, this)
+                            Tools.stringEvaluate(value, {}, false, this)
                         if (
                             (evaluated as {compileError:string}).compileError ||
                             (evaluated as {runtimeError:string}).runtimeError
