@@ -79,6 +79,8 @@
   },
   "peerDependencies": {
     "@babel/runtime": "*",
+    "@types/react": "*",
+    "@types/react-dom": "*",
     "clientnode": "*",
     "react": "*",
     "react-dom": "*"
