@@ -95,6 +95,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     disconnectedCallback():void {
         unmountComponentAtNode(this.root)
+        super.disconnectedCallback()
     }
     /**
      * Method which does the rendering job. Should be called when ever state
