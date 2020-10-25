@@ -213,6 +213,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.render() :
             Tools.timeout(this.render.bind(this))
     }
+    /**
+     * Frees some memory.
+     */
+    disconnectedCallback():void {
+        this.slots = {}
+        this.outputEventNames.clear()
+    }
     // endregion
     // region getter/setter
     /**
