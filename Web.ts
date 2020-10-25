@@ -159,7 +159,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             (this.ignoreAttributeUpdates || oldValue === newValue)
         )
             return
+
         this.evaluateStringOrNullAndSetAsProperty(name, newValue)
+
         if (this.batchAttributeUpdates) {
             if (!(
                 this.batchedAttributeUpdateRunning || this.batchedUpdateRunning
@@ -681,25 +683,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     if (value) {
                         const evaluated:EvaluationResult =
                             Tools.stringEvaluate(value, {}, false, this)
-                        if (
-                            (evaluated as {compileError:string}).compileError ||
-                            (evaluated as {runtimeError:string}).runtimeError
-                        ) {
+                        if (evaluated.error) {
                             console.warn(
                                 'Error occurred during processing given ' +
                                 `attribute configuration "${name}": ` +
-                                (
-                                    evaluated as {compileError:string}
-                                ).compileError ||
-                                (
-                                    evaluated as {runtimeError:string}
-                                ).runtimeError
+                                evaluated.error
                             )
                             break
                         }
-                        this.setInternalPropertyValue(
-                            name, (evaluated as {result:any}).result
-                        )
+                        this.setInternalPropertyValue(name, evaluated.result)
                     } else
                         this.setInternalPropertyValue(name, null)
                     break
@@ -714,18 +706,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     render():void {
         const evaluated:EvaluationResult =
             Tools.stringEvaluate(`\`${this.self.content}\``, this)
-        if (
-            (evaluated as {compileError:string}).compileError ||
-            (evaluated as {runtimeError:string}).runtimeError
-        ) {
-            console.warn(
-                `Faild to process template: ` +
-                (evaluated as {compileError:string}).compileError ||
-                (evaluated as {runtimeError:string}).runtimeError
-            )
+        if (evaluated.error) {
+            console.warn(`Faild to process template: ${evaluated.error}`)
             return
         }
-        this.root.innerHTML = (evaluated as {result:string}).result
+        this.root.innerHTML = evaluated.result
     }
     // endregion
 }
