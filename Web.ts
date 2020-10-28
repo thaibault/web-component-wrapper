@@ -806,6 +806,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             return
         }
         this.root.innerHTML = evaluated.result
+
+        this.applySlotsToContent()
+    }
+    /**
+     * TODO
+     */
+    applySlotsToContent():void {
+        console.log(this.slots)
+        for (const name in this.slots)
+            if (Object.prototype.hasOwnProperty.call(this.slots, name))
+                if (name === 'default') {
+                    if (this.slots.default && this.slots.default.length > 0)
+                        console.log('SLOT DEFAULT', this.slots.default)
+                } else
+                    console.log('SLOT', name, this.slots.default)
     }
     // endregion
 }
