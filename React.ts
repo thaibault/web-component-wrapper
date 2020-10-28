@@ -61,7 +61,7 @@ import {ComponentType, WebComponentAdapter} from './type'
  */
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     static attachWebComponentAdapterIfNotExists:boolean = true
-    static content:string|ComponentType = 'div'
+    static content:ComponentType|string = 'div'
     static _name:string = 'ReactWebComponent'
 
     preparedSlots:Mapping<null|ReactElement|string> & {
@@ -244,8 +244,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if ((this.self.content as ComponentType).webComponentAdapterWrapped) {
             if (this.wrapMemorizingWrapper) {
                 this.self.content =
-                    memorize(this.self.content as ComponentType);
-                (this.self.content as ComponentType).wrapped = wrapped
+                    memorize(this.self.content as ComponentType)
+                ;(this.self.content as ComponentType).wrapped = wrapped
             }
         } else if (this.self.attachWebComponentAdapterIfNotExists) {
             if (!(this.self.content as ComponentType).displayName)
@@ -268,14 +268,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 this.wrapMemorizingWrapper ||
                 this.wrapMemorizingWrapper === null
             )
-                this.self.content = memorize(this.self.content);
+                this.self.content = memorize(this.self.content)
 
-            (this.self.content as ComponentType).wrapped = wrapped;
-            (this.self.content as ComponentType).webComponentAdapterWrapped =
+            ;(this.self.content as ComponentType).wrapped = wrapped
+            ;(this.self.content as ComponentType).webComponentAdapterWrapped =
                 'react'
         } else if (this.wrapMemorizingWrapper) {
-            this.self.content = memorize(this.self.content as ComponentType);
-            (this.self.content as ComponentType).wrapped = wrapped
+            this.self.content = memorize(this.self.content as ComponentType)
+            ;(this.self.content as ComponentType).wrapped = wrapped
         }
     }
     /**
