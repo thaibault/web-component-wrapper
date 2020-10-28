@@ -61,6 +61,7 @@
     "@types/react-dom": "*",
     "@typescript-eslint/eslint-plugin": "*",
     "@typescript-eslint/parser": "*",
+    "@webcomponents/webcomponentsjs": "*",
     "babel-eslint": "*",
     "clientnode": "*",
     "documentation-website": "*",
@@ -94,9 +95,16 @@
         ]
       }
     },
+    "generic": {
+      "supportedBrowsers": [
+        "IE >= 11",
+        "last 2 versions",
+        "> 5%"
+      ]
+    },
     "injection": {
       "entry": {
-        "__evaluate__": "2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2].startsWith('test') ? './test.ts' : {index: './index.ts', React: './React.ts', Web: './Web.ts'}"
+        "__evaluate__": "2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2].startsWith('test') ? './test.ts' : 2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2] === 'serve' ? {clientnode: 'clientnode', index: './index'} : {index: './index.ts', React: './React.ts', Web: './Web.ts'}"
       }
     },
     "module": {
@@ -113,8 +121,8 @@
         }
       },
       "replacements": {
-        "#": "Pre-process environment specific module.",
         "normal": {
+          "#": "Pre-process environment specific module.",
           "clientnode/property-types$": "clientnode/property-types.ts"
         }
       }
