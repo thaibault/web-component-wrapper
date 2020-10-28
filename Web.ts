@@ -43,6 +43,7 @@ import {ComponentType} from 'react'
 
 import {EventToPropertyMapping, WebComponentAdapter} from './type'
 // endregion
+console.log('A')
 /**
  * Generic web component to render a content against instance specific values.
  * @property static:aliases - A mapping of property names to be treated as
