@@ -26,17 +26,19 @@ import ReactWeb from './React'
 export type EventToPropertyMapping =
     Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
 export interface WebComponentConfiguration {
-    aliases?:Mapping
     attachWebComponentAdapterIfNotExists?:boolean
     eventToPropertyMapping?:EventToPropertyMapping
     propertiesToReflectAsAttributes?:Map<string, boolean>
+    propertyAliases?:Mapping
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
 }
 export interface StaticWebComponent extends WebComponentConfiguration {
-    _name?:string
-    ___types?:{name?:{name?:string}}
+    content:ComponentType
     webComponentAdapterWrapped?:string
     wrapped?:ComponentType
+
+    _name?:string
+    ___types?:{name?:{name?:string}}
 }
 export type ComponentType = ReactComponentType & StaticWebComponent
 export interface WebComponentAdapter<Properties = Mapping<any>, State = Mapping<any>> {

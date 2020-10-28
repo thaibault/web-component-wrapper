@@ -34,16 +34,77 @@
     <!--region script-->
     <script>
         window.onload = function() {
-            console.log(webComponentWrapper)
+            // region prepare web-component
+            const Tools = webComponentWrapper.clientnode.Tools
+            const Web = webComponentWrapper.index.Web
+
+            const propertyTypes = {
+                exampleBoolean: 'boolean',
+                exampleFunction: 'function',
+                exampleJson: 'json',
+                exampleNumber: 'number',
+                exampleObject: 'object',
+                exampleString: 'string',
+                id: 'string'
+            }
+
+            Web.content = `
+                <div class="wrapper">
+                    Example Properties\${id ? (' for ' + id) : ''}:
+                    <ul>
+                        \${Object.keys(self.properties)
+                            .map(function(name) {
+                                return (
+                                    '<li>' +
+                                        name +
+                                        ': ' +
+                                        Tools.represent(self.properties[name]) +
+                                    '</li>'
+                                )
+                            })
+                            .join('')
+                        }
+                    </ul>
+                    <slot>Fallback Slot content</slot>
+                </div>
+            `
+            Web.propertiesToReflectAsAttributes = 'exampleBoolean'
+            Web.propertyTypes = propertyTypes
+            Web.observedAttributes = Object.keys(propertyTypes)
+                .map(function(name) {
+                    return Tools.stringCamelCaseToDelimited(name)
+                })
+            customElements.define('my-web', Web)
+            // endregion
+
+            const one = document.querySelector('#web-1')
+
+            const two = document.querySelector('#web-2')
+            two.exampleBoolean = true
         }
     </script>
     <!--endregion-->
     <body>
 
-    <my-web example-property="value">
-        <h1>Slotted Content</h1>
-        <p>Lorem ipsum...</p>
-    </my-web>
+        <my-web
+            id="web-1"
+            example-boolean
+            example-function="console.log(2)"
+            example-json='{"key": false, "key2": null, "key3": {"key": 2}, "key4": "value"}'
+            example-number="4"
+            example-object="{key: false, key2: null, key3: {key: 2}, key4: 'value'}"
+            example-string="value"
+        >
+            <h1>Slotted Content</h1>
+            <p>Lorem ipsum...</p>
+        </my-web>
+
+        <hr/>
+
+        <my-web id="web-2">
+            <h1>Slotted Content</h1>
+            <p>Lorem ipsum...</p>
+        </my-web>
 
     </body>
 <html>

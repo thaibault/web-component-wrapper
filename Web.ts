@@ -39,20 +39,28 @@ import PropertyTypes, {
     symbol
 } from 'clientnode/property-types'
 import {EvaluationResult, Mapping, ValueOf} from 'clientnode/type'
-import {ComponentType} from 'react'
 
 import {EventToPropertyMapping, WebComponentAdapter} from './type'
 // endregion
-console.log('A')
 /**
  * Generic web component to render a content against instance specific values.
- * @property static:aliases - A mapping of property names to be treated as
- * equal.
- * @property static:content - Content template to render on property changes.
+ * @property static:content - Content to render when changes happened.
  * @property static:observedAttributes - Attribute names to observe for
  * changes.
+ * @property static:propertyAliases - A mapping of property names to be treated
+ * as equal.
+ * @property static:propertyTypes - Configuration defining how to convert
+ * attributes into properties and reflect property changes back to attributes.
+ * @property static:propertiesToReflectAsAttributes - An item, list or mapping
+ * of properties to reflect as attributes.
  * @property static:useShadowDOM - Configures if a shadow dom should be used
  * during web-component instantiation.
+ *
+ * @property static:_propertyAliasIndex - Internal alias index to quickly match
+ * properties in both directions.
+ * @property static:_propertiesToReflectAsAttributes - A mapping of property
+ * names to set as attributes when they are set/updated. Uses a map to hold
+ * order and determine if a property exists in constant runtime.
  *
  * @property batchAttributeUpdates - Indicates whether to directly update dom
  * after each attribute mutation or to wait and batch mutations after current
@@ -68,6 +76,7 @@ console.log('A')
  * queue has been finished.
  * @property batchUpdates - Indicates whether to directly perform a
  * re-rendering after changes on properties have been made.
+ * @property content - Content template to render on property changes.
  * @property eventToPropertyMapping - Explicitly defined output events (a
  * mapping of event names to a potential parameter to properties transformer).
  * @property ignoreAttributeUpdates - Indicates whether attribute updates
@@ -83,20 +92,18 @@ console.log('A')
  * render method.
  * @property self - Back-reference to this class.
  * @property slots - Grabbed slots which where present in the connecting phase.
- *
- * @property _aliasIndex - Internal alias index to quickly match them in both
- * directions.
- * @property _propertiesToReflectAsAttributes - A mapping of property names to
- * set as attributes when they are set/updated.
- * @property _propertyTypes - Configuration defining how to convert attributes
- * into properties and reflect property changes back to attributes.
  */
 export class Web<TElement = HTMLElement> extends HTMLElement {
     // region properties
-    static aliases:Mapping = {}
-    static content:string|ComponentType = ''
+    static content:any = '<slot></slot>'
     static readonly observedAttributes:Array<string> = []
+    static propertyAliases:Mapping = {}
+    static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
+    static propertiesToReflectAsAttributes:Array<string>|Map<string, boolean>|string =
+        []
     static useShadowDOM:boolean = false
+    static _propertyAliasIndex:Mapping|undefined
+    static _propertiesToReflectAsAttributes:Map<string, boolean>|undefined
 
     batchAttributeUpdates:boolean = true
     batchedAttributeUpdateRunning:boolean = true
@@ -113,11 +120,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     runDomConnectionAndRendringInSameEventQueue:boolean = false
     readonly self:typeof Web = Web
     slots:Mapping<Node> & {default?:Array<Node>} = {}
-
-    _aliasIndex:Mapping|undefined
-    _propertiesToReflectAsAttributes:Map<string, boolean> =
-        new Map<string, boolean>()
-    _propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> = {}
     // endregion
     // region live cycle hooks
     /**
@@ -126,6 +128,26 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     constructor() {
         super()
+
+        this.defineGetterAndSetterInterface()
+
+        if (!this.self._propertiesToReflectAsAttributes)
+            this.self._propertiesToReflectAsAttributes =
+                this.self.normalizeList(
+                    this.self.propertiesToReflectAsAttributes
+                )
+        if (!this.self._propertyAliasIndex) {
+            this.self._propertyAliasIndex = {...this.self.propertyAliases}
+            // Align alias mapping for better performance while mapping them.
+            for (const [name, value] of Object.entries(
+                this.self._propertyAliasIndex
+            ))
+                if (!Object.prototype.hasOwnProperty.call(
+                    this.self._propertyAliasIndex, value
+                ))
+                    this.self._propertyAliasIndex[value] = name
+        }
+
         this.root = this.self.useShadowDOM ?
             (
                 (!('attachShadow' in this) && 'ShadyDOM' in window) ?
@@ -169,9 +191,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             )) {
                 this.batchedAttributeUpdateRunning = true
                 this.batchedUpdateRunning = true
+
                 Tools.timeout(():void => {
                     this.batchedAttributeUpdateRunning = false
                     this.batchedUpdateRunning = false
+
                     this.render()
                 })
             }
@@ -229,33 +253,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param name - Name to search an alternate name for.
      * @returns Found alias or "null".
      */
-    getAlias(name:string):null|string {
-        if (!this._aliasIndex) {
-            this._aliasIndex = {...this.self.aliases}
-            // Align alias mapping for better performance while mapping them.
-            for (const [name, value] of Object.entries(this._aliasIndex))
-                if (!Object.prototype.hasOwnProperty.call(this._aliasIndex, value))
-                    this._aliasIndex[value] = name
-        }
-        if (Object.prototype.hasOwnProperty.call(this._aliasIndex, name))
-            return this._aliasIndex[name]
+    getPropertyAlias(name:string):null|string {
+        if (Object.prototype.hasOwnProperty.call(
+            this.self._propertyAliasIndex, name
+        ))
+            return this.self._propertyAliasIndex[name]
         return null
-    }
-    /**
-     * Forwards "_propertiesToReflectAsAttributes" property value.
-     * @returns Property value.
-     */
-    get propertiesToReflectAsAttributes():Map<string, boolean> {
-        return this._propertiesToReflectAsAttributes
-    }
-    /**
-     * Sets "_propertiesToReflectAsAttributes" property value.
-     * @param value - New value to set.
-     * @returns Nothing.
-     */
-    set propertiesToReflectAsAttributes(value:Map<string, boolean>) {
-        this._propertiesToReflectAsAttributes = value
-        this.reflectProperties(this.properties)
     }
     /**
      * Generic property getter. Forwards properties from the "properties"
@@ -277,7 +280,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     setInternalPropertyValue(name:string, value:any):void {
         this.properties[name] = value
 
-        const alias:null|string = this.getAlias(name)
+        const alias:null|string = this.getPropertyAlias(name)
         if (alias)
             this.properties[alias] = value
     }
@@ -290,7 +293,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     setPropertyValue(name:string, value:any):void {
-        this.setInternalPropertyValue(name, value)
+        this.reflectProperties({[name]: value})
 
         if (this.batchPropertyUpdates) {
             if (!(
@@ -301,32 +304,17 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 Tools.timeout(():void => {
                     this.batchedPropertyUpdateRunning = false
                     this.batchedUpdateRunning = false
+
                     this.render()
+
                     this.triggerOuputEvents()
                 })
             }
         } else {
             this.render()
+
             this.triggerOuputEvents()
         }
-    }
-    /**
-     * Just forwards internal property types.
-     * @returns Internal "propertyTypes" property value.
-     */
-    get propertyTypes():Mapping<ValueOf<typeof PropertyTypes>> {
-        return this._propertyTypes
-    }
-    /**
-     * Set internal property types. Triggers a re-evaluation of all given
-     * attributes and re-renders current content.
-     * @param value - New property types configuration.
-     * @returns Nothing.
-     */
-    set propertyTypes(value:Mapping<ValueOf<typeof PropertyTypes>>) {
-        this._propertyTypes = value
-        this.updateAllAttributeEvaluations()
-        this.render()
     }
     // endregion
     // region helper
@@ -378,10 +366,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         reflectProperties:boolean = true
     ):void {
         // Determine all event handler to inject
-        for (const [name, type] of Object.entries(this._propertyTypes))
+        for (const [name, type] of Object.entries(this.self.propertyTypes))
             if (
                 !Object.prototype.hasOwnProperty.call(this.properties, name) &&
-                func === this._propertyTypes[name]
+                [func, 'function'].includes(this.self.propertyTypes[name])
             ) {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
@@ -430,8 +418,57 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.ignoreAttributeUpdates = true
         for (const [name, value] of Object.entries(properties)) {
             this.setInternalPropertyValue(name, value)
-            if (this._propertiesToReflectAsAttributes.has(name))
-                switch (this._propertyTypes[name]) {
+            const attributeName:string = Tools.stringCamelCaseToDelimited(name)
+            if (this.self._propertiesToReflectAsAttributes.has(name))
+                switch (this.self.propertyTypes[name]) {
+                    case boolean:
+                    case 'boolean':
+                        if (value) {
+                            if (this.getAttribute(attributeName) !== '')
+                                this.setAttribute(attributeName, '')
+                        } else if (this.hasAttribute(attributeName))
+                            this.removeAttribute(attributeName)
+                        break
+                    case func:
+                    case 'function':
+                        break
+                    case 'json':
+                        if (value) {
+                            const representation:string = JSON.stringify(value)
+                            if (
+                                representation &&
+                                this.getAttribute(attributeName) !==
+                                    representation
+                            ) {
+                                this.setAttribute(
+                                    attributeName, representation
+                                )
+                                break
+                            }
+                        }
+                        if (this.hasAttribute(attributeName))
+                            this.removeAttribute(attributeName)
+                        break
+                    case number:
+                    case 'number':
+                        if (typeof value === 'number' && !isNaN(value)) {
+                            const valueAsString:string = `${value}`
+                            if (
+                                this.getAttribute(attributeName) !==
+                                    valueAsString
+                            )
+                                this.setAttribute(attributeName, valueAsString)
+                        } else if (this.hasAttribute(attributeName))
+                            this.removeAttribute(attributeName)
+                        break
+                    case string:
+                    case 'string':
+                        if (value) {
+                            if (this.getAttribute(attributeName) !== value)
+                                this.setAttribute(attributeName, value)
+                        } else if (this.hasAttribute(attributeName))
+                            this.removeAttribute(attributeName)
+                        break
                     case any:
                     case array:
                     case arrayOf:
@@ -440,47 +477,28 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     case instanceOf:
                     case node:
                     case object:
+                    case 'object':
                     case objectOf:
                     case shape:
                     case exact:
                     case symbol:
+                    default:
                         if (value) {
                             const representation:string =
                                 Tools.represent(value)
                             if (
                                 representation &&
-                                this.getAttribute(name) !== representation
+                                this.getAttribute(attributeName) !==
+                                    representation
                             ) {
-                                this.setAttribute(name, representation)
+                                this.setAttribute(
+                                    attributeName, representation
+                                )
                                 break
                             }
                         }
-                        if (this.hasAttribute(name))
-                            this.removeAttribute(name)
-                        break
-                    case boolean:
-                        if (value) {
-                            if (this.getAttribute(name) !== '')
-                                this.setAttribute(name, '')
-                        } else if (this.hasAttribute(name))
-                            this.removeAttribute(name)
-                        break
-                    case number:
-                        if (typeof value === 'number' && !isNaN(value)) {
-                            const valueAsString:string = `${value}`
-                            if (this.getAttribute(name) !== valueAsString)
-                                this.setAttribute(name, valueAsString)
-                        } else if (this.hasAttribute(name))
-                            this.removeAttribute(name)
-                        break
-                    case func:
-                        break
-                    case string:
-                        if (value) {
-                            if (this.getAttribute(name) !== value)
-                                this.setAttribute(name, value)
-                        } else if (this.hasAttribute(name))
-                            this.removeAttribute(name)
+                        if (this.hasAttribute(attributeName))
+                            this.removeAttribute(attributeName)
                         break
                 }
         }
@@ -569,9 +587,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 Tools.isFunction(parameter[0].persist)
             ) {
                 newProperties = {}
-                for (const propertyName of Object.keys(this._propertyTypes))
+                for (const propertyName of Object.keys(this.self.propertyTypes))
                     for (const name of [propertyName].concat(
-                        this.getAlias(propertyName) ?? []
+                        this.getPropertyAlias(propertyName) ?? []
                     )) {
                         let currentValue:any
                         if (
@@ -608,40 +626,31 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     evaluateStringOrNullAndSetAsProperty(name:string, value:string):void {
         name = Tools.stringDelimitedToCamelCase(name)
-        const alias:null|string = this.getAlias(name)
+        const alias:null|string = this.getPropertyAlias(name)
         if (
             alias &&
-            Object.prototype.hasOwnProperty.call(this._propertyTypes, alias)
+            Object.prototype.hasOwnProperty.call(this.self.propertyTypes, alias)
         )
             name = alias
-        if (Object.prototype.hasOwnProperty.call(this._propertyTypes, name)) {
-            const type:ValueOf<typeof PropertyTypes> =
-                this._propertyTypes[name]
-            if (value === null && boolean === type) {
+        if (Object.prototype.hasOwnProperty.call(this.self.propertyTypes, name)) {
+            const type:ValueOf<typeof PropertyTypes>|string =
+                this.self.propertyTypes[name]
+            if (value === null && [boolean, 'boolean'].includes(type)) {
                 delete this.properties[name]
-                const alias:null|string = this.getAlias(name)
+                const alias:null|string = this.getPropertyAlias(name)
                 if (alias)
                     delete this.properties[alias]
                 return
             }
             switch (type) {
                 case boolean:
+                case 'boolean':
                     this.setInternalPropertyValue(
                         name, ![null, 'false'].includes(value)
                     )
                     break
-                case number:
-                    /*
-                        NOTE: You should not name this variable "number" since
-                        babel gets confused caused by existing module wide
-                        property type variable "number".
-                    */
-                    const numberValue:number = parseFloat(value)
-                    this.setInternalPropertyValue(
-                        name, isNaN(numberValue) ? undefined : numberValue
-                    )
-                    break
                 case func:
+                case 'function':
                     const callback:Function|string =
                         Tools.stringCompile(value, 'parameter')[1]
                     if (typeof callback === 'string')
@@ -670,7 +679,37 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         }
                     )
                     break
+                case 'json':
+                    if (value) {
+                        let evaluated:PlainObject
+                        try {
+                            evaluated = JSON.parse(value)
+                        } catch (error) {
+                            console.warn(
+                                'Error occurred during parsing given json ' +
+                                `attribute "${name}": ` +
+                                Tools.represent(error)
+                            )
+                            break
+                        }
+                        this.setInternalPropertyValue(name, evaluated)
+                    } else
+                        this.setInternalPropertyValue(name, null)
+                    break
+                case number:
+                case 'number':
+                    /*
+                        NOTE: You should not name this variable "number" since
+                        babel gets confused caused by existing module wide
+                        property type variable "number".
+                    */
+                    const numberValue:number = parseFloat(value)
+                    this.setInternalPropertyValue(
+                        name, isNaN(numberValue) ? undefined : numberValue
+                    )
+                    break
                 case string:
+                case 'string':
                     this.setInternalPropertyValue(name, value)
                     break
                 case any:
@@ -681,6 +720,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 case instanceOf:
                 case node:
                 case object:
+                case 'object':
                 case objectOf:
                 case oneOf:
                 case oneOfType:
@@ -707,13 +747,60 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         }
     }
     /**
+     * Converts given list, item or map to a map (with ordering).
+     * @param list - List to convert.
+     * @returns Generated map.
+     */
+    static normalizeList<Type=any>(value:Array<Type>|Map<Type, boolean>|Type) {
+        if (typeof value !== 'object')
+            value = [value]
+        if (Array.isArray(value)) {
+            const givenValue:Array<string> = value
+            value = new Map<string, boolean>()
+            for (const name of givenValue)
+                value.set(name, true)
+        }
+        return value
+    }
+    /**
+     * Registers needed getter and setter to get notified about changes and
+     * reflect them.
+     * @returns Nothing.
+     */
+    defineGetterAndSetterInterface():void {
+        const allPropertyNames:Array<string> = Tools.arrayUnique(
+            Object.keys(this.self.propertyTypes)
+                .concat(Object.keys(this.self.propertyAliases))
+                .concat(Object.values(this.self.propertyAliases))
+        )
+
+        for (const propertyName of allPropertyNames) {
+            Object.defineProperty(
+                Web.prototype,
+                propertyName,
+                {
+                    configurable: true,
+                    get: function():any {
+                        return this.getPropertyValue(propertyName)
+                    },
+                    set: function(value:any):void {
+                        this.setPropertyValue(propertyName, value)
+                    }
+                }
+            )
+        }
+    }
+    /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @returns Nothing.
      */
     render():void {
         const evaluated:EvaluationResult =
-            Tools.stringEvaluate(`\`${this.self.content}\``, this)
+            Tools.stringEvaluate(
+                `\`${this.self.content}\``,
+                {self: this, Tools, ...this.properties}
+            )
         if (evaluated.error) {
             console.warn(`Faild to process template: ${evaluated.error}`)
             return

@@ -46,61 +46,54 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
         */
         component.___types?.name?.name ||
         nameHint.replace(/^(.*\/+)?([^\/]+)\.tsx$/, '$2')
+
     if (!component.propTypes && configuration.propTypes)
         component.propTypes = configuration.propTypes
     const propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> =
         component.propTypes || {}
-    const aliases:Mapping = configuration.aliases || component.aliases || {}
+    const propertyAliases:Mapping =
+        configuration.propertyAliases || component.propertyAliases || {}
     const allPropertyNames:Array<string> = Tools.arrayUnique(
         Object.keys(propertyTypes)
-            .concat(Object.keys(aliases))
-            .concat(Object.values(aliases))
+            .concat(Object.keys(propertyAliases))
+            .concat(Object.values(propertyAliases))
     )
+
     class ConcreteComponent extends ReactWeb {
-        static aliases:Mapping = aliases
         static attachWebComponentAdapterIfNotExists:boolean =
             typeof configuration.attachWebComponentAdapterIfNotExists ===
                 'boolean' ?
                     configuration.attachWebComponentAdapterIfNotExists :
                     true
         static content:ComponentType = component
-        static _name:string = name
+        static propertyAliases:Mapping = propertyAliases
+        static propertiesToReflectAsAttributes:Map<string, boolean> =
+            configuration.propertiesToReflectAsAttributes ||
+            component.propertiesToReflectAsAttributes ||
+            new Map<string, boolean>()
+        static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> =
+            propertyTypes
         static readonly observedAttributes:Array<string> =
             allPropertyNames.map((name:string):string =>
                 Tools.stringCamelCaseToDelimited(name)
             )
+
+        static _name:string = name
 
         readonly eventToPropertyMapping:EventToPropertyMapping =
             configuration.eventToPropertyMapping ||
             component.eventToPropertyMapping ||
             {}
         readonly self:typeof ConcreteComponent = ConcreteComponent
-
-        _propertiesToReflectAsAttributes:Map<string, boolean> =
-            configuration.propertiesToReflectAsAttributes ||
-            component.propertiesToReflectAsAttributes ||
-            new Map<string, boolean>()
-        _propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> = propertyTypes
     }
+
     const webComponentAPI:WebComponentAPI<typeof ConcreteComponent> = {
         component: ConcreteComponent,
         register: (
             tagName:string = Tools.stringCamelCaseToDelimited(name)
         ):void => customElements.define(tagName, ConcreteComponent)
     }
-    for (const propertyName of allPropertyNames)
-        Object.defineProperty(
-            ConcreteComponent.prototype,
-            propertyName,
-            {
-                get: function():any {
-                    return this.getPropertyValue(propertyName)
-                },
-                set: function(value:any):void {
-                    this.setPropertyValue(propertyName, value)
-                }
-            }
-        )
+
     return webComponentAPI
 }
 export default wrapAsWebComponent
