@@ -53,8 +53,8 @@ import {EventToPropertyMapping, WebComponentAdapter} from './type'
  * attributes into properties and reflect property changes back to attributes.
  * @property static:propertiesToReflectAsAttributes - An item, list or mapping
  * of properties to reflect as attributes.
- * @property static:useShadowDOM - Configures if a shadow dom should be used
- * during web-component instantiation.
+ * @property static:shadowDOM - Configures if a shadow dom should be used
+ * during web-component instantiation. Can hold initialize configuration.
  *
  * @property static:_propertyAliasIndex - Internal alias index to quickly match
  * properties in both directions.
@@ -101,7 +101,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
     static propertiesToReflectAsAttributes:Array<string>|Map<string, boolean>|string =
         []
-    static useShadowDOM:boolean = false
+    static shadowDOM:boolean|null|{delegateFocus?:boolean;mode:'closed'|'open'} =
+        null
     static _propertyAliasIndex:Mapping|undefined
     static _propertiesToReflectAsAttributes:Map<string, boolean>|undefined
 
@@ -148,7 +149,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.self._propertyAliasIndex[value] = name
         }
 
-        this.root = this.self.useShadowDOM ?
+        this.root = this.self.shadowDOM ?
             (
                 (!('attachShadow' in this) && 'ShadyDOM' in window) ?
                     (
@@ -158,7 +159,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             }}
                     ).ShadyDOM.wrap(this) :
                     this
-            ).attachShadow({mode: 'open'}) :
+            ).attachShadow(
+                (
+                    this.self.shadowDOM !== null &&
+                    typeof this.self.shadowDOM === 'object'
+                ) ?
+                    this.self.shadowDOM :
+                    {mode: 'open'}
+            ) :
             this
     }
     /**
@@ -456,28 +464,28 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / endregion
     // / region slots
     /**
-     * Replaces given dom nodes children nodes.
+     * Replaces given dom node with given nodes.
      * @param domNode - Node to replace its children.
      * @param children - Element or array of elements to set as children.
      * @returns Nothing.
      */
-    setChildren(domNode:HTMLElement, children:Array<Node>|Node):void {
-        domNode.innerHTML = ''
-        for (const child of ([] as Array<Node>).concat(children))
-            domNode.appendChild(child)
+    replaceDomNodes(domNode:HTMLElement, children:Array<Node>|Node):void {
+        for (const child of ([] as Array<Node>).concat(children).reverse())
+            domNode.after(child)
+        domNode.remove()
     }
     /**
      * Sets provided slot contents into found inner slots.
      * @returns Nothing.
      */
     applySlotsToContent():void {
-        for (const domNode of Array.from(this.querySelectorAll('slot'))) {
+        for (const domNode of Array.from(this.root.querySelectorAll('slot'))) {
             const name:null|string = domNode.getAttribute('name')
             if (name === null || name === 'default') {
                 if (this.slots.default)
-                    this.setChildren(domNode, this.slots.default)
+                    this.replaceDomNodes(domNode, this.slots.default)
             } else if (Object.prototype.hasOwnProperty.call(this.slots, name))
-                this.setChildren(domNode, this.slots[name])
+                this.replaceDomNodes(domNode, this.slots[name])
         }
     }
     // / endregion
