@@ -33,9 +33,8 @@ export interface WebComponentConfiguration {
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
 }
 export interface StaticWebComponent extends WebComponentConfiguration {
-    content:ComponentType
     webComponentAdapterWrapped?:string
-    wrapped?:ComponentType
+    wrapped?:any
 
     _name?:string
     ___types?:{name?:{name?:string}}

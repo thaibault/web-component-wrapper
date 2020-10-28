@@ -38,7 +38,7 @@ import PropertyTypes, {
     string,
     symbol
 } from 'clientnode/property-types'
-import {EvaluationResult, Mapping, ValueOf} from 'clientnode/type'
+import {EvaluationResult, Mapping, PlainObject, ValueOf} from 'clientnode/type'
 
 import {EventToPropertyMapping, WebComponentAdapter} from './type'
 // endregion
@@ -133,7 +133,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         if (!this.self._propertiesToReflectAsAttributes)
             this.self._propertiesToReflectAsAttributes =
-                this.self.normalizeList(
+                this.self.normalizeList<string>(
                     this.self.propertiesToReflectAsAttributes
                 )
         if (!this.self._propertyAliasIndex) {
@@ -248,6 +248,34 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // endregion
     // region getter/setter
     /**
+     * Registers needed getter and setter to get notified about changes and
+     * reflect them.
+     * @returns Nothing.
+     */
+    defineGetterAndSetterInterface():void {
+        const allPropertyNames:Array<string> = Tools.arrayUnique(
+            Object.keys(this.self.propertyTypes)
+                .concat(Object.keys(this.self.propertyAliases))
+                .concat(Object.values(this.self.propertyAliases))
+        )
+
+        for (const propertyName of allPropertyNames) {
+            Object.defineProperty(
+                Web.prototype,
+                propertyName,
+                {
+                    configurable: true,
+                    get: function():any {
+                        return this.getPropertyValue(propertyName)
+                    },
+                    set: function(value:any):void {
+                        this.setPropertyValue(propertyName, value)
+                    }
+                }
+            )
+        }
+    }
+    /**
      * Creats an index to match alias source and target against each other on
      * constant runtime.
      * @param name - Name to search an alternate name for.
@@ -257,7 +285,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (Object.prototype.hasOwnProperty.call(
             this.self._propertyAliasIndex, name
         ))
-            return this.self._propertyAliasIndex[name]
+            return this.self._propertyAliasIndex![name]
         return null
     }
     /**
@@ -318,6 +346,27 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     // endregion
     // region helper
+    // / region utility
+    /**
+     * Converts given list, item or map to a map (with ordering).
+     * @param list - List to convert.
+     * @returns Generated map.
+     */
+    static normalizeList<Type=any>(
+        value:Array<Type>|Map<Type, boolean>|Type
+    ):Map<Type, boolean> {
+        if (typeof value !== 'object')
+            value = [value]
+        if (Array.isArray(value)) {
+            const givenValue:Array<Type> = value
+            value = new Map<Type, boolean>()
+            for (const name of givenValue)
+                value.set(name, true)
+        }
+        return value as Map<Type, boolean>
+    }
+    // / endregion
+    // / region events
     /**
      * Attaches event handler to keep in sync with nested components properties
      * states.
@@ -369,7 +418,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         for (const [name, type] of Object.entries(this.self.propertyTypes))
             if (
                 !Object.prototype.hasOwnProperty.call(this.properties, name) &&
-                [func, 'function'].includes(this.self.propertyTypes[name])
+                [func, 'function'].includes(
+                    this.self.propertyTypes![name] as string
+                )
             ) {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
@@ -402,6 +453,35 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             new CustomEvent(name, {detail: {target: this, parameter}})
         )
     }
+    // / endregion
+    // / region slots
+    /**
+     * Replaces given dom nodes children nodes.
+     * @param domNode - Node to replace its children.
+     * @param children - Element or array of elements to set as children.
+     * @returns Nothing.
+     */
+    setChildren(domNode:HTMLElement, children:Array<Node>|Node):void {
+        domNode.innerHTML = ''
+        for (const child of ([] as Array<Node>).concat(children))
+            domNode.appendChild(child)
+    }
+    /**
+     * Sets provided slot contents into found inner slots.
+     * @returns Nothing.
+     */
+    applySlotsToContent():void {
+        for (const domNode of Array.from(this.querySelectorAll('slot'))) {
+            const name:null|string = domNode.getAttribute('name')
+            if (name === null || name === 'default') {
+                if (this.slots.default)
+                    this.setChildren(domNode, this.slots.default)
+            } else if (Object.prototype.hasOwnProperty.call(this.slots, name))
+                this.setChildren(domNode, this.slots[name])
+        }
+    }
+    // / endregion
+    // / region properties
     /**
      * Reflects wrapped component state back to web-component's attributes and
      * properties.
@@ -419,7 +499,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         for (const [name, value] of Object.entries(properties)) {
             this.setInternalPropertyValue(name, value)
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
-            if (this.self._propertiesToReflectAsAttributes.has(name))
+            if (this.self._propertiesToReflectAsAttributes!.has(name))
                 switch (this.self.propertyTypes[name]) {
                     case boolean:
                     case 'boolean':
@@ -635,7 +715,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (Object.prototype.hasOwnProperty.call(this.self.propertyTypes, name)) {
             const type:ValueOf<typeof PropertyTypes>|string =
                 this.self.propertyTypes[name]
-            if (value === null && [boolean, 'boolean'].includes(type)) {
+            if (
+                value === null &&
+                [boolean, 'boolean'].includes(type as string)
+            ) {
                 delete this.properties[name]
                 const alias:null|string = this.getPropertyAlias(name)
                 if (alias)
@@ -746,50 +829,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             }
         }
     }
-    /**
-     * Converts given list, item or map to a map (with ordering).
-     * @param list - List to convert.
-     * @returns Generated map.
-     */
-    static normalizeList<Type=any>(value:Array<Type>|Map<Type, boolean>|Type) {
-        if (typeof value !== 'object')
-            value = [value]
-        if (Array.isArray(value)) {
-            const givenValue:Array<string> = value
-            value = new Map<string, boolean>()
-            for (const name of givenValue)
-                value.set(name, true)
-        }
-        return value
-    }
-    /**
-     * Registers needed getter and setter to get notified about changes and
-     * reflect them.
-     * @returns Nothing.
-     */
-    defineGetterAndSetterInterface():void {
-        const allPropertyNames:Array<string> = Tools.arrayUnique(
-            Object.keys(this.self.propertyTypes)
-                .concat(Object.keys(this.self.propertyAliases))
-                .concat(Object.values(this.self.propertyAliases))
-        )
-
-        for (const propertyName of allPropertyNames) {
-            Object.defineProperty(
-                Web.prototype,
-                propertyName,
-                {
-                    configurable: true,
-                    get: function():any {
-                        return this.getPropertyValue(propertyName)
-                    },
-                    set: function(value:any):void {
-                        this.setPropertyValue(propertyName, value)
-                    }
-                }
-            )
-        }
-    }
+    // / endregion
     /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
@@ -808,19 +848,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.root.innerHTML = evaluated.result
 
         this.applySlotsToContent()
-    }
-    /**
-     * TODO
-     */
-    applySlotsToContent():void {
-        console.log(this.slots)
-        for (const name in this.slots)
-            if (Object.prototype.hasOwnProperty.call(this.slots, name))
-                if (name === 'default') {
-                    if (this.slots.default && this.slots.default.length > 0)
-                        console.log('SLOT DEFAULT', this.slots.default)
-                } else
-                    console.log('SLOT', name, this.slots.default)
     }
     // endregion
 }
