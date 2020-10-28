@@ -31,6 +31,14 @@ import {
     WebComponentConfiguration
 } from './type'
 // endregion
+/**
+ * Wraps given react component as web component.
+ * @param component - React component to wrap.
+ * @param nameHint - A name to set as property in runtime generated web
+ * component class.
+ * @param configuration - Additional web component configurations.
+ * @returns Generated object to register and retrieve generated web component.
+ */
 export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
     component:Type,
     nameHint:string = 'NoName',
@@ -59,6 +67,9 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
             .concat(Object.values(propertyAliases))
     )
 
+    /**
+     * Runtime generated web component.
+     */
     class ConcreteComponent extends ReactWeb {
         static attachWebComponentAdapterIfNotExists:boolean =
             typeof configuration.attachWebComponentAdapterIfNotExists ===
