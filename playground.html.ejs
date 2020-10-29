@@ -20,7 +20,7 @@
         <meta http-equiv="expires" content="0">
         <meta http-equiv="pragma" content="no-cache">
         <title>playground</title>
-        <script src="https://polyfill.io/v3/polyfill.js?features=Array.from%2CArray.prototype.includes%2CArray.prototype.values%2CCustomEvent%2CObject.assign%2CObject.entries%2CObject.values%2CPromise%2CString.prototype.endsWith%2CString.prototype.includes%2CString.prototype.startsWith%2CSymbol%2Cfetch"></script>
+        <script src="https://polyfill.io/v3/polyfill.js?features=Array.from%2CArray.prototype.includes%2CArray.prototype.values%2CCustomEvent%2CElement.prototype.after%2CObject.assign%2CObject.entries%2CObject.values%2CPromise%2CString.prototype.endsWith%2CString.prototype.includes%2CString.prototype.startsWith%2CSymbol%2Cfetch"></script>
         <script>
             /*
                 Only provide the shadow dom polyfill and avoid to patch a lot
@@ -38,26 +38,30 @@
             const Tools = webComponentWrapper.clientnode.Tools
             const Web = webComponentWrapper.index.Web
 
-            Web.content = `
-                <div class="wrapper">
-                    Example Properties\${id ? (' for ' + id) : ''}:
-                    <ul>
-                        \${Object.keys(self.properties)
-                            .map(function(name) {
-                                return (
-                                    '<li>' +
-                                        name +
-                                        ': ' +
-                                        Tools.represent(self.properties[name]) +
-                                    '</li>'
-                                )
-                            })
-                            .join('')
-                        }
-                    </ul>
-                    <slot>Fallback Slot content</slot>
-                </div>
-            `
+            Web.content = Tools.maximalSupportedInternetExplorerVersion === 0 ?
+                ('<div class="wrapper">' +
+                    "Example Properties\${id ? (' for ' + id) : ''}:" +
+                    '<ul>' +
+                        '${Object.keys(self.properties)' +
+                            '.map(function(name) {' +
+                                'return (' +
+                                    "'<li>' +" +
+                                        'name +' +
+                                        "': ' +" +
+                                        'Tools.represent(self.properties[name]) +' +
+                                    "'</li>'" +
+                                ')' +
+                            '})' +
+                            ".join('')" +
+                        '}' +
+                    '</ul>' +
+                    '<slot>Fallback Slot content</slot>' +
+                '</div>') :
+                Web.content = (
+                    '<div class="wrapper">' +
+                        '<slot>Fallback Slot content</slot>' +
+                    '</div>'
+                )
             Web.propertiesToReflectAsAttributes = 'exampleBoolean'
             Web.propertyTypes = {
                 exampleBoolean: 'boolean',
@@ -72,7 +76,10 @@
                 .map(function(name) {
                     return Tools.stringCamelCaseToDelimited(name)
                 })
-            Web.shadowDOM = {mode: 'closed'}
+            Web.shadowDOM =
+                Tools.maximalSupportedInternetExplorerVersion === 0 ?
+                    {mode: 'closed'} :
+                    null
 
             customElements.define('my-web', Web)
             // endregion

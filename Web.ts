@@ -470,8 +470,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     replaceDomNodes(domNode:HTMLElement, children:Array<Node>|Node):void {
-        for (const child of ([] as Array<Node>).concat(children).reverse())
-            domNode.after(child)
+        for (const child of ([] as Array<Node>).concat(children).reverse()) {
+            if (!(
+                child.nodeType === Node.TEXT_NODE &&
+                child.nodeValue.trim() === ''
+            ))
+                domNode.after(child)
+        }
         domNode.remove()
     }
     /**
