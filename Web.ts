@@ -234,7 +234,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         (slot as HTMLElement).getAttribute('slot') as string
                     ).trim() :
                     slot.nodeName
-            ] = slot.cloneNode(true)
+            ] = slot
+            // NOTE: Append ".cloneNode(true)" if desired.
         if (this.slots.default)
             this.slots.default = [this.slots.default as unknown as Node]
         else if (this.childNodes.length > 0)
@@ -480,11 +481,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         domNode.remove()
     }
     /**
-     * Sets provided slot contents into found inner slots.
+     * Renders component given slot contents into given dom node.
+     * @param targetDomNode - Target dom node to render slots into.
      * @returns Nothing.
      */
-    applySlotsToContent():void {
-        for (const domNode of Array.from(this.root.querySelectorAll('slot'))) {
+    applySlots(targetDomNode:HTMLElement):void {
+        for (const domNode of Array.from(targetDomNode.querySelectorAll(
+            'slot'
+        ))) {
             const name:null|string = domNode.getAttribute('name')
             if (name === null || name === 'default') {
                 if (this.slots.default)
@@ -858,9 +862,19 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             console.warn(`Faild to process template: ${evaluated.error}`)
             return
         }
-        this.root.innerHTML = evaluated.result
 
-        this.applySlotsToContent()
+        /*
+            NOTE: We first render into an intermediate render target and apply
+            slot content until we finally publish everything to document.
+            This avoid painting twice and internet explorer bugs with empty
+            node after first overwriting content of "this.root".
+        */
+        const renderTargetDomNode:HTMLDivElement =
+            document.createElement('div')
+        renderTargetDomNode.innerHTML = evaluated.result
+        this.applySlots(renderTargetDomNode)
+
+        this.root.innerHTML = renderTargetDomNode.innerHTML
     }
     // endregion
 }
