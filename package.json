@@ -74,8 +74,6 @@
     "react": "*",
     "react-dom": "*",
     "weboptimizer": "*",
-    "webpack": "*",
-    "webpack-cli": "*",
     "webpack-dev-server": "*"
   },
   "peerDependencies": {

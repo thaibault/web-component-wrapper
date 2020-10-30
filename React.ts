@@ -19,7 +19,7 @@
 // region imports 
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
-import {
+import React, {
     Attributes,
     createElement,
     createRef,
@@ -52,6 +52,7 @@ import {ComponentType, WebComponentAdapter} from './type'
  * @property static:attachWebComponentAdapterIfNotExists - Indicates whether to
  * wrap with a reference wrapper to get updated about internal state changes.
  * @property static:content - React component to wrap.
+ * @property static:react - React namespace.
  *
  * @property preparedSlots - Cache of yet converted slot elements to their
  * react pendants.
@@ -62,6 +63,7 @@ import {ComponentType, WebComponentAdapter} from './type'
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     static attachWebComponentAdapterIfNotExists:boolean = true
     static content:ComponentType|string = 'div'
+    static react:typeof React = React
     static _name:string = 'ReactWebComponent'
 
     preparedSlots:Mapping<null|ReactElement|string> & {
@@ -113,6 +115,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             return
 
         render(createElement(this.self.content, this.properties), this.root)
+
         /*
             NOTE: Update current instance if we have a newly created one
             otherwise check after current queue has been finished.
