@@ -131,6 +131,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     constructor() {
         super()
+        /*
+            NOTE: We cannot not use someting like "this.." e.g. "this.self".
+            to determine class properties since instance properties like "self"
+            may not set properly yet because this method is called during
+            constructing this instance itself.
+        */
+        this.self = this.constructor as unknown as typeof Web
 
         if (!this.self._propertiesToReflectAsAttributes)
             this.self._propertiesToReflectAsAttributes =
@@ -259,18 +266,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     defineGetterAndSetterInterface():void {
-        /*
-            NOTE: We cannot not use someting like "this.." e.g. "this.self".
-            to determine class properties since instance properties like "self"
-            may not set properly yet because this method is called during
-            constructing this instance itself.
-        */
-        const self:typeof Web = this.constructor as unknown as typeof Web
-
         const allPropertyNames:Array<string> = Tools.arrayUnique(
-            Object.keys(self.propertyTypes)
-                .concat(Object.keys(self.propertyAliases))
-                .concat(Object.values(self.propertyAliases))
+            Object.keys(this.self.propertyTypes)
+                .concat(Object.keys(this.self.propertyAliases))
+                .concat(Object.values(this.self.propertyAliases))
         )
 
         for (const propertyName of allPropertyNames) {
@@ -767,6 +766,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     delete this.properties[alias]
                 return
             }
+
+            console.log('TODO', name, value, type, string, type === string)
+
             switch (type) {
                 case boolean:
                 case 'boolean':
