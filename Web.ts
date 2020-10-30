@@ -436,6 +436,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.self.propertyTypes![name] as string
                 )
             ) {
+                console.log(func === any, string === func)
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
                     name,
