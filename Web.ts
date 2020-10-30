@@ -132,24 +132,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     constructor() {
         super()
 
-        this.defineGetterAndSetterInterface()
-
         if (!this.self._propertiesToReflectAsAttributes)
             this.self._propertiesToReflectAsAttributes =
                 this.self.normalizeList<string>(
                     this.self.propertiesToReflectAsAttributes
                 )
-        if (!this.self._propertyAliasIndex) {
-            this.self._propertyAliasIndex = {...this.self.propertyAliases}
-            // Align alias mapping for better performance while mapping them.
-            for (const [name, value] of Object.entries(
-                this.self._propertyAliasIndex
-            ))
-                if (!Object.prototype.hasOwnProperty.call(
-                    this.self._propertyAliasIndex, value
-                ))
-                    this.self._propertyAliasIndex[value] = name
-        }
+
+        this.generateAliasIndex()
 
         this.root = this.self.shadowDOM ?
             (
@@ -170,6 +159,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     {mode: 'open'}
             ) :
             this
+
+        /*
+            NOTE: We define getter and setter at the end to avoid shadowing
+            existing property names.
+        */
+        this.defineGetterAndSetterInterface()
     }
     /**
      * Triggered when ever a given attribute has changed and triggers to update
@@ -264,15 +259,23 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     defineGetterAndSetterInterface():void {
+        /*
+            NOTE: We cannot not use someting like "this.." e.g. "this.self".
+            to determine class properties since instance properties like "self"
+            may not set properly yet because this method is called during
+            constructing this instance itself.
+        */
+        const self:typeof Web = this.constructor as unknown as typeof Web
+
         const allPropertyNames:Array<string> = Tools.arrayUnique(
-            Object.keys(this.self.propertyTypes)
-                .concat(Object.keys(this.self.propertyAliases))
-                .concat(Object.values(this.self.propertyAliases))
+            Object.keys(self.propertyTypes)
+                .concat(Object.keys(self.propertyAliases))
+                .concat(Object.values(self.propertyAliases))
         )
 
         for (const propertyName of allPropertyNames) {
             Object.defineProperty(
-                Web.prototype,
+                this,
                 propertyName,
                 {
                     configurable: true,
@@ -504,6 +507,23 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     // / endregion
     // / region properties
+    /**
+     * Generates an alias to name and the other way around mapping if not
+     * exists.
+     */
+    generateAliasIndex():void {
+        if (!this.self._propertyAliasIndex) {
+            this.self._propertyAliasIndex = {...this.self.propertyAliases}
+            // Align alias mapping for better performance while mapping them.
+            for (const [name, value] of Object.entries(
+                this.self._propertyAliasIndex
+            ))
+                if (!Object.prototype.hasOwnProperty.call(
+                    this.self._propertyAliasIndex, value
+                ))
+                    this.self._propertyAliasIndex[value] = name
+        }
+    }
     /**
      * Reflects wrapped component state back to web-component's attributes and
      * properties.
