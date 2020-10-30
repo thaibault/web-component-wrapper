@@ -55,7 +55,7 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
         component.___types?.name?.name ||
         nameHint.replace(/^(.*\/+)?([^\/]+)\.tsx$/, '$2')
 
-    if (!component.propTypes && configuration.propTypes)
+    if (configuration.propTypes)
         component.propTypes = configuration.propTypes
     const propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> =
         component.propTypes || {}
