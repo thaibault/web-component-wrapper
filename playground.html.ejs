@@ -34,8 +34,9 @@
     <!--region script-->
     <script>
         window.onload = function() {
-            // region prepare web-component
             const Tools = webComponentWrapper.clientnode.Tools
+
+            // region prepare web-component
             const Web = webComponentWrapper.index.Web
 
             Web.content = Tools.maximalSupportedInternetExplorerVersion === 0 ?
@@ -43,6 +44,9 @@
                     "Example Properties\${id ? (' for ' + id) : ''}:" +
                     '<ul>' +
                         '${Object.keys(self.properties)' +
+                            '.filter(function(name) {' +
+                                "return !name.endsWith('Function')" +
+                            '})' +
                             '.map(function(name) {' +
                                 'return (' +
                                     "'<li>' +" +
@@ -84,10 +88,61 @@
             customElements.define('my-web', Web)
             // endregion
 
-            const one = document.querySelector('#web-1')
+            const oneWeb = document.querySelector('#web-1')
 
-            const two = document.querySelector('#web-2')
-            two.exampleBoolean = true
+            const twoWeb = document.querySelector('#web-2')
+            twoWeb.exampleBoolean = true
+
+            // region prepare react-web-component
+            const ReactWeb = webComponentWrapper.index.ReactWeb
+            const createElement = ReactWeb.react.createElement
+
+            ReactWeb.content = function(props) {
+                return createElement(
+                    'div',
+                    {className: 'wrapper'},
+                    'Example Properties',
+                    props.id ? (' for ' + props.id) : '',
+                    ':',
+                    createElement(
+                        'ul',
+                        null,
+                        Object.keys(props)
+                            .filter(function(name) {
+                                return !(
+                                    ['children', 'ref'].includes(name) ||
+                                    name.endsWith('Function')
+                                )
+                            })
+                            .map(function(name, index) {
+                                return createElement(
+                                    'li',
+                                    {key: index},
+                                    (
+                                        name +
+                                        ': ' +
+                                        Tools.represent(props[name])
+                                    )
+                                )
+                            })
+                    ),
+                    props.children
+                )
+            }
+            ReactWeb.propertiesToReflectAsAttributes =
+                Web.propertiesToReflectAsAttributes
+            ReactWeb.propertyTypes = Web.propertyTypes
+            ReactWeb.observedAttributes = Web.observedAttributes
+            ReactWeb.shadowDOM = Web.shadowDOM
+
+            customElements.define('my-react-web', ReactWeb)
+            return
+            // endregion
+
+            const oneReactWeb = document.querySelector('#web-react-1')
+
+            const twoReactWeb = document.querySelector('#web-react-2')
+            twoReactWeb.exampleBoolean = true
         }
     </script>
     <!--endregion-->
@@ -112,6 +167,28 @@
             <h1>Slotted Content</h1>
             <p>Lorem ipsum...</p>
         </my-web>
+
+        <hr/>
+
+        <my-react-web
+            id="web-react-1"
+            example-boolean
+            example-function="console.log(2)"
+            example-json='{"key": false, "key2": null, "key3": {"key": 2}, "key4": "value"}'
+            example-number="4"
+            example-object="{key: false, key2: null, key3: {key: 2}, key4: 'value'}"
+            example-string="value"
+        >
+            <h1>Slotted Content</h1>
+            <p>Lorem ipsum...</p>
+        </my-react-web>
+
+        <hr/>
+
+        <my-react-web id="web-react-2">
+            <h1>Slotted Content</h1>
+            <p>Lorem ipsum...</p>
+        </my-react-web>
 
     </body>
 <html>

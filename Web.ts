@@ -55,6 +55,7 @@ import {EventToPropertyMapping, WebComponentAdapter} from './type'
  * of properties to reflect as attributes.
  * @property static:shadowDOM - Configures if a shadow dom should be used
  * during web-component instantiation. Can hold initialize configuration.
+ * @property static:trimSlots - Ignore empty text nodes while applying slots.
  *
  * @property static:_propertyAliasIndex - Internal alias index to quickly match
  * properties in both directions.
@@ -103,6 +104,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         []
     static shadowDOM:boolean|null|{delegateFocus?:boolean;mode:'closed'|'open'} =
         null
+    static trimSlots:boolean = true
     static _propertyAliasIndex:Mapping|undefined
     static _propertiesToReflectAsAttributes:Map<string, boolean>|undefined
 
@@ -473,8 +475,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     replaceDomNodes(domNode:HTMLElement, children:Array<Node>|Node):void {
         for (const child of ([] as Array<Node>).concat(children).reverse()) {
             if (!(
-                child.nodeType === Node.TEXT_NODE &&
-                child.nodeValue.trim() === ''
+                Web.trimSlots &&
+                (
+                    child.nodeType === Node.TEXT_NODE &&
+                    child.nodeValue?.trim() === ''
+                )
             ))
                 domNode.after(child)
         }
