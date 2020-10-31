@@ -766,9 +766,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     delete this.properties[alias]
                 return
             }
-
-            console.log('TODO', name, value, type, string, type === string)
-
             switch (type) {
                 case boolean:
                 case 'boolean':
