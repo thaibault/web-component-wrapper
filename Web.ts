@@ -272,7 +272,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 .concat(Object.values(this.self.propertyAliases))
         )
 
-        for (const propertyName of allPropertyNames) {
+        for (const propertyName of allPropertyNames)
             Object.defineProperty(
                 this,
                 propertyName,
@@ -286,7 +286,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     }
                 }
             )
-        }
     }
     /**
      * Creats an index to match alias source and target against each other on
@@ -335,6 +334,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     setPropertyValue(name:string, value:any):void {
         this.reflectProperties({[name]: value})
+        /*
+            NOTE: "reflectProperties" does not set state values so we have to
+            make sure that an explict setter call triggers setting the value
+            nether there is already a corresponding state nor there isn't.
+        */
+        this.setInternalPropertyValue(name, value)
 
         if (this.batchPropertyUpdates) {
             if (!(
