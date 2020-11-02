@@ -637,7 +637,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.instance?.current?.state &&
             typeof this.instance.current.state === 'object'
         )
-            for (const name of Object.keys(this.instance.current.state))
+            for (const name of Object.keys(this.instance.current.state).concat(
+                this.instance.current.state?.model?.state ?
+                    Object.keys(this.instance.current.state.model.state) :
+                    []
+            ))
                 if (
                     Object.prototype.hasOwnProperty.call(this.properties, name)
                 )
