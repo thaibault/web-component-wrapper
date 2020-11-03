@@ -36,7 +36,8 @@ import PropertyTypes, {
     exact,
     shape,
     string,
-    symbol
+    symbol,
+    UndefinedSymbol
 } from 'clientnode/property-types'
 import {EvaluationResult, Mapping, PlainObject, ValueOf} from 'clientnode/type'
 
@@ -649,7 +650,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         We want to avoid to fully delete this property to know
                         which properties exists on the underlying instance.
                     */
-                    this.setInternalPropertyValue(name, undefined)
+                    this.setInternalPropertyValue(name, UndefinedSymbol)
         this.ignoreAttributeUpdates = false
         if (render)
             if (this.batchUpdates) {
@@ -838,7 +839,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     */
                     const numberValue:number = parseFloat(value)
                     this.setInternalPropertyValue(
-                        name, isNaN(numberValue) ? undefined : numberValue
+                        name, isNaN(numberValue) ? UndefinedSymbol : numberValue
                     )
                     break
                 case string:
