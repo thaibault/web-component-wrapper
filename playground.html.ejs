@@ -29,122 +29,123 @@
             window.ShadyDOM = {noPatch: true}
         </script>
         <script src="/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
-    </head>
-    <!--endregion-->
-    <!--region script-->
-    <script>
-        window.onload = function() {
-            const Tools = webComponentWrapper.clientnode.Tools
+        <!--region script-->
+        <script>
+            window.onload = function() {
+                const Tools = webComponentWrapper.clientnode.Tools
 
-            // region prepare web-component
-            const Web = webComponentWrapper.index.Web
+                // region prepare web-component
+                const Web = webComponentWrapper.index.Web
 
-            Web.content = Tools.maximalSupportedInternetExplorerVersion === 0 ?
-                ('<div class="wrapper">' +
-                    "Example Properties\${id ? (' for ' + id) : ''}:" +
-                    '<ul>' +
-                        '${Object.keys(self.properties)' +
-                            '.filter(function(name) {' +
-                                "return !name.endsWith('Function')" +
-                            '})' +
-                            '.map(function(name) {' +
-                                'return (' +
-                                    "'<li>' +" +
-                                        'name +' +
-                                        "': ' +" +
-                                        'Tools.represent(self.properties[name]) +' +
-                                    "'</li>'" +
-                                ')' +
-                            '})' +
-                            ".join('')" +
-                        '}' +
-                    '</ul>' +
-                    '<slot>Fallback Slot content</slot>' +
-                '</div>') :
-                Web.content = (
-                    '<div class="wrapper">' +
-                        '<slot>Fallback Slot content</slot>' +
-                    '</div>'
-                )
-            Web.propertiesToReflectAsAttributes = 'exampleBoolean'
-            Web.propertyTypes = {
-                exampleBoolean: 'boolean',
-                exampleFunction: 'function',
-                exampleJson: 'json',
-                exampleNumber: 'number',
-                exampleObject: 'object',
-                exampleString: 'string',
-                id: 'string'
-            }
-            Web.observedAttributes = Object.keys(Web.propertyTypes)
-                .map(function(name) {
-                    return Tools.stringCamelCaseToDelimited(name)
-                })
-            Web.shadowDOM =
-                Tools.maximalSupportedInternetExplorerVersion === 0 ?
-                    {mode: 'closed'} :
-                    null
+                Web.content =
+                    Tools.maximalSupportedInternetExplorerVersion === 0 ?
+                        ('<div class="wrapper">' +
+                            "Example Properties\${id ? (' for ' + id) : ''}:" +
+                            '<ul>' +
+                                '${Object.keys(self.properties)' +
+                                    '.filter(function(name) {' +
+                                        "return !name.endsWith('Function')" +
+                                    '})' +
+                                    '.map(function(name) {' +
+                                        'return (' +
+                                            "'<li>' +" +
+                                                'name +' +
+                                                "': ' +" +
+                                                'Tools.represent(self.properties[name]) +' +
+                                            "'</li>'" +
+                                        ')' +
+                                    '})' +
+                                    ".join('')" +
+                                '}' +
+                            '</ul>' +
+                            '<slot>Fallback Slot content</slot>' +
+                        '</div>') :
+                        Web.content = (
+                            '<div class="wrapper">' +
+                                '<slot>Fallback Slot content</slot>' +
+                            '</div>'
+                        )
+                Web.propertiesToReflectAsAttributes = 'exampleBoolean'
+                Web.propertyTypes = {
+                    exampleBoolean: 'boolean',
+                    exampleFunction: 'function',
+                    exampleJson: 'json',
+                    exampleNumber: 'number',
+                    exampleObject: 'object',
+                    exampleString: 'string',
+                    id: 'string'
+                }
+                Web.observedAttributes = Object.keys(Web.propertyTypes)
+                    .map(function(name) {
+                        return Tools.stringCamelCaseToDelimited(name)
+                    })
+                Web.shadowDOM =
+                    Tools.maximalSupportedInternetExplorerVersion === 0 ?
+                        {mode: 'closed'} :
+                        null
 
-            customElements.define('my-web', Web)
-            // endregion
+                customElements.define('my-web', Web)
+                // endregion
 
-            const oneWeb = document.querySelector('#web-1')
+                const oneWeb = document.querySelector('#web-1')
 
-            const twoWeb = document.querySelector('#web-2')
-            twoWeb.exampleBoolean = true
+                const twoWeb = document.querySelector('#web-2')
+                twoWeb.exampleBoolean = true
 
-            // region prepare react-web-component
-            const ReactWeb = webComponentWrapper.index.ReactWeb
-            const createElement = ReactWeb.react.createElement
+                // region prepare react-web-component
+                const ReactWeb = webComponentWrapper.index.ReactWeb
+                const createElement = ReactWeb.react.createElement
 
-            ReactWeb.content = function(props) {
-                return createElement(
-                    'div',
-                    {className: 'wrapper'},
-                    'Example Properties',
-                    props.id ? (' for ' + props.id) : '',
-                    ':',
-                    createElement(
-                        'ul',
-                        null,
-                        Object.keys(props)
-                            .filter(function(name) {
-                                return !(
-                                    ['children', 'ref'].includes(name) ||
-                                    name.endsWith('Function')
-                                )
-                            })
-                            .map(function(name, index) {
-                                return createElement(
-                                    'li',
-                                    {key: index},
-                                    (
-                                        name +
-                                        ': ' +
-                                        Tools.represent(props[name])
+                ReactWeb.content = function(props) {
+                    return createElement(
+                        'div',
+                        {className: 'wrapper'},
+                        'Example Properties',
+                        props.id ? (' for ' + props.id) : '',
+                        ':',
+                        createElement(
+                            'ul',
+                            null,
+                            Object.keys(props)
+                                .filter(function(name) {
+                                    return !(
+                                        ['children', 'ref'].includes(name) ||
+                                        name.endsWith('Function')
                                     )
-                                )
-                            })
-                    ),
-                    props.children
-                )
+                                })
+                                .map(function(name, index) {
+                                    return createElement(
+                                        'li',
+                                        {key: index},
+                                        (
+                                            name +
+                                            ': ' +
+                                            Tools.represent(props[name])
+                                        )
+                                    )
+                                })
+                        ),
+                        props.children
+                    )
+                }
+                ReactWeb.propertiesToReflectAsAttributes =
+                    Web.propertiesToReflectAsAttributes
+                ReactWeb.propertyTypes = Web.propertyTypes
+                ReactWeb.observedAttributes = Web.observedAttributes
+                ReactWeb.shadowDOM = Web.shadowDOM
+
+                customElements.define('my-react-web', ReactWeb)
+                return
+                // endregion
+
+                const oneReactWeb = document.querySelector('#web-react-1')
+
+                const twoReactWeb = document.querySelector('#web-react-2')
+                twoReactWeb.exampleBoolean = true
             }
-            ReactWeb.propertiesToReflectAsAttributes =
-                Web.propertiesToReflectAsAttributes
-            ReactWeb.propertyTypes = Web.propertyTypes
-            ReactWeb.observedAttributes = Web.observedAttributes
-            ReactWeb.shadowDOM = Web.shadowDOM
-
-            customElements.define('my-react-web', ReactWeb)
-            return
-            // endregion
-
-            const oneReactWeb = document.querySelector('#web-react-1')
-
-            const twoReactWeb = document.querySelector('#web-react-2')
-            twoReactWeb.exampleBoolean = true
-        }
-    </script>
+        </script>
+        <!--endregion-->
+    </head>
     <!--endregion-->
     <body>
 
