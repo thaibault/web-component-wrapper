@@ -28,6 +28,7 @@ import PropertyTypes, {
     instanceOf,
     func,
     node,
+    NullSymbol,
     number,
     object,
     objectOf,
@@ -308,9 +309,19 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Retrieved property value.
      */
     getPropertyValue(name:string):any {
-        if (this.instance?.current?.properties)
-            return this.instance.current.properties[name]
-        return this.properties[name]
+        const result:any = this.instance?.current?.properties ?
+            this.instance.current.properties[name] :
+            this.properties[name]
+        if (result === NullSymbol)
+            return null
+        if (
+            this.instance?.current?.state &&
+            Object.prototype.hasOwnProperty.call(
+                this.instance.current.state, name
+            )
+        )
+            return this.instance.current.state[name]
+        return result
     }
     /**
      * Internal property setter. Respects configured aliases.
@@ -319,6 +330,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     setInternalPropertyValue(name:string, value:any):void {
+        if (value === null)
+            value = NullSymbol
+        else if (value === undefined)
+            value = UndefinedSymbol
         this.properties[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
@@ -639,8 +654,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             typeof this.instance.current.state === 'object'
         )
             for (const name of Object.keys(this.instance.current.state).concat(
-                this.instance.current.state.model ?
-                    Object.keys(this.instance.current.state.model) :
+                this.instance.current.state.modelState ?
+                    Object.keys(this.instance.current.state.modelState) :
                     []
             ))
                 if (
@@ -684,9 +699,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     reflectEventToProperties(name:string, parameter:Array<any>):void {
         /*
-            NOTE: We enforce to update components state imidiatly after an event
-            occurs since batching usually does not make sense here. An event
-            is ran an its own context.
+            NOTE: We enforce to update components state immediately after an
+            event occurs since batching usually does not make sense here. An
+            event is ran an its own context.
             On the other hand it can be necessary to immediately reflect a
             property change to the components internal state to avoid
             contradicting internal render cycles.
@@ -740,7 +755,17 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                                 instance.
                             */
                             currentValue = this.getPropertyValue(name)
-                        if (currentValue !== this.properties[name])
+                        if (!(
+                            currentValue === this.properties[name] ||
+                            [null, NullSymbol].includes(currentValue) &&
+                            [null, NullSymbol].includes(
+                                this.properties[name]
+                            ) ||
+                            [undefined, UndefinedSymbol].includes(currentValue) &&
+                            [undefined, UndefinedSymbol].includes(
+                                this.properties[name]
+                            )
+                        ))
                             newProperties[name] = currentValue
                     }
             }
@@ -755,7 +780,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param value - Value to evaluate.
      * @returns Nothing.
      */
-    evaluateStringOrNullAndSetAsProperty(name:string, value:string):void {
+    evaluateStringOrNullAndSetAsProperty(name:string, value:null|string):void {
         name = Tools.stringDelimitedToCamelCase(name)
         const alias:null|string = this.getPropertyAlias(name)
         if (
@@ -763,12 +788,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             Object.prototype.hasOwnProperty.call(this.self.propertyTypes, alias)
         )
             name = alias
-        if (Object.prototype.hasOwnProperty.call(this.self.propertyTypes, name)) {
+        if (Object.prototype.hasOwnProperty.call(
+            this.self.propertyTypes, name
+        )) {
             const type:ValueOf<typeof PropertyTypes>|string =
                 this.self.propertyTypes[name]
             if (
-                value === null &&
-                [boolean, 'boolean'].includes(type as string)
+                value === null && [boolean, 'boolean'].includes(type as string)
             ) {
                 delete this.properties[name]
                 const alias:null|string = this.getPropertyAlias(name)
@@ -780,18 +806,20 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 case boolean:
                 case 'boolean':
                     this.setInternalPropertyValue(
-                        name, ![null, 'false'].includes(value)
+                        name, ![null, NullSymbol, 'false'].includes(value)
                     )
                     break
                 case func:
                 case 'function':
-                    const callback:Function|string =
-                        Tools.stringCompile(value, 'parameter')[1]
-                    if (typeof callback === 'string')
-                        console.warn(
-                            `'Failed to process event handler "${name}": ` +
-                            `${callback}.`
-                        )
+                    let callback:Function|string|undefined
+                    if (value) {
+                        callback = Tools.stringCompile(value, 'parameter')[1]
+                        if (typeof callback === 'string')
+                            console.warn(
+                                `'Failed to process event handler "${name}":` +
+                                ` ${callback}.`
+                            )
+                    }
                     this.setInternalPropertyValue(
                         name,
                         (...parameter:Array<any>):void => {
@@ -832,6 +860,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     break
                 case number:
                 case 'number':
+                    if (value === null) {
+                        this.setInternalPropertyValue(name, value)
+                        break
+                    }
                     /*
                         NOTE: You should not name this variable "number" since
                         babel gets confused caused by existing module wide
