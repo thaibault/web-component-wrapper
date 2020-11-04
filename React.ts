@@ -114,13 +114,16 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.hasParentWithPreparedSlots())
             return
 
-        render(createElement(this.self.content, this.properties), this.root)
+        render(
+            createElement(this.self.content, this.internalProperties),
+            this.root
+        )
 
         /*
             NOTE: Update current instance if we have a newly created one
             otherwise check after current queue has been finished.
         */
-        if (this.properties.ref.current)
+        if (this.internalProperties.ref.current)
             this.reflectInstanceProperties()
         else
             Tools.timeout(this.reflectInstanceProperties.bind(this))
@@ -181,7 +184,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 NOTE: Nested components are already instantiated so use their
                 properties.
             */
-            const properties:Mapping<any> = (node as ReactWeb).properties ?? {}
+            const properties:Mapping<any> =
+                (node as ReactWeb).internalProperties ?? {}
             if (!Object.prototype.hasOwnProperty.call(properties, 'key'))
                 properties.key = key
             return createElement(type.content, properties)
@@ -206,9 +210,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 Object.prototype.hasOwnProperty.call(
                     this.preparedSlots, name
                 ) &&
-                !Object.prototype.hasOwnProperty.call(this.properties, name)
+                !Object.prototype.hasOwnProperty.call(
+                    this.internalProperties, name
+                )
             )
-                this.properties[name] = this.preparedSlots[name]
+                this.internalProperties[name] = this.preparedSlots[name]
     }
     /**
      * Converts yet determined slots into react components and caches the
@@ -288,12 +294,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     prepareProperties():void {
-        this.properties.ref = createRef()
+        this.internalProperties.ref = createRef()
         if (!this.instance)
-            this.instance = this.properties.ref
+            this.instance = this.internalProperties.ref
 
         this.applySlotsToProperties()
-        this.removeKnownUnwantedPropertyKeys(this.properties)
+        this.removeKnownUnwantedPropertyKeys(this.internalProperties)
     }
     /**
      * Determines whether their exist a parent which should trigger this
@@ -315,8 +321,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     reflectInstanceProperties():void {
-        if (this.properties.ref.current) {
-            this.instance = this.properties.ref
+        if (this.internalProperties.ref.current) {
+            this.instance = this.internalProperties.ref
             if (
                 (this.instance as {current:WebComponentAdapter}).current
                     .properties
