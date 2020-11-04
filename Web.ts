@@ -365,8 +365,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     setPropertyValue(name:string, value:any):void {
-        this.reflectProperties({[name]: value}, false)
-        this.setInternalPropertyValue(name, value)
+        this.reflectProperties({[name]: Tools.copy(value)}, false)
+        this.setInternalPropertyValue(name, Tools.copy(value))
 
         if (this.batchPropertyUpdates) {
             if (!(
