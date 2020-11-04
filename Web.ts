@@ -315,8 +315,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const result:any = this.instance?.current?.properties ?
             this.instance.current.properties[name] :
             this.externalProperties[name]
-        if (result === NullSymbol)
-            return null
         if (
             this.instance?.current?.state &&
             Object.prototype.hasOwnProperty.call(
@@ -680,7 +678,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         We want to avoid to fully delete this property to know
                         which properties exists on the underlying instance.
                     */
-                    this.setInternalPropertyValue(name, UndefinedSymbol)
+                    this.setInternalPropertyValue(name, undefined)
         this.ignoreAttributeUpdates = false
         if (render)
             if (this.batchUpdates) {
@@ -812,9 +810,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             switch (type) {
                 case boolean:
                 case 'boolean':
-                    this.setInternalPropertyValue(
-                        name, ![null, NullSymbol, 'false'].includes(value)
-                    )
+                    const booleanValue:boolean = ![null, 'false'].includes(value)
+                    this.setInternalPropertyValue(name, booleanValue)
+                    this.setExternalPropertyValue(name, booleanValue)
                     break
                 case func:
                 case 'function':
@@ -847,6 +845,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             this.forwardEvent(name, parameter)
                         }
                     )
+                    if (typeof callback === 'function')
+                        this.setExternalPropertyValue(name, callback)
                     break
                 case 'json':
                     if (value) {
@@ -861,14 +861,24 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             )
                             break
                         }
+                        /*
+                            NOTE: We have to avoid that both values changes
+                            each other.
+                        */
                         this.setInternalPropertyValue(name, evaluated)
-                    } else
+                        this.setExternalPropertyValue(
+                            name, Tools.copy(evaluated)
+                        )
+                    } else {
                         this.setInternalPropertyValue(name, null)
+                        this.setExternalPropertyValue(name, null)
+                    }
                     break
                 case number:
                 case 'number':
                     if (value === null) {
                         this.setInternalPropertyValue(name, value)
+                        this.setExternalPropertyValue(name, value)
                         break
                     }
                     /*
@@ -876,14 +886,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         babel gets confused caused by existing module wide
                         property type variable "number".
                     */
-                    const numberValue:number = parseFloat(value)
-                    this.setInternalPropertyValue(
-                        name, isNaN(numberValue) ? UndefinedSymbol : numberValue
-                    )
+                    let numberValue:number|undefined = parseFloat(value)
+                    if (isNaN(numberValue))
+                        numberValue = undefined
+                    this.setInternalPropertyValue(name, numberValue)
+                    this.setExternalPropertyValue(name, numberValue)
                     break
                 case string:
                 case 'string':
                     this.setInternalPropertyValue(name, value)
+                    this.setExternalPropertyValue(name, value)
                     break
                 case any:
                 case array:
@@ -912,9 +924,18 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             )
                             break
                         }
+                        /*
+                            NOTE: We have to avoid that both values changes
+                            each other.
+                        */
                         this.setInternalPropertyValue(name, evaluated.result)
-                    } else
+                        this.setExternalPropertyValue(
+                            name, Tools.copy(evaluated.result)
+                        )
+                    } else {
                         this.setInternalPropertyValue(name, null)
+                        this.setExternalPropertyValue(name, null)
+                    }
                     break
             }
         }
