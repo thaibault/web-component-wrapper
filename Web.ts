@@ -82,11 +82,13 @@ import {EventToPropertyMapping, WebComponentAdapter} from './type'
  * @property content - Content template to render on property changes.
  * @property eventToPropertyMapping - Explicitly defined output events (a
  * mapping of event names to a potential parameter to properties transformer).
+ * @property externalProperties - Holds currently evaluated or seen properties.
  * @property ignoreAttributeUpdates - Indicates whether attribute updates
  * should be considered (usually only needed internally).
+ * @property internalProperties - Holds currently evaluated properties which
+ * are owned by this instance and should always be delegated.
  * @property instance - Wrapped component instance.
  * @property outputEventNames - Set of determined output event names.
- * @property properties - Holds currently evaluated properties.
  * @property root - Hosting dom node.
  * @property runDomConnectionAndRendringInSameEventQueue - Indicates whether
  * we should render initial dom immediately after the component is connected to
@@ -116,11 +118,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     batchedUpdateRunning:boolean = true
     batchPropertyUpdates:boolean = true
     batchUpdates:boolean = true
+    externalProperties:Mapping<any> = {}
     ignoreAttributeUpdates:boolean = false
     instance:null|{current?:WebComponentAdapter} = null
+    internalProperties:Mapping<any> = {}
     eventToPropertyMapping:EventToPropertyMapping = {}
     outputEventNames:Set<string> = new Set<string>()
-    properties:Mapping<any> = {}
     root:ShadowRoot|Web<TElement>
     runDomConnectionAndRendringInSameEventQueue:boolean = false
     readonly self:typeof Web = Web
@@ -311,7 +314,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     getPropertyValue(name:string):any {
         const result:any = this.instance?.current?.properties ?
             this.instance.current.properties[name] :
-            this.properties[name]
+            this.externalProperties[name]
         if (result === NullSymbol)
             return null
         if (
@@ -324,6 +327,19 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         return result
     }
     /**
+     * External property setter. Respects configured aliases.
+     * @param name - Property name to write.
+     * @param value - New value to write.
+     * @returns Nothing.
+     */
+    setExternalPropertyValue(name:string, value:any):void {
+        this.externalProperties[name] = value
+
+        const alias:null|string = this.getPropertyAlias(name)
+        if (alias)
+            this.externalProperties[alias] = value
+    }
+    /**
      * Internal property setter. Respects configured aliases.
      * @param name - Property name to write.
      * @param value - New value to write.
@@ -334,11 +350,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             value = NullSymbol
         else if (value === undefined)
             value = UndefinedSymbol
-        this.properties[name] = value
+        this.internalProperties[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
         if (alias)
-            this.properties[alias] = value
+            this.internalProperties[alias] = value
     }
     /**
      * Generic property setter. Forwards field writes into "properties" field
@@ -349,12 +365,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     setPropertyValue(name:string, value:any):void {
-        this.reflectProperties({[name]: value})
-        /*
-            NOTE: "reflectProperties" does not set state values so we have to
-            make sure that an explict setter call triggers setting the value
-            nether there is already a corresponding state nor there isn't.
-        */
+        this.reflectProperties({[name]: value}, false)
         this.setInternalPropertyValue(name, value)
 
         if (this.batchPropertyUpdates) {
@@ -425,7 +436,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         // Grab all existing output to property specifications
         let result:boolean = false
         for (const name of Object.keys(this.eventToPropertyMapping))
-            if (!Object.prototype.hasOwnProperty.call(this.properties, name)) {
+            if (!Object.prototype.hasOwnProperty.call(
+                this.internalProperties, name
+            )) {
                 result = true
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
@@ -451,7 +464,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         // Determine all event handler to inject
         for (const [name, type] of Object.entries(this.self.propertyTypes))
             if (
-                !Object.prototype.hasOwnProperty.call(this.properties, name) &&
+                !Object.prototype.hasOwnProperty.call(
+                    this.internalProperties, name
+                ) &&
                 [func, 'function'].includes(
                     this.self.propertyTypes![name] as string
                 )
@@ -474,7 +489,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     triggerOuputEvents():void {
         for (const name of this.outputEventNames)
-            this.forwardEvent(name, [this.properties])
+            this.forwardEvent(name, [this.externalProperties])
     }
     /**
      * Forwards given event as native web event.
@@ -559,7 +574,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         */
         this.ignoreAttributeUpdates = true
         for (const [name, value] of Object.entries(properties)) {
-            this.setInternalPropertyValue(name, value)
+            this.setExternalPropertyValue(name, value)
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
             if (this.self._propertiesToReflectAsAttributes!.has(name))
                 switch (this.self.propertyTypes[name]) {
@@ -658,9 +673,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     Object.keys(this.instance.current.state.modelState) :
                     []
             ))
-                if (
-                    Object.prototype.hasOwnProperty.call(this.properties, name)
-                )
+                if (Object.prototype.hasOwnProperty.call(
+                    this.internalProperties, name
+                ))
                     /*
                         We want to avoid to fully delete this property to know
                         which properties exists on the underlying instance.
@@ -737,35 +752,24 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     for (const name of [propertyName].concat(
                         this.getPropertyAlias(propertyName) ?? []
                     )) {
-                        let currentValue:any
-                        if (
-                            parameter[0].currentTarget &&
-                            Object.prototype.hasOwnProperty.call(
-                                parameter[0].currentTarget, name
-                            )
-                        )
-                            /*
-                                Update all known properties from event target
-                                instance.
-                            */
-                            currentValue = parameter[0].currentTarget[name]
-                        else
-                            /*
-                                Update all known properties from adapter
-                                instance.
-                            */
-                            currentValue = this.getPropertyValue(name)
-                        if (!(
-                            currentValue === this.properties[name] ||
-                            [null, NullSymbol].includes(currentValue) &&
-                            [null, NullSymbol].includes(
-                                this.properties[name]
-                            ) ||
-                            [undefined, UndefinedSymbol].includes(currentValue) &&
-                            [undefined, UndefinedSymbol].includes(
-                                this.properties[name]
-                            )
-                        ))
+                        const currentValue:any =
+                            (
+                                parameter[0].currentTarget &&
+                                Object.prototype.hasOwnProperty.call(
+                                    parameter[0].currentTarget, name
+                                )
+                            ) ?
+                                /*
+                                    Update all known properties from event
+                                    target instance.
+                                */
+                                parameter[0].currentTarget[name] :
+                                /*
+                                    Update all known properties from adapter
+                                    instance.
+                                */
+                                this.getPropertyValue(name)
+                        if (currentValue !== this.externalProperties[name])
                             newProperties[name] = currentValue
                     }
             }
@@ -796,10 +800,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             if (
                 value === null && [boolean, 'boolean'].includes(type as string)
             ) {
-                delete this.properties[name]
+                delete this.externalProperties[name]
+                delete this.internalProperties[name]
                 const alias:null|string = this.getPropertyAlias(name)
-                if (alias)
-                    delete this.properties[alias]
+                if (alias) {
+                    delete this.externalProperties[alias]
+                    delete this.internalProperties[alias]
+                }
                 return
             }
             switch (type) {
@@ -922,7 +929,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const evaluated:EvaluationResult =
             Tools.stringEvaluate(
                 `\`${this.self.content}\``,
-                {self: this, Tools, ...this.properties}
+                {self: this, Tools, ...this.internalProperties}
             )
         if (evaluated.error) {
             console.warn(`Faild to process template: ${evaluated.error}`)
