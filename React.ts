@@ -106,7 +106,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     render():void {
         this.prepareProperties()
-
         /*
             NOTE: We prevent a nested component from further rendering since
             they will be rendered by their parent.
@@ -118,7 +117,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             createElement(this.self.content, this.internalProperties),
             this.root
         )
-
         /*
             NOTE: Update current instance if we have a newly created one
             otherwise check after current queue has been finished.
@@ -127,7 +125,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             this.reflectInstanceProperties()
         else
             Tools.timeout(this.reflectInstanceProperties.bind(this))
-
     }
     // endregion
     // region handle slots
