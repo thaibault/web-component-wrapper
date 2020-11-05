@@ -950,6 +950,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const evaluated:EvaluationResult =
             Tools.stringEvaluate(
                 `\`${this.self.content}\``,
+                // Copy properties to avoid manipulations in nested structures.
                 {self: this, Tools, ...Tools.copy(this.internalProperties)}
             )
         if (evaluated.error) {
