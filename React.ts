@@ -105,7 +105,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     render():void {
-        this.prepareProperties()
+        const properties:Mapping<any> = this.prepareProperties()
         /*
             NOTE: We prevent a nested component from further rendering since
             they will be rendered by their parent.
@@ -113,18 +113,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.hasParentWithPreparedSlots())
             return
 
-        render(
-            createElement(this.self.content, this.internalProperties),
-            this.root
-        )
+        render(createElement(this.self.content, properties), this.root)
         /*
             NOTE: Update current instance if we have a newly created one
             otherwise check after current queue has been finished.
         */
-        if (this.internalProperties.ref.current)
+        if (this.instance?.current)
             this.reflectInstanceProperties()
         else
-            Tools.timeout(this.reflectInstanceProperties.bind(this))
+            Tools.timeout(this.reflectInstanceProperties)
     }
     // endregion
     // region handle slots
@@ -288,15 +285,16 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * Prepares the properties object to render against current component.
      * Creates a reference for being recognized of reacts internal state
      * updates.
-     * @returns Nothing.
+     * @returns Prepared properties.
      */
-    prepareProperties():void {
-        this.internalProperties.ref = createRef()
-        if (!this.instance)
-            this.instance = this.internalProperties.ref
-
+    prepareProperties():Mapping<any> {
         this.applySlotsToProperties()
         this.removeKnownUnwantedPropertyKeys(this.internalProperties)
+        // Copy properties to avoid manipulations in nested structures.
+        const result:Mapping<any> = Tools.copy(this.internalProperties)
+        this.instance = createRef() as {current?:WebComponentAdapter}
+        result.ref = this.instance
+        return result
     }
     /**
      * Determines whether their exist a parent which should trigger this
@@ -317,9 +315,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * properties.
      * @returns Nothing.
      */
-    reflectInstanceProperties():void {
-        if (this.internalProperties.ref.current) {
-            this.instance = this.internalProperties.ref
+    reflectInstanceProperties = ():void => {
+        if (this.instance?.current) {
             if (
                 (this.instance as {current:WebComponentAdapter}).current
                     .properties
