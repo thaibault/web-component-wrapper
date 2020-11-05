@@ -114,7 +114,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             return
 
         render(
-            createElement(this.self.content, this.internalProperties),
+            createElement(
+                this.self.content, Tools.copy(this.internalProperties)
+            ),
             this.root
         )
         /*
@@ -124,7 +126,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.internalProperties.ref.current)
             this.reflectInstanceProperties()
         else
-            Tools.timeout(this.reflectInstanceProperties.bind(this))
+            Tools.timeout(this.reflectInstanceProperties)
     }
     // endregion
     // region handle slots
@@ -317,7 +319,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * properties.
      * @returns Nothing.
      */
-    reflectInstanceProperties():void {
+    reflectInstanceProperties = ():void => {
         if (this.internalProperties.ref.current) {
             this.instance = this.internalProperties.ref
             if (

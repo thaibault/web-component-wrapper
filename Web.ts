@@ -950,7 +950,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const evaluated:EvaluationResult =
             Tools.stringEvaluate(
                 `\`${this.self.content}\``,
-                {self: this, Tools, ...this.internalProperties}
+                {self: this, Tools, ...Tools.copy(this.internalProperties)}
             )
         if (evaluated.error) {
             console.warn(`Faild to process template: ${evaluated.error}`)
