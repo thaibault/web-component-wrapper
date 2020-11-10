@@ -67,7 +67,6 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
             .concat(Object.keys(propertyAliases))
             .concat(Object.values(propertyAliases))
     )
-
     /**
      * Runtime generated web component.
      */
