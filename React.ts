@@ -58,6 +58,7 @@ import {ComponentType, WebComponentAdapter} from './type'
  * react pendants.
  * @property self - Back-reference to this class.
  * @property wrapMemorizingWrapper - Determines whether to wrap component with
+ * @property wrapped - Indicates whether react component is wrapped already.
  * reacts memorizing wrapper to cache component render results.
  */
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
@@ -71,6 +72,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     } = {}
     readonly self:typeof ReactWeb = ReactWeb
     wrapMemorizingWrapper:boolean|null = null
+    wrapped:boolean = false
     // region live-cycle
     /**
      * Triggered when this component is mounted into the document. Event
@@ -237,8 +239,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     applyComponentWrapper():void {
-        if (typeof this.self.content === 'string')
+        if (typeof this.self.content === 'string' || this.wrapped)
             return
+        this.wrapped = true
 
         const wrapped:ComponentType =
             (this.self.content as ComponentType).wrapped ||

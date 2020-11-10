@@ -234,6 +234,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.batchedPropertyUpdateRunning = false
         this.batchedUpdateRunning = false
 
+        this.slots = {}
         const slots:NodeList = this.querySelectorAll('[slot]')
         for (let slot of Array.from(slots))
             this.slots[
@@ -265,7 +266,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     disconnectedCallback():void {
         this.slots = {}
-        this.outputEventNames.clear()
     }
     // endregion
     // region getter/setter
@@ -426,7 +426,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             NOTE: We only reflect properties by implicit determined events if
             their where no explicitly defined.
         */
-        this.outputEventNames.clear()
         this.attachImplicitDefinedOutputEventHandler(
             !this.attachExplicitDefinedOutputEventHandler()
         )
@@ -685,6 +684,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         which properties exists on the underlying instance.
                     */
                     this.setInternalPropertyValue(name, undefined)
+        if (this.internalProperties.model?.state) {
+            delete this.internalProperties.model.state
+            this.setInternalPropertyValue(
+                'model', this.internalProperties.model
+            )
+        }
+
         this.ignoreAttributeUpdates = false
         if (render)
             if (this.batchUpdates) {
@@ -712,7 +718,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Reflect given event handler call with given parameter back to current
      * properties state.
-     * @param name - Event handler name.
+     * @param name - Event name.
      * @param parameter - List of parameter to given event handler call.
      * @returns Nothing.
      */
