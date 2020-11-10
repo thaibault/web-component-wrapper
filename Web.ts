@@ -42,7 +42,11 @@ import PropertyTypes, {
 } from 'clientnode/property-types'
 import {EvaluationResult, Mapping, PlainObject, ValueOf} from 'clientnode/type'
 
-import {EventToPropertyMapping, WebComponentAdapter} from './type'
+import {
+    AttributesReflectionConfiguration,
+    EventToPropertyMapping,
+    WebComponentAdapter
+} from './type'
 // endregion
 /**
  * Generic web component to render a content against instance specific values.
@@ -104,13 +108,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static readonly observedAttributes:Array<string> = []
     static propertyAliases:Mapping = {}
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
-    static propertiesToReflectAsAttributes:Array<string>|Map<string, boolean>|string =
+    static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
         []
     static shadowDOM:boolean|null|{delegateFocus?:boolean;mode:'closed'|'open'} =
         null
     static trimSlots:boolean = true
     static _propertyAliasIndex:Mapping|undefined
-    static _propertiesToReflectAsAttributes:Map<string, boolean>|undefined
+    static _propertiesToReflectAsAttributes:Map<string, string|ValueOf<typeof PropertyTypes>>|undefined
 
     batchAttributeUpdates:boolean = true
     batchedAttributeUpdateRunning:boolean = true
@@ -146,7 +150,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         if (!this.self._propertiesToReflectAsAttributes)
             this.self._propertiesToReflectAsAttributes =
-                this.self.normalizeList<string>(
+                this.normalizePropertyTypeList(
                     this.self.propertiesToReflectAsAttributes
                 )
 
@@ -395,18 +399,20 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param list - List to convert.
      * @returns Generated map.
      */
-    static normalizeList<Type=any>(
-        value:Array<Type>|Map<Type, boolean>|Type
-    ):Map<Type, boolean> {
-        if (typeof value !== 'object')
+    normalizePropertyTypeList(
+        value:AttributesReflectionConfiguration
+    ):Map<string, string|ValueOf<typeof PropertyTypes>> {
+        if (typeof value === 'string')
             value = [value]
         if (Array.isArray(value)) {
-            const givenValue:Array<Type> = value
-            value = new Map<Type, boolean>()
+            const givenValue:Array<string> = value
+            value = new Map<string, string|ValueOf<typeof PropertyTypes>>()
             for (const name of givenValue)
-                value.set(name, true)
-        }
-        return value as Map<Type, boolean>
+                if (this.self.propertyTypes.hasOwnProperty(name))
+                    value.set(name, this.self.propertyTypes[name])
+        } else
+            value = Tools.convertPlainObjectToMap(value)
+        return value as Map<string, string|ValueOf<typeof PropertyTypes>>
     }
     // / endregion
     // / region events
@@ -511,7 +517,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     replaceDomNodes(domNode:HTMLElement, children:Array<Node>|Node):void {
         for (const child of ([] as Array<Node>).concat(children).reverse()) {
             if (!(
-                Web.trimSlots &&
+                this.self.trimSlots &&
                 (
                     child.nodeType === Node.TEXT_NODE &&
                     child.nodeValue?.trim() === ''
@@ -575,7 +581,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.setExternalPropertyValue(name, value)
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
             if (this.self._propertiesToReflectAsAttributes!.has(name))
-                switch (this.self.propertyTypes[name]) {
+                switch (this.self._propertiesToReflectAsAttributes!.get(name)) {
                     case boolean:
                     case 'boolean':
                         if (value) {

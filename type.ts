@@ -25,10 +25,12 @@ import ReactWeb from './React'
 // region exports
 export type EventToPropertyMapping =
     Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
+export type AttributesReflectionConfiguration =
+    Array<string>|Map<string, string|ValueOf<typeof PropertyTypes>>|string|{[key:string]:ValueOf<typeof PropertyTypes>|string}
 export interface WebComponentConfiguration {
     attachWebComponentAdapterIfNotExists?:boolean
     eventToPropertyMapping?:EventToPropertyMapping
-    propertiesToReflectAsAttributes?:Map<string, boolean>
+    propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
 }

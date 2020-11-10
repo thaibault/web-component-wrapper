@@ -25,6 +25,7 @@ import {Mapping, ValueOf} from 'clientnode/type'
 
 import ReactWeb from './React'
 import {
+    AttributesReflectionConfiguration,
     ComponentType,
     EventToPropertyMapping,
     WebComponentAPI,
@@ -57,7 +58,7 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
 
     if (configuration.propTypes)
         component.propTypes = configuration.propTypes
-    const propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> =
+    const propertyTypes:Mapping<string|ValueOf<typeof PropertyTypes>> =
         component.propTypes || {}
     const propertyAliases:Mapping =
         configuration.propertyAliases || component.propertyAliases || {}
@@ -78,11 +79,11 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
                     true
         static content:ComponentType = component
         static propertyAliases:Mapping = propertyAliases
-        static propertiesToReflectAsAttributes:Map<string, boolean> =
+        static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
             configuration.propertiesToReflectAsAttributes ||
             component.propertiesToReflectAsAttributes ||
-            new Map<string, boolean>()
-        static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>> =
+            []
+        static propertyTypes:Mapping<string|ValueOf<typeof PropertyTypes>> =
             propertyTypes
         static readonly observedAttributes:Array<string> =
             allPropertyNames.map((name:string):string =>
