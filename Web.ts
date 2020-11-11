@@ -280,7 +280,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 .concat(Object.keys(this.self.propertyAliases))
                 .concat(Object.values(this.self.propertyAliases))
         )
-
         for (const propertyName of allPropertyNames)
             Object.defineProperty(
                 this,
