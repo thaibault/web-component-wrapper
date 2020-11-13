@@ -25,6 +25,7 @@ import React, {
     createRef,
     forwardRef,
     Fragment,
+    isValidElement as isValidReactElement,
     memo as memorize,
     ReactElement,
     Ref,
@@ -90,7 +91,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             We apply properties initially to allow wrapping components access
             them during there slot preparations.
         */
-        this.applySlotsToProperties()
+        this.applySlotsToInternalProperties()
     }
     /**
      * Triggered when this component is unmounted into the document. Event
@@ -115,7 +116,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.hasParentWithPreparedSlots())
             return
 
-        delete window.Symbol.for
         render(createElement(this.self.content, properties), this.root)
         /*
             NOTE: Update current instance if we have a newly created one
@@ -201,7 +201,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
       * Forward named slots as properties to component.
       * @returns Nothing.
       */
-    applySlotsToProperties():void {
+    applySlotsToInternalProperties():void {
         for (const name in this.preparedSlots)
             if (
                 Object.prototype.hasOwnProperty.call(
@@ -292,12 +292,41 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Prepared properties.
      */
     prepareProperties():Mapping<any> {
-        this.applySlotsToProperties()
+        this.applySlotsToInternalProperties()
         this.removeKnownUnwantedPropertyKeys(this.internalProperties)
-        // Copy properties to avoid manipulations in nested structures.
-        const result:Mapping<any> = Tools.copy(this.internalProperties)
+        // Copy properties to avoid manipulations in nested rendering.
+        const properties:Mapping<any> = this.copyInternalProperties()
         this.instance = createRef() as {current?:WebComponentAdapter}
-        result.ref = this.instance
+        properties.ref = this.instance
+        return properties
+    }
+    /**
+     * Copy properties while respecting react entities to not to copy at first
+     * and second array level.
+     * @returns Copied properties object.
+     */
+    copyInternalProperties():Mapping<any> {
+        const result:Mapping<any> = {}
+        for (const [name, value] of Object.entries(this.internalProperties))
+            if (
+                value === null ||
+                typeof value === 'symbol' ||
+                typeof value !== 'object' ||
+                isValidReactElement(value)
+            )
+                result[name] = value
+            else if (Array.isArray(value)) {
+                result[name] = []
+                for (const subValue of value)
+                    result[name].push(
+                        (
+                            subValue === null ||
+                            typeof subValue === 'symbol' ||
+                            typeof subValue !== 'object' ||
+                            isValidReactElement(subValue)
+                        ) ? subValue : Tools.copy(subValue)
+                    )
+            }
         return result
     }
     /**
