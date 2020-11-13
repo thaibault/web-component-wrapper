@@ -19,6 +19,7 @@
   ],
   "files": [
     "index.ts",
+    "polyfill.html.ejs",
     "React.ts",
     "React.js",
     "Web.ts",
