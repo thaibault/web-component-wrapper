@@ -42,16 +42,13 @@
                         ('<div class="wrapper">' +
                             "Example Properties\${id ? (' for ' + id) : ''}:" +
                             '<ul>' +
-                                '${Object.keys(self.properties)' +
-                                    '.filter(function(name) {' +
-                                        "return !name.endsWith('Function')" +
-                                    '})' +
+                                '${Object.keys(self.externalProperties)' +
                                     '.map(function(name) {' +
                                         'return (' +
                                             "'<li>' +" +
                                                 'name +' +
                                                 "': ' +" +
-                                                'Tools.represent(self.properties[name]) +' +
+                                                'Tools.represent(self.externalProperties[name]) +' +
                                             "'</li>'" +
                                         ')' +
                                     '})' +
