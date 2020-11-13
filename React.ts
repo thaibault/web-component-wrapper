@@ -16,7 +16,7 @@
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
 */
-// region imports 
+// region imports
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
 import React, {
@@ -115,6 +115,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.hasParentWithPreparedSlots())
             return
 
+        delete window.Symbol.for
         render(createElement(this.self.content, properties), this.root)
         /*
             NOTE: Update current instance if we have a newly created one
