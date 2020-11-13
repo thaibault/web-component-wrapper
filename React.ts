@@ -326,7 +326,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                             isValidReactElement(subValue)
                         ) ? subValue : Tools.copy(subValue)
                     )
-            }
+            } else
+                result[name] = Tools.copy(value)
         return result
     }
     /**
