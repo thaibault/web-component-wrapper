@@ -108,7 +108,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     render():void {
-        const properties:Mapping<any> = this.prepareProperties()
+        this.prepareInternalProperties()
         /*
             NOTE: We prevent a nested component from further rendering since
             they will be rendered by their parent.
@@ -116,7 +116,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.hasParentWithPreparedSlots())
             return
 
-        render(createElement(this.self.content, properties), this.root)
+        render(
+            createElement(this.self.content, this.internalProperties),
+            this.root
+        )
         /*
             NOTE: Update current instance if we have a newly created one
             otherwise check after current queue has been finished.
@@ -289,46 +292,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * Prepares the properties object to render against current component.
      * Creates a reference for being recognized of reacts internal state
      * updates.
-     * @returns Prepared properties.
+     * @returns Nothing.
      */
-    prepareProperties():Mapping<any> {
+    prepareInternalProperties():void {
         this.applySlotsToInternalProperties()
         this.removeKnownUnwantedPropertyKeys(this.internalProperties)
-        // Copy properties to avoid manipulations in nested rendering.
-        const properties:Mapping<any> = this.copyInternalProperties()
         this.instance = createRef() as {current?:WebComponentAdapter}
-        properties.ref = this.instance
-        return properties
-    }
-    /**
-     * Copy properties while respecting react entities to not to copy at first
-     * and second array level.
-     * @returns Copied properties object.
-     */
-    copyInternalProperties():Mapping<any> {
-        const result:Mapping<any> = {}
-        for (const [name, value] of Object.entries(this.internalProperties))
-            if (
-                value === null ||
-                typeof value === 'symbol' ||
-                typeof value !== 'object' ||
-                isValidReactElement(value)
-            )
-                result[name] = value
-            else if (Array.isArray(value)) {
-                result[name] = []
-                for (const subValue of value)
-                    result[name].push(
-                        (
-                            subValue === null ||
-                            typeof subValue === 'symbol' ||
-                            typeof subValue !== 'object' ||
-                            isValidReactElement(subValue)
-                        ) ? subValue : Tools.copy(subValue)
-                    )
-            } else
-                result[name] = Tools.copy(value)
-        return result
+        this.internalProperties.ref = this.instance
     }
     /**
      * Determines whether their exist a parent which should trigger this
