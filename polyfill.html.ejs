@@ -25,7 +25,7 @@
         typeof additionalFeatures === 'undefined' ? [] : additionalFeatures
     )
 _%>
-<script src="https://polyfill.io/v3/polyfill.js?features=<%- features.join('%2C') %>"></script>
+<script src="https://polyfill.io/v3/polyfill.js?features=<%- encodeURIComponent(features.join(',')) %>"></script>
 <script>
     /*
         Only provide the shadow dom polyfill and avoid to patch a lot
