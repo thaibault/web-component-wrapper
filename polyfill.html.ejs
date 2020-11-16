@@ -8,8 +8,14 @@
     features = [
         // Is used by "Object.entries" polyfill.
         'Array.prototype.flat',
+        // Usual array interaction.
+        'Array.prototype.@@iterator',
         // clientnode - Usage.
         'Array.prototype.includes',
+        // Usual dom interactions.
+        'DOMTokenList.prototype.@@iterator',
+        // Usual dom interactions.
+        'NodeList.prototype.@@iterator',
         // Iterating over mapping objects everywhere.
         'Object.entries',
         // Applying a scope object during template function call.
