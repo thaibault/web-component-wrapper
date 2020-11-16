@@ -351,6 +351,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             value = NullSymbol
         else if (value === undefined)
             value = UndefinedSymbol
+
         this.internalProperties[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
@@ -361,6 +362,26 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Generic property setter. Forwards field writes into "properties" field
      * and triggers re-rendering (optionally batched). After rendering all
      * known output events are triggered.
+     *
+     * In general it is a bad idea to write properties which shadow state
+     * properties (move to a controlled component instance) and re-set the
+     * property to "undefined" later to lose control.
+     *
+     * The reason is to avoid this scenario.:
+     *
+     * 1. Property overwrites state.
+     * 2. State changes but is shadows by recently changed
+     *    property.
+     *
+     * Ensure:
+     *
+     * 1. Property overwrites state.
+     * 2. Property is overwritten to "undefined" to lose
+     *    control over state.
+     * 3. State can change post property adaption didn't take
+     *    effect anymore: Communicate change back by
+     *    triggering output events.
+     *
      * @param name - Property name to write.
      * @param value - New value to write.
      * @returns Nothing.
@@ -376,16 +397,35 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.batchedPropertyUpdateRunning = true
                 this.batchedUpdateRunning = true
                 Tools.timeout(():void => {
-                    this.batchedPropertyUpdateRunning = false
-                    this.batchedUpdateRunning = false
+                    if (value !== undefined && this.isStateProperty(name)) {
+                        this.render()
 
-                    this.render()
+                        this.setInternalPropertyValue(name, undefined)
 
-                    this.triggerOuputEvents()
+                        this.batchedPropertyUpdateRunning = false
+                        this.batchedUpdateRunning = false
+
+                        this.render()
+
+                        this.triggerOuputEvents()
+                    } else {
+                        this.batchedPropertyUpdateRunning = false
+                        this.batchedUpdateRunning = false
+
+                        this.render()
+
+                        this.triggerOuputEvents()
+                    }
                 })
             }
         } else {
             this.render()
+
+            if (value !== undefined && this.isStateProperty(name)) {
+                this.setInternalPropertyValue(name, undefined)
+
+                this.render()
+            }
 
             this.triggerOuputEvents()
         }
@@ -544,6 +584,25 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     // / endregion
     // / region properties
+    /**
+     * Determines if given property name exists in wrapped component state.
+     * @param name - Property name to check if exists in state.
+     * @returns Boolean result.
+     */
+    isStateProperty(name:string):boolean {
+        return Boolean(
+            this.instance?.current?.state &&
+            (
+                Object.prototype.hasOwnProperty.call(
+                    this.instance?.current?.state, name
+                ) ||
+                this.instance.current.state.modelState &&
+                Object.prototype.hasOwnProperty.call(
+                    this.instance.current.state.modelState, name
+                )
+            )
+        )
+    }
     /**
      * Generates an alias to name and the other way around mapping if not
      * exists.
