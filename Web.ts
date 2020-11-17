@@ -400,14 +400,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     if (value !== undefined && this.isStateProperty(name)) {
                         this.render()
 
-                        this.setInternalPropertyValue(name, undefined)
+                        Tools.timeout(():void => {
+                            this.setInternalPropertyValue(name, undefined)
 
-                        this.batchedPropertyUpdateRunning = false
-                        this.batchedUpdateRunning = false
+                            this.batchedPropertyUpdateRunning = false
+                            this.batchedUpdateRunning = false
 
-                        this.render()
+                            this.render()
 
-                        this.triggerOuputEvents()
+                            this.triggerOuputEvents()
+                        })
                     } else {
                         this.batchedPropertyUpdateRunning = false
                         this.batchedUpdateRunning = false
