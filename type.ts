@@ -20,7 +20,7 @@ import PropertyTypes from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
 import {ComponentType as ReactComponentType} from 'react'
 
-import ReactWeb from './React'
+import Web from './Web'
 // endregion
 // region exports
 export type EventToPropertyMapping =
@@ -46,7 +46,7 @@ export interface WebComponentAdapter<Properties = Mapping<any>, State = Mapping<
     properties?:Properties
     state?:State
 }
-export type WebComponentAPI<WebComponent extends typeof ReactWeb = typeof ReactWeb> = {
+export type WebComponentAPI<WebComponent extends typeof Web = typeof Web> = {
     component:WebComponent
     register:(tagName?:string) => void
 }
