@@ -24,8 +24,10 @@
     "polyfill.html.ejs",
     "React.ts",
     "React.js",
+    "ReactNext.js",
     "Web.ts",
     "Web.js",
+    "WebNext.js",
     "type.ts"
   ],
   "repository": {
@@ -33,8 +35,9 @@
     "url": "https://github.com/thaibault/web-component-wrapper"
   },
   "scripts": {
-    "build": "weboptimizer build",
+    "build": "weboptimizer build && yarn build:next",
     "build:export": "weboptimizer build '{__reference__: \"target:export\"}'",
+    "build:next": "weboptimizer build '{__reference__: \"target:next\"}'",
     "check": "yarn check:types; yarn lint",
     "check:types": "weboptimizer check:types",
     "clear": "weboptimizer clear",
@@ -124,6 +127,16 @@
               }
             }
           }
+        }
+      }
+    },
+    "target:next": {
+      "generic": {
+        "supportedBrowsers": ["browserslist config and supports es6-class"]
+      },
+      "injection": {
+        "entry": {
+          "__evaluate__": "{ReactNext: './React.ts', WebNext: './Web.ts'}"
         }
       }
     }
