@@ -15,8 +15,10 @@
     "isolate",
     "native",
     "web",
-    "webcomponent"
+    "webcomponent",
+    "web-component"
   ],
+  "main": "index.js",
   "files": [
     "index.ts",
     "polyfill.html.ejs",
@@ -26,7 +28,6 @@
     "Web.js",
     "type.ts"
   ],
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/thaibault/web-component-wrapper"
