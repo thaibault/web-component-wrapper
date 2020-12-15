@@ -367,20 +367,17 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * properties (move to a controlled component instance) and re-set the
      * property to "undefined" later to lose control.
      *
-     * The reason is to avoid this scenario.:
+     * The reason causes in avoiding this scenario:
      *
      * 1. Property overwrites state.
-     * 2. State changes but is shadows by recently changed
-     *    property.
+     * 2. State changes but is shadowed by recent changes in property.
      *
      * Ensure:
      *
      * 1. Property overwrites state.
-     * 2. Property is overwritten to "undefined" to lose
-     *    control over state.
-     * 3. State can change post property adaption didn't take
-     *    effect anymore: Communicate change back by
-     *    triggering output events.
+     * 2. Property is overwritten to "undefined" to lose control over state.
+     * 3. State can change post property adaption didn't take effect anymore:
+     *    Communicate change back by triggering output events.
      *
      * @param name - Property name to write.
      * @param value - New value to write.
