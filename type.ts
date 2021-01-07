@@ -21,12 +21,12 @@ import {Mapping, ValueOf} from 'clientnode/type'
 import {ComponentType as ReactComponentType} from 'react'
 
 import Web from './Web'
-// endregion
+// endregion 
 // region exports
 export type EventToPropertyMapping =
     Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
 export type AttributesReflectionConfiguration =
-    Array<string>|Map<string, string|ValueOf<typeof PropertyTypes>>|string|{[key:string]:ValueOf<typeof PropertyTypes>|string}
+    Array<string>|Map<string, string|ValueOf<typeof PropertyTypes>>|string|Mapping<ValueOf<typeof PropertyTypes>|string>
 export interface WebComponentConfiguration {
     attachWebComponentAdapterIfNotExists?:boolean
     eventToPropertyMapping?:EventToPropertyMapping
