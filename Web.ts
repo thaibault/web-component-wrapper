@@ -540,8 +540,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param parameter - Event parameter.
      * @returns Nothing.
      */
-    forwardEvent(name:string, parameter:Array<any>):void {
-        this.dispatchEvent(
+    forwardEvent(name:string, parameter:Array<any>):boolean {
+        return this.dispatchEvent(
             new CustomEvent(name, {detail: {target: this, parameter}})
         )
     }
