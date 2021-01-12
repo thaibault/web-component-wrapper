@@ -54,6 +54,7 @@ import {ComponentType, WebComponentAdapter} from './type'
  * wrap with a reference wrapper to get updated about internal state changes.
  * @property static:content - React component to wrap.
  * @property static:react - React namespace.
+ * @property static:_name - Provided to name current component.
  *
  * @property preparedSlots - Cache of yet converted slot elements to their
  * react pendants.

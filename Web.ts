@@ -110,8 +110,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
         []
-    static shadowDOM:boolean|null|{delegateFocus?:boolean;mode:'closed'|'open'} =
-        null
+    static shadowDOM:boolean|null|{
+        delegateFocus?:boolean
+        mode:'closed'|'open'
+    } = null
     static trimSlots:boolean = true
     static _propertyAliasIndex:Mapping|undefined
     static _propertiesToReflectAsAttributes:Map<string, string|ValueOf<typeof PropertyTypes>>|undefined
