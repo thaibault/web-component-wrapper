@@ -1115,8 +1115,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static evaluateDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
         domNode:NodeType,
         scope:any = {},
-        filter?:(domNode:NodeType) => boolean,
-        map:CompiledDomNodeTemplate = new Map()
+        map:CompiledDomNodeTemplate = new Map(),
+        filter?:(domNode:NodeType) => boolean
     ):CompiledDomNodeTemplate {
         if (!map.has(domNode))
             Web.compileDomNodeTemplate<NodeType>(domNode, scope, filter, map)
@@ -1153,7 +1153,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         while (currentDomNode) {
             if (!filter || filter(currentDomNode as NodeType))
                 Web.evaluateDomNodeTemplate<NodeType>(
-                    currentDomNode as NodeType, scope, filter, map
+                    currentDomNode as NodeType, scope, map, filter
                 )
             currentDomNode = currentDomNode.nextSibling
         }
