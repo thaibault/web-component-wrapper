@@ -1059,8 +1059,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static compileDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
         domNode:NodeType,
         scope:any = [],
-        filter?:(domNode:NodeType) => boolean,
-        map:CompiledDomNodeTemplate = new Map()
+        map:CompiledDomNodeTemplate = new Map(),
+        filter?:(domNode:NodeType) => boolean
     ):CompiledDomNodeTemplate {
         const nodeName:string = domNode.nodeName.toLowerCase()
         let template:string|undefined
@@ -1096,7 +1096,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         while (currentDomNode) {
             if (!filter || filter(currentDomNode as NodeType))
                 children.push(Web.compileDomNodeTemplate<NodeType>(
-                    currentDomNode as NodeType, scope, filter, map
+                    currentDomNode as NodeType, scope, map, filter
                 ))
             currentDomNode = currentDomNode.nextSibling
         }
@@ -1119,7 +1119,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         filter?:(domNode:NodeType) => boolean
     ):CompiledDomNodeTemplate {
         if (!map.has(domNode))
-            Web.compileDomNodeTemplate<NodeType>(domNode, scope, filter, map)
+            Web.compileDomNodeTemplate<NodeType>(domNode, scope, map, filter)
         if (map.has(domNode)) {
             const {scopeNames, templateFunction} = map.get(domNode) as
                 CompiledDomNodeTemplateItem
