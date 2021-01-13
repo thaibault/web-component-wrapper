@@ -16,6 +16,7 @@
     endregion
 */
 // region imports
+import Tools from 'clientnode'
 import PropertyTypes from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
 import {ComponentType as ReactComponentType} from 'react'
@@ -23,6 +24,15 @@ import {ComponentType as ReactComponentType} from 'react'
 import Web from './Web'
 // endregion 
 // region exports
+export type CompiledDomNodeTemplateItem = {
+    children:Array<CompiledDomNodeTemplate>
+    scopeNames:Array<string>
+    template:string
+    templateFunction:ReturnType<typeof Tools.stringCompile>[1]
+}
+export type CompiledDomNodeTemplate =
+    Map<HTMLElement, CompiledDomNodeTemplateItem>
+
 export type EventToPropertyMapping =
     Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
 export type AttributesReflectionConfiguration =
