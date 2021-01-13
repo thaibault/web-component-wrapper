@@ -1120,31 +1120,33 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     ):CompiledDomNodeTemplate {
         if (!map.has(domNode))
             Web.compileDomNodeTemplate<NodeType>(domNode, scope, filter, map)
-        const {scopeNames, templateFunction} = map.get(domNode) as
-            CompiledDomNodeTemplateItem
-        if (typeof templateFunction === 'string')
-            console.warn(
-                `Error occurred during compiling node content: ` +
-                templateFunction
-            )
-        else {
-            let output:null|string = null
-            try {
-                output = templateFunction(
-                    ...scopeNames.map((name:string):any => scope[name])
-                )
-            } catch (error) {
+        if (map.has(domNode)) {
+            const {scopeNames, templateFunction} = map.get(domNode) as
+                CompiledDomNodeTemplateItem
+            if (typeof templateFunction === 'string')
                 console.warn(
-                    `Error occurred when running "${templateFunction}": with` +
-                    ` bound names "${scopeNames.join('", "')}": "` +
-                    `${Tools.represent(error)}".`
+                    `Error occurred during compiling node content: ` +
+                    templateFunction
                 )
+            else {
+                let output:null|string = null
+                try {
+                    output = templateFunction(
+                        ...scopeNames.map((name:string):any => scope[name])
+                    )
+                } catch (error) {
+                    console.warn(
+                        `Error occurred when running "${templateFunction}": ` +
+                        `with bound names "${scopeNames.join('", "')}": "` +
+                        `${Tools.represent(error)}".`
+                    )
+                }
+                if (output)
+                    if (domNode.nodeName.toLowerCase() === 'a')
+                        domNode.setAttribute('href', output)
+                    else
+                        domNode.textContent = output
             }
-            if (output)
-                if (domNode.nodeName.toLowerCase() === 'a')
-                    domNode.setAttribute('href', output)
-                else
-                    domNode.textContent = output
         }
         // Render content of each nested node.
         let currentDomNode:ChildNode|null = domNode.firstChild
