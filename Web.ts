@@ -44,6 +44,8 @@ import {EvaluationResult, Mapping, PlainObject, ValueOf} from 'clientnode/type'
 
 import {
     AttributesReflectionConfiguration,
+    CompiledDomNodeTemplate,
+    CompiledDomNodeTemplateItem,
     EventToPropertyMapping,
     WebComponentAdapter
 } from './type'
@@ -1012,6 +1014,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         }
     }
     // / endregion
+    // / region render
     /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
@@ -1031,9 +1034,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         /*
             NOTE: We first render into an intermediate render target and apply
-            slot content until we finally publish everything to document.
-            This avoid painting twice and internet explorer bugs with empty
-            node after first overwriting content of "this.root".
+            slot content until we finally publish everything to document. This
+            avoid painting twice and internet explorer bugs with empty node
+            after first overwriting content of "this.root".
         */
         const renderTargetDomNode:HTMLDivElement =
             document.createElement('div')
@@ -1042,6 +1045,119 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
     }
+    /**
+     * Compiles given node content and their children. Provides corresponding
+     * map of compiled template functions connected to their (sub) nodes and
+     * expected scope names.
+     *
+     * @param domNode - Node to compile.
+     * @param scope - Scope to extract names from.
+     * @param filter - Filter function to avoid compiling specific nodes.
+     * @param map - Cache map to save compiled nodes in.
+     * @returns Map of compiled templates.
+     */
+    static compileDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
+        domNode:NodeType,
+        scope:any = [],
+        filter?:(domNode:NodeType) => boolean,
+        map:CompiledDomNodeTemplate = new Map()
+    ):CompiledDomNodeTemplate {
+        const nodeName:string = domNode.nodeName.toLowerCase()
+        let template:string|undefined
+        if (['a', '#text'].includes(nodeName)) {
+            const content:null|string = nodeName === 'a' ?
+                domNode.getAttribute('href') :
+                domNode.textContent
+            // NOTE: First three conditions are only for performance.
+            if (
+                typeof content === 'string' &&
+                content.includes('${') &&
+                content.includes('}') &&
+                /\${.+}/.test(content)
+            )
+                template = content.replace(/&nbsp;/g, ' ').trim()
+        }
+        const children:Array<CompiledDomNodeTemplate> = []
+        if (template) {
+            const result:ReturnType<typeof Tools.stringCompile> =
+                Tools.stringCompile(`\`${template}\``, scope)
+            map.set(
+                domNode,
+                {
+                    children,
+                    scopeNames: result[0],
+                    template,
+                    templateFunction: result[1]
+                }
+            )
+        }
+        // Render content of each nested node.
+        let currentDomNode:ChildNode|null = domNode.firstChild
+        while (currentDomNode) {
+            if (!filter || filter(currentDomNode as NodeType))
+                children.push(Web.compileDomNodeTemplate<NodeType>(
+                    currentDomNode as NodeType, scope, filter, map
+                ))
+            currentDomNode = currentDomNode.nextSibling
+        }
+        return map
+    }
+    /**
+     * Compiles and evaluates given node content and their children. Replaces
+     * each node content with their evaluated representation.
+     *
+     * @param domNode - Node to evaluate.
+     * @param scope - Scope to render against.
+     * @param filter - Filter function to avoid evaluation specific nodes.
+     * @param map - Cache map to save compiled nodes in.
+     * @returns Map of compiled templates.
+     */
+    static evaluateDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
+        domNode:NodeType,
+        scope:any = {},
+        filter?:(domNode:NodeType) => boolean,
+        map:CompiledDomNodeTemplate = new Map()
+    ):CompiledDomNodeTemplate {
+        if (!map.has(domNode))
+            Web.compileDomNodeTemplate<NodeType>(domNode, scope, filter, map)
+        const {scopeNames, templateFunction} = map.get(domNode) as
+            CompiledDomNodeTemplateItem
+        if (typeof templateFunction === 'string')
+            console.warn(
+                `Error occurred during compiling node content: ` +
+                templateFunction
+            )
+        else {
+            let output:null|string = null
+            try {
+                output = templateFunction(
+                    ...scopeNames.map((name:string):any => scope[name])
+                )
+            } catch (error) {
+                console.warn(
+                    `Error occurred when running "${templateFunction}": with` +
+                    ` bound names "${scopeNames.join('", "')}": "` +
+                    `${Tools.represent(error)}".`
+                )
+            }
+            if (output)
+                if (domNode.nodeName.toLowerCase() === 'a')
+                    domNode.setAttribute('href', output)
+                else
+                    domNode.textContent = output
+        }
+        // Render content of each nested node.
+        let currentDomNode:ChildNode|null = domNode.firstChild
+        while (currentDomNode) {
+            if (!filter || filter(currentDomNode as NodeType))
+                Web.evaluateDomNodeTemplate<NodeType>(
+                    currentDomNode as NodeType, scope, filter, map
+                )
+            currentDomNode = currentDomNode.nextSibling
+        }
+        return map
+    }
+    // / endregion
     // endregion
 }
 export default Web
