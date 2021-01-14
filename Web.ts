@@ -154,7 +154,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         if (!this.self._propertiesToReflectAsAttributes)
             this.self._propertiesToReflectAsAttributes =
-                this.normalizePropertyTypeList(
+                this.self.normalizePropertyTypeList(
                     this.self.propertiesToReflectAsAttributes
                 )
 
@@ -436,12 +436,161 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // endregion
     // region helper
     // / region utility
+    // // region dom nodes
+    /**
+     * Compiles given node content and their children. Provides corresponding
+     * map of compiled template functions connected to their (sub) nodes and
+     * expected scope names.
+     *
+     * @param domNode - Node to compile.
+     * @param scope - Scope to extract names from.
+     * @param filter - Filter function to avoid compiling specific nodes.
+     * @param map - Cache map to save compiled nodes in.
+     * @returns Map of compiled templates.
+     */
+    static compileDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
+        domNode:NodeType,
+        scope:any = [],
+        map:CompiledDomNodeTemplate = new Map(),
+        filter?:(domNode:NodeType) => boolean
+    ):CompiledDomNodeTemplate {
+        const nodeName:string = domNode.nodeName.toLowerCase()
+        let template:string|undefined
+        if (['a', '#text'].includes(nodeName)) {
+            const content:null|string = nodeName === 'a' ?
+                domNode.getAttribute('href') :
+                domNode.textContent
+            // NOTE: First three conditions are only for performance.
+            if (
+                typeof content === 'string' &&
+                content.includes('${') &&
+                content.includes('}') &&
+                /\${.+}/.test(content)
+            )
+                template = content.replace(/&nbsp;/g, ' ').trim()
+        }
+        const children:Array<CompiledDomNodeTemplate> = []
+        if (template) {
+            const result:ReturnType<typeof Tools.stringCompile> =
+                Tools.stringCompile(`\`${template}\``, scope)
+            map.set(
+                domNode,
+                {
+                    children,
+                    scopeNames: result[0],
+                    template,
+                    templateFunction: result[1]
+                }
+            )
+        }
+        // Render content of each nested node.
+        let currentDomNode:ChildNode|null = domNode.firstChild
+        while (currentDomNode) {
+            if (!filter || filter(currentDomNode as NodeType))
+                children.push(Web.compileDomNodeTemplate<NodeType>(
+                    currentDomNode as NodeType, scope, map, filter
+                ))
+            currentDomNode = currentDomNode.nextSibling
+        }
+        return map
+    }
+    /**
+     * Compiles and evaluates given node content and their children. Replaces
+     * each node content with their evaluated representation.
+     *
+     * @param domNode - Node to evaluate.
+     * @param scope - Scope to render against.
+     * @param filter - Filter function to avoid evaluation specific nodes.
+     * @param map - Cache map to save compiled nodes in.
+     * @returns Map of compiled templates.
+     */
+    static evaluateDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
+        domNode:NodeType,
+        scope:any = {},
+        map:CompiledDomNodeTemplate = new Map(),
+        filter?:(domNode:NodeType) => boolean
+    ):CompiledDomNodeTemplate {
+        if (!map.has(domNode))
+            Web.compileDomNodeTemplate<NodeType>(domNode, scope, map, filter)
+        if (map.has(domNode)) {
+            const {scopeNames, templateFunction} = map.get(domNode) as
+                CompiledDomNodeTemplateItem
+            if (typeof templateFunction === 'string')
+                console.warn(
+                    `Error occurred during compiling node content: ` +
+                    templateFunction
+                )
+            else {
+                let output:null|string = null
+                try {
+                    output = templateFunction(
+                        ...scopeNames.map((name:string):any => scope[name])
+                    )
+                } catch (error) {
+                    console.warn(
+                        `Error occurred when running "${templateFunction}": ` +
+                        `with bound names "${scopeNames.join('", "')}": "` +
+                        `${Tools.represent(error)}".`
+                    )
+                }
+                if (output)
+                    if (domNode.nodeName.toLowerCase() === 'a')
+                        domNode.setAttribute('href', output)
+                    else
+                        domNode.textContent = output
+            }
+        }
+        // Render content of each nested node.
+        let currentDomNode:ChildNode|null = domNode.firstChild
+        while (currentDomNode) {
+            if (!filter || filter(currentDomNode as NodeType))
+                Web.evaluateDomNodeTemplate<NodeType>(
+                    currentDomNode as NodeType, scope, map, filter
+                )
+            currentDomNode = currentDomNode.nextSibling
+        }
+        return map
+    }
+    /**
+     * Replaces given dom node with given nodes.
+     * @param domNode - Node to replace its children.
+     * @param children - Element or array of elements to set as children.
+     * @returns Nothing.
+     */
+    static replaceDomNodes(
+        domNode:HTMLElement, children:Array<Node>|Node
+    ):void {
+        for (const child of ([] as Array<Node>).concat(children).reverse()) {
+            if (!(
+                Web.trimSlots &&
+                (
+                    child.nodeType === Node.TEXT_NODE &&
+                    child.nodeValue?.trim() === ''
+                )
+            ))
+                domNode.after(child)
+        }
+        domNode.remove()
+    }
+    /**
+     * Moves content of given dom node one level up and removes given node.
+     * @param domNode - Node to unwrap.
+     * @returns Nothing.
+     */
+    static unwrapDomNode(domNode:HTMLElement):void {
+        // Move all children out of the element to unwrap fallback content.
+        const parent:HTMLElement = domNode.parentNode as HTMLElement
+        while (domNode.firstChild)
+            parent.insertBefore(domNode.firstChild, domNode)
+        parent.removeChild(domNode)
+    }
+    // // endregion
     /**
      * Converts given list, item or map to a map (with ordering).
      * @param list - List to convert.
      * @returns Generated map.
      */
-    normalizePropertyTypeList(
+    static normalizePropertyTypeList(
         value:AttributesReflectionConfiguration
     ):Map<string, string|ValueOf<typeof PropertyTypes>> {
         if (typeof value === 'string')
@@ -450,8 +599,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             const givenValue:Array<string> = value
             value = new Map<string, string|ValueOf<typeof PropertyTypes>>()
             for (const name of givenValue)
-                if (this.self.propertyTypes.hasOwnProperty(name))
-                    value.set(name, this.self.propertyTypes[name])
+                if (Web.propertyTypes.hasOwnProperty(name))
+                    value.set(name, Web.propertyTypes[name])
         } else
             value = Tools.convertPlainObjectToMap(value)
         return value as Map<string, string|ValueOf<typeof PropertyTypes>>
@@ -550,25 +699,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / endregion
     // / region slots
     /**
-     * Replaces given dom node with given nodes.
-     * @param domNode - Node to replace its children.
-     * @param children - Element or array of elements to set as children.
-     * @returns Nothing.
-     */
-    replaceDomNodes(domNode:HTMLElement, children:Array<Node>|Node):void {
-        for (const child of ([] as Array<Node>).concat(children).reverse()) {
-            if (!(
-                this.self.trimSlots &&
-                (
-                    child.nodeType === Node.TEXT_NODE &&
-                    child.nodeValue?.trim() === ''
-                )
-            ))
-                domNode.after(child)
-        }
-        domNode.remove()
-    }
-    /**
      * Renders component given slot contents into given dom node.
      * @param targetDomNode - Target dom node to render slots into.
      * @returns Nothing.
@@ -578,11 +708,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             'slot'
         ))) {
             const name:null|string = domNode.getAttribute('name')
-            if (name === null || name === 'default') {
+            if (name === null || name === 'default')
                 if (this.slots.default)
-                    this.replaceDomNodes(domNode, this.slots.default)
-            } else if (Object.prototype.hasOwnProperty.call(this.slots, name))
-                this.replaceDomNodes(domNode, this.slots[name])
+                    this.self.replaceDomNodes(domNode, this.slots.default)
+                else
+                    this.self.unwrapDomNode(domNode)
+            else if (Object.prototype.hasOwnProperty.call(this.slots, name))
+                this.self.replaceDomNodes(domNode, this.slots[name])
+            else
+                this.self.unwrapDomNode(domNode)
         }
     }
     // / endregion
@@ -1032,6 +1166,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             return
         }
 
+        console.log('SLOT', this.slots)
         /*
             NOTE: We first render into an intermediate render target and apply
             slot content until we finally publish everything to document. This
@@ -1044,120 +1179,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.applySlots(renderTargetDomNode)
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
-    }
-    /**
-     * Compiles given node content and their children. Provides corresponding
-     * map of compiled template functions connected to their (sub) nodes and
-     * expected scope names.
-     *
-     * @param domNode - Node to compile.
-     * @param scope - Scope to extract names from.
-     * @param filter - Filter function to avoid compiling specific nodes.
-     * @param map - Cache map to save compiled nodes in.
-     * @returns Map of compiled templates.
-     */
-    static compileDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
-        domNode:NodeType,
-        scope:any = [],
-        map:CompiledDomNodeTemplate = new Map(),
-        filter?:(domNode:NodeType) => boolean
-    ):CompiledDomNodeTemplate {
-        const nodeName:string = domNode.nodeName.toLowerCase()
-        let template:string|undefined
-        if (['a', '#text'].includes(nodeName)) {
-            const content:null|string = nodeName === 'a' ?
-                domNode.getAttribute('href') :
-                domNode.textContent
-            // NOTE: First three conditions are only for performance.
-            if (
-                typeof content === 'string' &&
-                content.includes('${') &&
-                content.includes('}') &&
-                /\${.+}/.test(content)
-            )
-                template = content.replace(/&nbsp;/g, ' ').trim()
-        }
-        const children:Array<CompiledDomNodeTemplate> = []
-        if (template) {
-            const result:ReturnType<typeof Tools.stringCompile> =
-                Tools.stringCompile(`\`${template}\``, scope)
-            map.set(
-                domNode,
-                {
-                    children,
-                    scopeNames: result[0],
-                    template,
-                    templateFunction: result[1]
-                }
-            )
-        }
-        // Render content of each nested node.
-        let currentDomNode:ChildNode|null = domNode.firstChild
-        while (currentDomNode) {
-            if (!filter || filter(currentDomNode as NodeType))
-                children.push(Web.compileDomNodeTemplate<NodeType>(
-                    currentDomNode as NodeType, scope, map, filter
-                ))
-            currentDomNode = currentDomNode.nextSibling
-        }
-        return map
-    }
-    /**
-     * Compiles and evaluates given node content and their children. Replaces
-     * each node content with their evaluated representation.
-     *
-     * @param domNode - Node to evaluate.
-     * @param scope - Scope to render against.
-     * @param filter - Filter function to avoid evaluation specific nodes.
-     * @param map - Cache map to save compiled nodes in.
-     * @returns Map of compiled templates.
-     */
-    static evaluateDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
-        domNode:NodeType,
-        scope:any = {},
-        map:CompiledDomNodeTemplate = new Map(),
-        filter?:(domNode:NodeType) => boolean
-    ):CompiledDomNodeTemplate {
-        if (!map.has(domNode))
-            Web.compileDomNodeTemplate<NodeType>(domNode, scope, map, filter)
-        if (map.has(domNode)) {
-            const {scopeNames, templateFunction} = map.get(domNode) as
-                CompiledDomNodeTemplateItem
-            if (typeof templateFunction === 'string')
-                console.warn(
-                    `Error occurred during compiling node content: ` +
-                    templateFunction
-                )
-            else {
-                let output:null|string = null
-                try {
-                    output = templateFunction(
-                        ...scopeNames.map((name:string):any => scope[name])
-                    )
-                } catch (error) {
-                    console.warn(
-                        `Error occurred when running "${templateFunction}": ` +
-                        `with bound names "${scopeNames.join('", "')}": "` +
-                        `${Tools.represent(error)}".`
-                    )
-                }
-                if (output)
-                    if (domNode.nodeName.toLowerCase() === 'a')
-                        domNode.setAttribute('href', output)
-                    else
-                        domNode.textContent = output
-            }
-        }
-        // Render content of each nested node.
-        let currentDomNode:ChildNode|null = domNode.firstChild
-        while (currentDomNode) {
-            if (!filter || filter(currentDomNode as NodeType))
-                Web.evaluateDomNodeTemplate<NodeType>(
-                    currentDomNode as NodeType, scope, map, filter
-                )
-            currentDomNode = currentDomNode.nextSibling
-        }
-        return map
     }
     // / endregion
     // endregion
