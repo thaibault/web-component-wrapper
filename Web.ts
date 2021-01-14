@@ -1170,7 +1170,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             return
         }
 
-        console.log('SLOT', this.slots)
         /*
             NOTE: We first render into an intermediate render target and apply
             slot content until we finally publish everything to document. This
