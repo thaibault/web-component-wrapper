@@ -461,19 +461,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             unsafe: false,
             ...options
         }
-        if (options.unsafe && Web.hasCode(domNode.innerHTML)) {
-            const result:ReturnType<typeof Tools.stringCompile> =
-                Tools.stringCompile(`\`${domNode.innerHTML}\``, scope)
-            options.map!.set(
-                domNode,
-                {
-                    children: [],
-                    scopeNames: result[0],
-                    template: domNode.innerHTML,
-                    templateFunction: result[1]
-                }
-            )
-        } else {
+        if (options.unsafe)
+            if (Web.hasCode(domNode.innerHTML)) {
+                const result:ReturnType<typeof Tools.stringCompile> =
+                    Tools.stringCompile(`\`${domNode.innerHTML}\``, scope)
+                options.map!.set(
+                    domNode,
+                    {
+                        children: [],
+                        scopeNames: result[0],
+                        template: domNode.innerHTML,
+                        templateFunction: result[1]
+                    }
+                )
+            }
+        else {
             const nodeName:string = domNode.nodeName.toLowerCase()
             let template:string|undefined
             if (['a', '#text'].includes(nodeName)) {
@@ -633,7 +635,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             typeof content === 'string' &&
             content.includes('${') &&
             content.includes('}') &&
-            /\${.+}/.test(content)
+            /\${[\s\S]+}/.test(content)
         )
     }
     /**
