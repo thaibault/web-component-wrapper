@@ -444,55 +444,73 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      *
      * @param domNode - Node to compile.
      * @param scope - Scope to extract names from.
-     * @param filter - Filter function to avoid compiling specific nodes.
-     * @param map - Cache map to save compiled nodes in.
+     * @param options - Additional compile options.
      * @returns Map of compiled templates.
      */
     static compileDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
         domNode:NodeType,
         scope:any = [],
-        map:CompiledDomNodeTemplate = new Map(),
-        filter?:(domNode:NodeType) => boolean
+        options:{
+            filter?:(domNode:NodeType) => boolean
+            map?:CompiledDomNodeTemplate
+            unsafe?:boolean
+        } = {}
     ):CompiledDomNodeTemplate {
-        const nodeName:string = domNode.nodeName.toLowerCase()
-        let template:string|undefined
-        if (['a', '#text'].includes(nodeName)) {
-            const content:null|string = nodeName === 'a' ?
-                domNode.getAttribute('href') :
-                domNode.textContent
-            // NOTE: First three conditions are only for performance.
-            if (
-                typeof content === 'string' &&
-                content.includes('${') &&
-                content.includes('}') &&
-                /\${.+}/.test(content)
-            )
-                template = content.replace(/&nbsp;/g, ' ').trim()
+        options = {
+            map: new Map(),
+            unsafe: false,
+            ...options
         }
-        const children:Array<CompiledDomNodeTemplate> = []
-        if (template) {
+        if (options.unsafe && Web.hasCode(domNode.innerHTML)) {
             const result:ReturnType<typeof Tools.stringCompile> =
-                Tools.stringCompile(`\`${template}\``, scope)
-            map.set(
+                Tools.stringCompile(`\`${domNode.innerHTML}\``, scope)
+            options.map!.set(
                 domNode,
                 {
-                    children,
+                    children: [],
                     scopeNames: result[0],
-                    template,
+                    template: domNode.innerHTML,
                     templateFunction: result[1]
                 }
             )
+        } else {
+            const nodeName:string = domNode.nodeName.toLowerCase()
+            let template:string|undefined
+            if (['a', '#text'].includes(nodeName)) {
+                const content:null|string = nodeName === 'a' ?
+                    domNode.getAttribute('href') :
+                    domNode.textContent
+                if (Web.hasCode(content))
+                    template = content!.replace(/&nbsp;/g, ' ').trim()
+            }
+            const children:Array<CompiledDomNodeTemplate> = []
+            if (template) {
+                const result:ReturnType<typeof Tools.stringCompile> =
+                    Tools.stringCompile(`\`${template}\``, scope)
+                options.map!.set(
+                    domNode,
+                    {
+                        children,
+                        scopeNames: result[0],
+                        template,
+                        templateFunction: result[1]
+                    }
+                )
+            }
+            // Render content of each nested node.
+            let currentDomNode:ChildNode|null = domNode.firstChild
+            while (currentDomNode) {
+                if (
+                    !options.filter ||
+                    options.filter(currentDomNode as NodeType)
+                )
+                    children.push(Web.compileDomNodeTemplate<NodeType>(
+                        currentDomNode as NodeType, scope, options
+                    ))
+                currentDomNode = currentDomNode.nextSibling
+            }
         }
-        // Render content of each nested node.
-        let currentDomNode:ChildNode|null = domNode.firstChild
-        while (currentDomNode) {
-            if (!filter || filter(currentDomNode as NodeType))
-                children.push(Web.compileDomNodeTemplate<NodeType>(
-                    currentDomNode as NodeType, scope, map, filter
-                ))
-            currentDomNode = currentDomNode.nextSibling
-        }
-        return map
+        return options.map!
     }
     /**
      * Compiles and evaluates given node content and their children. Replaces
@@ -507,13 +525,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static evaluateDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
         domNode:NodeType,
         scope:any = {},
-        map:CompiledDomNodeTemplate = new Map(),
-        filter?:(domNode:NodeType) => boolean
+        options:{
+            filter?:(domNode:NodeType) => boolean
+            map?:CompiledDomNodeTemplate
+            unsafe?:boolean
+        } = {}
     ):CompiledDomNodeTemplate {
-        if (!map.has(domNode))
-            Web.compileDomNodeTemplate<NodeType>(domNode, scope, map, filter)
-        if (map.has(domNode)) {
-            const {scopeNames, templateFunction} = map.get(domNode) as
+        options = {
+            map: new Map(),
+            unsafe: false,
+            ...options
+        }
+        if (!options.map!.has(domNode))
+            Web.compileDomNodeTemplate<NodeType>(domNode, scope, options)
+        if (options.map!.has(domNode)) {
+            const {scopeNames, templateFunction} = options.map!.get(domNode) as
                 CompiledDomNodeTemplateItem
             if (typeof templateFunction === 'string')
                 console.warn(
@@ -533,23 +559,30 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         `${Tools.represent(error)}".`
                     )
                 }
-                if (output)
-                    if (domNode.nodeName.toLowerCase() === 'a')
+                if (output !== null)
+                    if (options.unsafe)
+                        domNode.innerHTML = output
+                    else if (domNode.nodeName.toLowerCase() === 'a')
                         domNode.setAttribute('href', output)
                     else
                         domNode.textContent = output
             }
         }
-        // Render content of each nested node.
-        let currentDomNode:ChildNode|null = domNode.firstChild
-        while (currentDomNode) {
-            if (!filter || filter(currentDomNode as NodeType))
-                Web.evaluateDomNodeTemplate<NodeType>(
-                    currentDomNode as NodeType, scope, map, filter
+        if (!options.unsafe) {
+            // Render content of each nested node.
+            let currentDomNode:ChildNode|null = domNode.firstChild
+            while (currentDomNode) {
+                if (
+                    !options.filter ||
+                    options.filter(currentDomNode as NodeType)
                 )
-            currentDomNode = currentDomNode.nextSibling
+                    Web.evaluateDomNodeTemplate<NodeType>(
+                        currentDomNode as NodeType, scope, options
+                    )
+                currentDomNode = currentDomNode.nextSibling
+            }
         }
-        return map
+        return options.map!
     }
     /**
      * Replaces given dom node with given nodes.
@@ -589,6 +622,20 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         return result
     }
     // // endregion
+    /**
+     * Checks if given content hast code (to compile and render).
+     * @param content - Potential string with code inside.
+     * @returns A boolean indicating whether given content has code.
+     */
+    static hasCode(content:any):boolean {
+        return (
+            // NOTE: First three conditions are only for performance.
+            typeof content === 'string' &&
+            content.includes('${') &&
+            content.includes('}') &&
+            /\${.+}/.test(content)
+        )
+    }
     /**
      * Converts given list, item or map to a map (with ordering).
      * @param list - List to convert.
