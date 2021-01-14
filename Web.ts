@@ -708,6 +708,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applySlots(targetDomNode:HTMLElement):void {
+        // TODO unwrap domNode may return a text node only!
         for (const domNode of Array.from(targetDomNode.querySelectorAll(
             'slot'
         ))) {
@@ -720,7 +721,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             else if (Object.prototype.hasOwnProperty.call(this.slots, name))
                 this.self.replaceDomNodes(domNode, this.slots[name])
             else
-                this.slots[name] = this.self.unwrapDomNode(domNode)[0]
+                this.slots[name] = this.self.unwrapDomNode(domNode)
+                    .filter((domNode:Node):boolean =>
+                        domNode.nodeName.toLowerCase() !== '#text'
+                    )[0]
         }
     }
     // / endregion
