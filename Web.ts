@@ -577,12 +577,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param domNode - Node to unwrap.
      * @returns Nothing.
      */
-    static unwrapDomNode(domNode:HTMLElement):void {
+    static unwrapDomNode(domNode:HTMLElement):Array<ChildNode> {
         // Move all children out of the element to unwrap fallback content.
         const parent:HTMLElement = domNode.parentNode as HTMLElement
-        while (domNode.firstChild)
+        const result:Array<ChildNode> = []
+        while (domNode.firstChild) {
+            result.push(domNode.firstChild)
             parent.insertBefore(domNode.firstChild, domNode)
+        }
         parent.removeChild(domNode)
+        return result
     }
     // // endregion
     /**
@@ -712,11 +716,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 if (this.slots.default)
                     this.self.replaceDomNodes(domNode, this.slots.default)
                 else
-                    this.self.unwrapDomNode(domNode)
+                    this.slots.default = this.self.unwrapDomNode(domNode)
             else if (Object.prototype.hasOwnProperty.call(this.slots, name))
                 this.self.replaceDomNodes(domNode, this.slots[name])
             else
-                this.self.unwrapDomNode(domNode)
+                this.slots[name] = this.self.unwrapDomNode(domNode)[0]
         }
     }
     // / endregion
