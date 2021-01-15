@@ -135,7 +135,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     root:ShadowRoot|Web<TElement>
     runDomConnectionAndRendringInSameEventQueue:boolean = false
     readonly self:typeof Web = Web
-    slots:Mapping<Node> & {default?:Array<Node>} = {}
+    slots:Mapping<HTMLElement> & {default?:Array<HTMLElement>} = {}
     // endregion
     // region live cycle hooks
     /**
@@ -239,25 +239,24 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.batchedUpdateRunning = false
 
         this.slots = {}
-        const slots:NodeList = this.querySelectorAll('[slot]')
-        for (let slot of Array.from(slots))
+        const slots:Array<HTMLElement> =
+            Array.from(this.querySelectorAll('[slot]'))
+        for (let slot of slots)
             this.slots[
                 (
-                    (slot as HTMLElement).getAttribute &&
-                    (slot as HTMLElement).getAttribute('slot') &&
-                    ((slot as HTMLElement).getAttribute('slot') as string)
-                        .trim()
+                    slot.getAttribute &&
+                    slot.getAttribute('slot') &&
+                    slot.getAttribute('slot')!.trim()
                 ) ?
-                    (
-                        (slot as HTMLElement).getAttribute('slot') as string
-                    ).trim() :
+                    slot.getAttribute('slot')!.trim() :
                     slot.nodeName
             ] = slot
             // NOTE: Append ".cloneNode(true)" if desired.
         if (this.slots.default)
-            this.slots.default = [this.slots.default as unknown as Node]
+            this.slots.default = [this.slots.default as unknown as HTMLElement]
         else if (this.childNodes.length > 0)
-            this.slots.default = Array.from(this.childNodes)
+            this.slots.default = Array.from(this.childNodes) as
+                Array<HTMLElement>
         else
             this.slots.default = []
 
@@ -757,7 +756,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applySlots(targetDomNode:HTMLElement):void {
-        // TODO unwrap domNode may return a text node only!
         for (const domNode of Array.from(targetDomNode.querySelectorAll(
             'slot'
         ))) {
@@ -766,14 +764,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 if (this.slots.default)
                     this.self.replaceDomNodes(domNode, this.slots.default)
                 else
-                    this.slots.default = this.self.unwrapDomNode(domNode)
+                    this.slots.default = this.self.unwrapDomNode(domNode) as
+                        Array<HTMLElement>
             else if (Object.prototype.hasOwnProperty.call(this.slots, name))
                 this.self.replaceDomNodes(domNode, this.slots[name])
             else
                 this.slots[name] = this.self.unwrapDomNode(domNode)
                     .filter((domNode:Node):boolean =>
                         domNode.nodeName.toLowerCase() !== '#text'
-                    )[0]
+                    )[0] as HTMLElement
         }
     }
     // / endregion
