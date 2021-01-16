@@ -270,7 +270,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     nested content either.
                 */
                 slot = slot.cloneNode() as HTMLElement
-                slot.innerHTML = content
+                slot.innerHTML = ''
+                ;(slot as HTMLElement & {template:string}).template = content
             } else if (this.self.cloneSlots)
                 slot = slot.cloneNode(true) as HTMLElement
             this.slots[
@@ -491,21 +492,27 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             unsafe: false,
             ...options
         }
-        if (options.unsafe)
-            if (Web.hasCode(domNode.innerHTML)) {
+        if (options.unsafe) {
+            let template:string = domNode.innerHTML
+            if (
+                domNode.innerHTML === '' &&
+                (domNode as NodeType & {template:string}).template
+            )
+                template = (domNode as NodeType & {template:string}).template
+            if (Web.hasCode(template)) {
                 const result:ReturnType<typeof Tools.stringCompile> =
-                    Tools.stringCompile(`\`${domNode.innerHTML}\``, scope)
+                    Tools.stringCompile(`\`${template}\``, scope)
                 options.map!.set(
                     domNode,
                     {
                         children: [],
                         scopeNames: result[0],
-                        template: domNode.innerHTML,
+                        template,
                         templateFunction: result[1]
                     }
                 )
             }
-        else {
+        } else {
             const nodeName:string = domNode.nodeName.toLowerCase()
             let template:string|undefined
             if (['a', '#text'].includes(nodeName)) {
