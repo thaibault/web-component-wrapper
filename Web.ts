@@ -65,6 +65,8 @@ import {
  * attributes into properties and reflect property changes back to attributes.
  * @property static:propertiesToReflectAsAttributes - An item, list or mapping
  * of properties to reflect as attributes.
+ * @property static:renderSlots - Indicates whether determined slots should be
+ * rendered into root node.
  * @property static:shadowDOM - Configures if a shadow dom should be used
  * during web-component instantiation. Can hold initialize configuration.
  * @property static:trimSlots - Ignore empty text nodes while applying slots.
@@ -117,6 +119,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
         []
+    static renderSlots:boolean = true
     static shadowDOM:boolean|null|{
         delegateFocus?:boolean
         mode:'closed'|'open'
@@ -799,14 +802,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         ))) {
             const name:null|string = domNode.getAttribute('name')
             if (name === null || name === 'default')
-                if (this.slots.default)
-                    this.self.replaceDomNodes(domNode, this.slots.default)
-                else
+                if (this.slots.default) {
+                    if (this.self.renderSlots)
+                        this.self.replaceDomNodes(domNode, this.slots.default)
+                } else
                     this.slots.default = this.self.unwrapDomNode(domNode) as
                         Array<HTMLElement>
-            else if (Object.prototype.hasOwnProperty.call(this.slots, name))
-                this.self.replaceDomNodes(domNode, this.slots[name])
-            else
+            else if (Object.prototype.hasOwnProperty.call(this.slots, name)) {
+                if (this.self.renderSlots)
+                    this.self.replaceDomNodes(domNode, this.slots[name])
+            } else
                 this.slots[name] = this.self.unwrapDomNode(domNode)
                     .filter((domNode:Node):boolean =>
                         domNode.nodeName.toLowerCase() !== '#text'
