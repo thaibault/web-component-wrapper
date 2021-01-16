@@ -248,24 +248,29 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             Array.from(this.querySelectorAll('[slot]'))
         for (let slot of slots) {
             /*
-                If real (template) code is wrapped in a "pre" tag unwrap it
+                If real (template) code is wrapped in a "textarea" tag unwrap it
                 now. This extra wrapping can be used to avoid first dom
                 rendering before actual template code has been evaluated.
             */
             if (
-                slot.firstElementChild?.nodeName.toLowerCase() === 'pre' &&
+                slot.firstElementChild?.nodeName.toLowerCase() ===
+                    'textarea' &&
                 (
                     !slot.firstElementChild.hasAttribute('data-no-template') ||
                     slot.firstElementChild.getAttribute('data-no-template') ===
                         'false'
                 )
             ) {
+                const content:string =
+                    (slot.firstElementChild as HTMLInputElement).value
                 /*
                     NOTE: These kind of slots is always used as a template and
                     should therefor be copied in every case.
+                    NOTE: A flat copy should suffice since we will replace
+                    nested content either.
                 */
-                slot = slot.cloneNode(true) as HTMLElement
-                slot.innerHTML = slot.firstElementChild!.innerHTML
+                slot = slot.cloneNode() as HTMLElement
+                slot.innerHTML = content
             } else if (this.self.cloneSlots)
                 slot = slot.cloneNode(true) as HTMLElement
             this.slots[
