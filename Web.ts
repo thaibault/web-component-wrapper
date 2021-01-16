@@ -52,6 +52,10 @@ import {
 // endregion
 /**
  * Generic web component to render a content against instance specific values.
+ * @property static:cloneSlots - Indicates whether to clone slot nots before
+ * transcluding them. If a slot should be used multiple times (e.g. when it
+ * works as a template node) they should be copied to avoid unexpected
+ * mutations.
  * @property static:content - Content to render when changes happened.
  * @property static:observedAttributes - Attribute names to observe for
  * changes.
@@ -106,6 +110,7 @@ import {
  */
 export class Web<TElement = HTMLElement> extends HTMLElement {
     // region properties
+    static cloneSlots:boolean = false
     static content:any = '<slot></slot>'
     static readonly observedAttributes:Array<string> = []
     static propertyAliases:Mapping = {}
@@ -241,7 +246,28 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.slots = {}
         const slots:Array<HTMLElement> =
             Array.from(this.querySelectorAll('[slot]'))
-        for (let slot of slots)
+        for (let slot of slots) {
+            /*
+                If real (template) code is wrapped in a "pre" tag unwrap it
+                now. This extra wrapping can be used to avoid first dom
+                rendering before actual template code has been evaluated.
+            */
+            if (
+                slot.firstElementChild?.nodeName.toLowerCase() === 'pre' &&
+                (
+                    !slot.firstElementChild.hasAttribute('data-no-template') ||
+                    slot.firstElementChild.getAttribute('data-no-template') ===
+                        'false'
+                )
+            ) {
+                /*
+                    NOTE: These kind of slots is always used as a template and
+                    should therefor be copied in every case.
+                */
+                slot = slot.cloneNode(true) as HTMLElement
+                slot.innerHTML = slot.firstElementChild!.innerHTML
+            } else if (this.self.cloneSlots)
+                slot = slot.cloneNode(true) as HTMLElement
             this.slots[
                 (
                     slot.getAttribute &&
@@ -249,9 +275,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     slot.getAttribute('slot')!.trim()
                 ) ?
                     slot.getAttribute('slot')!.trim() :
-                    slot.nodeName
+                    slot.nodeName.toLowerCase()
             ] = slot
-            // NOTE: Append ".cloneNode(true)" if desired.
+        }
         if (this.slots.default)
             this.slots.default = [this.slots.default as unknown as HTMLElement]
         else if (this.childNodes.length > 0)
@@ -609,7 +635,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Moves content of given dom node one level up and removes given node.
      * @param domNode - Node to unwrap.
-     * @returns Nothing.
+     * @returns List of unwrapped nodes.
      */
     static unwrapDomNode(domNode:HTMLElement):Array<ChildNode> {
         // Move all children out of the element to unwrap fallback content.
