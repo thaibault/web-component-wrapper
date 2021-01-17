@@ -246,54 +246,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.batchedPropertyUpdateRunning = false
         this.batchedUpdateRunning = false
 
-        this.slots = {}
-        const slots:Array<HTMLElement> =
-            Array.from(this.querySelectorAll('[slot]'))
-        for (let slot of slots) {
-            /*
-                If real (template) code is wrapped in a "textarea" tag unwrap it
-                now. This extra wrapping can be used to avoid first dom
-                rendering before actual template code has been evaluated.
-            */
-            if (
-                slot.firstElementChild?.nodeName.toLowerCase() ===
-                    'textarea' &&
-                (
-                    !slot.firstElementChild.hasAttribute('data-no-template') ||
-                    slot.firstElementChild.getAttribute('data-no-template') ===
-                        'false'
-                )
-            ) {
-                const content:string =
-                    (slot.firstElementChild as HTMLInputElement).value
-                /*
-                    NOTE: These kind of slots is always used as a template and
-                    should therefor be copied in every case.
-                    NOTE: A flat copy should suffice since we will replace
-                    nested content either.
-                */
-                slot = slot.cloneNode() as HTMLElement
-                slot.innerHTML = ''
-                ;(slot as HTMLElement & {template:string}).template = content
-            } else if (this.self.cloneSlots)
-                slot = slot.cloneNode(true) as HTMLElement
-            this.slots[
-                (
-                    slot.getAttribute &&
-                    slot.getAttribute('slot') &&
-                    slot.getAttribute('slot')!.trim()
-                ) ?
-                    slot.getAttribute('slot')!.trim() :
-                    slot.nodeName.toLowerCase()
-            ] = slot
-        }
-        if (this.slots.default)
-            this.slots.default = [this.slots.default as unknown as HTMLElement]
-        else if (this.childNodes.length > 0)
-            this.slots.default = Array.from(this.childNodes) as
-                Array<HTMLElement>
-        else
-            this.slots.default = []
+        this.grabGivenSlots()
 
         this.runDomConnectionAndRendringInSameEventQueue ?
             this.render() :
@@ -468,7 +421,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         }
     }
     // endregion
-    // region helper
+    // region  helper
     // / region utility
     // // region dom nodes
     /**
@@ -790,7 +743,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         )
     }
     // / endregion
-    // / region slots
+    // / region slot s
     /**
      * Renders component given slot contents into given dom node.
      * @param targetDomNode - Target dom node to render slots into.
@@ -806,17 +759,86 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     if (this.self.renderSlots)
                         this.self.replaceDomNodes(domNode, this.slots.default)
                 } else
-                    this.slots.default = this.self.unwrapDomNode(domNode) as
-                        Array<HTMLElement>
+                    this.slots.default = (
+                        this.self.unwrapDomNode(domNode) as Array<HTMLElement>
+                    ).map((domNode:HTMLElement):HTMLElement =>
+                        this.grabSlotContent(domNode)
+                    )
             else if (Object.prototype.hasOwnProperty.call(this.slots, name)) {
                 if (this.self.renderSlots)
                     this.self.replaceDomNodes(domNode, this.slots[name])
             } else
-                this.slots[name] = this.self.unwrapDomNode(domNode)
-                    .filter((domNode:Node):boolean =>
-                        domNode.nodeName.toLowerCase() !== '#text'
-                    )[0] as HTMLElement
+                this.slots[name] = this.grabSlotContent(
+                    this.self.unwrapDomNode(domNode)
+                        .filter((domNode:Node):boolean =>
+                            domNode.nodeName.toLowerCase() !== '#text'
+                        )[0] as HTMLElement
+                )
         }
+    }
+    /**
+     * Determines slot content from given node.
+     * @param slot - Node to grab slot content from.
+     * @returns Determined slot.
+     */
+    grabSlotContent(slot:HTMLElement):HTMLElement {
+        /*
+            If real (template) code is wrapped in a "textarea" tag unwrap it
+            now. This extra wrapping can be used to avoid first dom rendering
+            before actual template code has been evaluated.
+        */
+        if (
+            slot.firstElementChild?.nodeName.toLowerCase() === 'textarea' &&
+            (
+                !slot.firstElementChild.hasAttribute('data-no-template') ||
+                slot.firstElementChild.getAttribute('data-no-template') ===
+                    'false'
+            )
+        ) {
+            const content:string =
+                (slot.firstElementChild as HTMLInputElement).value
+            /*
+                NOTE: These kind of slots is always used as a template and
+                should therefor be copied in every case.
+                NOTE: A flat copy should suffice since we will replace nested
+                content either.
+            */
+            slot = slot.cloneNode() as HTMLElement
+            slot.innerHTML = ''
+            ;(slot as HTMLElement & {template:string}).template = content
+            return slot
+        }
+        return this.self.cloneSlots ?
+            slot.cloneNode(true) as HTMLElement :
+            slot
+    }
+    /**
+     * Saves given slots.
+     * @returns Nothing.
+     */
+    grabGivenSlots():void {
+        this.slots = {}
+
+        for (let slot of Array.from(
+            this.querySelectorAll('[slot]')) as Array<HTMLElement>
+        )
+            this.slots[
+                (
+                    slot.getAttribute &&
+                    slot.getAttribute('slot') &&
+                    slot.getAttribute('slot')!.trim()
+                ) ?
+                    slot.getAttribute('slot')!.trim() :
+                    slot.nodeName.toLowerCase()
+            ] = this.grabSlotContent(slot)
+
+        if (this.slots.default)
+            this.slots.default = [this.slots.default as unknown as HTMLElement]
+        else if (this.childNodes.length > 0)
+            this.slots.default = Array.from(this.childNodes) as
+                Array<HTMLElement>
+        else
+            this.slots.default = []
     }
     // / endregion
     // / region properties
