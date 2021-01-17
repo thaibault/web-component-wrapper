@@ -759,20 +759,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     if (this.self.renderSlots)
                         this.self.replaceDomNodes(domNode, this.slots.default)
                 } else
-                    this.slots.default = this.self.unwrapDomNode(domNode) as
-                        Array<HTMLElement>
+                    this.slots.default = (
+                        this.self.unwrapDomNode(domNode) as Array<HTMLElement>
+                    ).map((domNode:HTMLElement):HTMLElement =>
+                        this.grabSlotContent(domNode)
+                    )
             else if (Object.prototype.hasOwnProperty.call(this.slots, name)) {
                 if (this.self.renderSlots)
                     this.self.replaceDomNodes(domNode, this.slots[name])
-            } else {
-                // TODO use "grabSlotContent()"
-                const a = this.self.unwrapDomNode(domNode)
-                console.log(name, a)
-                this.slots[name] = a
-                    .filter((domNode:Node):boolean =>
-                        domNode.nodeName.toLowerCase() !== '#text'
-                    )[0] as HTMLElement
-            }
+            } else
+                this.slots[name] = this.grabSlotContent(
+                    this.self.unwrapDomNode(domNode)
+                        .filter((domNode:Node):boolean =>
+                            domNode.nodeName.toLowerCase() !== '#text'
+                        )[0] as HTMLElement
+                )
         }
     }
     /**
