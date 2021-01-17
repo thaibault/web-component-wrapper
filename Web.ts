@@ -743,9 +743,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         )
     }
     // / endregion
-    // / region slot s
+    // / region slots
     /**
-     * Renders component given slot contents into given dom node.
+     * Renders component given slot contents into given dom node. If expected
+     * slots are not given but a fallback is specified they will be loaded into
+     * internal slot mapping.
      * @param targetDomNode - Target dom node to render slots into.
      * @returns Nothing.
      */
@@ -802,9 +804,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 should therefor be copied in every case.
                 NOTE: A flat copy should suffice since we will replace nested
                 content either.
+                NOTE: Remove template content in actual node and returned
+                (copied one) to avoid to render them before being evaluated.
             */
-            slot = slot.cloneNode() as HTMLElement
             slot.innerHTML = ''
+            slot = slot.cloneNode() as HTMLElement
             ;(slot as HTMLElement & {template:string}).template = content
             return slot
         }
