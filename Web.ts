@@ -900,8 +900,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 re-instantiate this slot during whole component
                 re-instantiation.
             */
+            ;(slot as HTMLElement).classList?.remove('web-component-template')
             const newSlot:Node = slot.cloneNode()
-            slot.style.display = 'none'
+            ;(slot as HTMLElement).classList?.add('web-component-template')
             ;(newSlot as HTMLElement).innerHTML = ''
             ;(newSlot as Node & {template:string}).template = content
             return newSlot
