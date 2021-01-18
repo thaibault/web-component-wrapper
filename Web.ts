@@ -425,6 +425,49 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / region utility
     // // region dom nodes
     /**
+     * Provides properties to nested components.
+     * @returns Nothing.
+     */
+    static applyPropertyBindings(
+        targetDomNode:HTMLElement, scope:Mapping<any>
+    ):void {
+        for (const domNode of Array.from(
+            targetDomNode.querySelectorAll<HTMLElement>('*')
+        ))
+            if (domNode.hasAttributes())
+                for (
+                    let index = 0; index < domNode.attributes.length; index++
+                ) {
+                    const attribute:Attr = domNode.attributes[index]
+                    if (
+                        attribute.name.length > 'bind-property-'.length &&
+                        attribute.name.startsWith('bind-property-')
+                    ) {
+                        const evaluated:EvaluationResult =
+                            Tools.stringEvaluate(attribute.value, scope)
+                        if (evaluated.error) {
+                            console.warn(
+                                'Error occurred during processing given ' +
+                                `attribute binding "${attribute.name}" on ` +
+                                'node:',
+                                domNode,
+                                evaluated.error
+                            )
+                            continue
+                        }
+                        /*
+                            NOTE: Cast to "textContent" to have a writable
+                            property here.
+                        */
+                        domNode[
+                            attribute.name
+                                .replace(/bind-property-(.+)$/, '$1') as
+                                    'textContent'
+                        ] = evaluated.result
+                    }
+                }
+    }
+    /**
      * Compiles given node content and their children. Provides corresponding
      * map of compiled template functions connected to their (sub) nodes and
      * expected scope names.
@@ -513,20 +556,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      *
      * @param domNode - Node to evaluate.
      * @param scope - Scope to render against.
-     * @param filter - Filter function to avoid evaluation specific nodes.
-     * @param map - Cache map to save compiled nodes in.
+     * @param options - Compile options.
      * @returns Map of compiled templates.
      */
     static evaluateDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
         domNode:NodeType,
         scope:any = {},
         options:{
+            applyPropertyBindings?:boolean
             filter?:(domNode:NodeType) => boolean
             map?:CompiledDomNodeTemplate
             unsafe?:boolean
         } = {}
     ):CompiledDomNodeTemplate {
         options = {
+            applyPropertyBindings: true,
             map: new Map(),
             unsafe: false,
             ...options
@@ -572,11 +616,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     options.filter(currentDomNode as NodeType)
                 )
                     Web.evaluateDomNodeTemplate<NodeType>(
-                        currentDomNode as NodeType, scope, options
+                        currentDomNode as NodeType,
+                        scope,
+                        {...options, applyPropertyBindings: false}
                     )
                 currentDomNode = currentDomNode.nextSibling
             }
         }
+        if (options.applyPropertyBindings)
+            Web.applyPropertyBindings(domNode, scope)
         return options.map!
     }
     /**
@@ -846,46 +894,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     // / endregion
     // / region properties
-    /**
-     * Provides properties to nested components.
-     * @returns Nothing.
-     */
-    applyPropertyBindings(targetDomNode:HTMLElement, scope:Mapping<any>):void {
-        for (const domNode of Array.from(
-            targetDomNode.querySelectorAll<HTMLElement>('*')
-        ))
-            if (domNode.hasAttributes())
-                for (
-                    let index = 0; index < domNode.attributes.length; index++
-                ) {
-                    const attribute:Attr = domNode.attributes[index]
-                    if (
-                        attribute.name.length > 'bind-property-'.length &&
-                        attribute.name.startsWith('bind-property-')
-                    ) {
-                        const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(attribute.value, scope)
-                        if (evaluated.error) {
-                            console.warn(
-                                'Error occurred during processing given ' +
-                                `attribute binding "${attribute.name}" on node:`,
-                                domNode,
-                                evaluated.error
-                            )
-                            continue
-                        }
-                        /*
-                            NOTE: Cast to "textContent" to have a writable
-                            property here.
-                        */
-                        domNode[
-                            attribute.name
-                                .replace(/bind-property-(.+)$/, '$1') as
-                                    'textContent'
-                        ] = evaluated.result
-                    }
-                }
-    }
     /**
      * Determines if given property name exists in wrapped component state.
      * @param name - Property name to check if exists in state.
@@ -1344,7 +1352,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
 
-        this.applyPropertyBindings(this.root as HTMLElement, scope)
+        this.self.applyPropertyBindings(this.root as HTMLElement, scope)
     }
     // / endregion
     // endregion
