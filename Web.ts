@@ -752,9 +752,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applySlots(targetDomNode:HTMLElement):void {
-        for (const domNode of Array.from(targetDomNode.querySelectorAll(
-            'slot'
-        ))) {
+        for (const domNode of Array.from(
+            targetDomNode.querySelectorAll<HTMLElement>('slot')
+        )) {
             const name:null|string = domNode.getAttribute('name')
             if (name === null || name === 'default')
                 if (this.slots.default) {
@@ -846,6 +846,46 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     // / endregion
     // / region properties
+    /**
+     * Provides properties to nested components.
+     * @returns Nothing.
+     */
+    applyPropertyBindings(targetDomNode:HTMLElement, scope:Mapping<any>):void {
+        for (const domNode of Array.from(
+            targetDomNode.querySelectorAll<HTMLElement>('*')
+        ))
+            if (domNode.hasAttributes())
+                for (
+                    let index = 0; index < domNode.attributes.length; index++
+                ) {
+                    const attribute:Attr = domNode.attributes[index]
+                    if (
+                        attribute.name.length > 'bind-property-'.length &&
+                        attribute.name.startsWith('bind-property-')
+                    ) {
+                        const evaluated:EvaluationResult =
+                            Tools.stringEvaluate(attribute.value, scope)
+                        if (evaluated.error) {
+                            console.warn(
+                                'Error occurred during processing given ' +
+                                `attribute binding "${attribute.name}" on node:`,
+                                domNode,
+                                evaluated.error
+                            )
+                            continue
+                        }
+                        /*
+                            NOTE: Cast to "textContent" to have a writable
+                            property here.
+                        */
+                        domNode[
+                            attribute.name
+                                .replace(/bind-property-(.+)$/, '$1') as
+                                    'textContent'
+                        ] = evaluated.result
+                    }
+                }
+    }
     /**
      * Determines if given property name exists in wrapped component state.
      * @param name - Property name to check if exists in state.
@@ -1280,12 +1320,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     render():void {
+        // Copy properties to avoid manipulations in nested structures.
+        const scope:Mapping<any> = {
+            self: this, Tools, ...Tools.copy(this.internalProperties)
+        }
         const evaluated:EvaluationResult =
-            Tools.stringEvaluate(
-                `\`${this.self.content}\``,
-                // Copy properties to avoid manipulations in nested structures.
-                {self: this, Tools, ...Tools.copy(this.internalProperties)}
-            )
+            Tools.stringEvaluate(`\`${this.self.content}\``, scope)
         if (evaluated.error) {
             console.warn(`Faild to process template: ${evaluated.error}`)
             return
@@ -1303,6 +1343,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.applySlots(renderTargetDomNode)
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
+
+        this.applyPropertyBindings(this.root as HTMLElement, scope)
     }
     // / endregion
     // endregion
