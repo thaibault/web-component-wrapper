@@ -428,10 +428,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Provides properties to nested components.
      * @returns Nothing.
      */
-    static applyPropertyBindings(
-        targetDomNode:HTMLElement, scope:Mapping<any>
-    ):void {
-        let domNode:ChildNode|null = targetDomNode
+    static applyPropertyBindings(domNode:Node|null, scope:Mapping<any>):void {
         while (domNode) {
             /*
                 NOTE: Nested custom components (recognized by their dash in
@@ -475,6 +472,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         ] = evaluated.result
                     }
                 }
+            Web.applyPropertyBindings(domNode.firstChild, scope)
             domNode = domNode.nextSibling
         }
     }
