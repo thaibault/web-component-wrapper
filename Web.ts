@@ -57,6 +57,8 @@ import {
  * works as a template node) they should be copied to avoid unexpected
  * mutations.
  * @property static:content - Content to render when changes happened.
+ * @property static:evaluateSlots - Indicates whether to evaluate slot content
+ * when before rendering them.
  * @property static:observedAttributes - Attribute names to observe for
  * changes.
  * @property static:propertyAliases - A mapping of property names to be treated
@@ -91,7 +93,7 @@ import {
  * queue has been finished.
  * @property batchUpdates - Indicates whether to directly perform a
  * re-rendering after changes on properties have been made.
- * @property content - Content template to render on property changes.
+ * @property domNodeTemplateCache - Caches template compilation results.
  * @property eventToPropertyMapping - Explicitly defined output events (a
  * mapping of event names to a potential parameter to properties transformer).
  * @property externalProperties - Holds currently evaluated or seen properties.
@@ -113,7 +115,9 @@ import {
 export class Web<TElement = HTMLElement> extends HTMLElement {
     // region properties
     static cloneSlots:boolean = false
-    static content:any = '<slot></slot>'
+    static content:any =
+        '<slot>Please provide a template to transclude.</slot>'
+    static evaluateSlots:boolean = false
     static readonly observedAttributes:Array<string> = []
     static propertyAliases:Mapping = {}
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
@@ -134,6 +138,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     batchedUpdateRunning:boolean = true
     batchPropertyUpdates:boolean = true
     batchUpdates:boolean = true
+    domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
     externalProperties:Mapping<any> = {}
     ignoreAttributeUpdates:boolean = false
     instance:null|{current?:WebComponentAdapter} = null
@@ -143,7 +148,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     root:ShadowRoot|Web<TElement>
     runDomConnectionAndRendringInSameEventQueue:boolean = false
     readonly self:typeof Web = Web
-    slots:Mapping<HTMLElement> & {default?:Array<HTMLElement>} = {}
+    slots:Mapping<Node> & {default?:Array<Node>} = {}
     // endregion
     // region live cycle hooks
     /**
@@ -421,22 +426,24 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         }
     }
     // endregion
-    // region  helper
+    // region helper
     // / region utility
     // // region dom nodes
     /**
-     * Provides properties to nested components.
+     * Provides properties to given, sibling and nested nodes.
+     * @param domNode - Node to start traversing from.
+     * @param scope - Scope to render property value again.
+     * @param renderSlots - Indicates whether to render nested elements of
+     * slots (determined by an existing corresponding attribute).
      * @returns Nothing.
      */
-    static applyPropertyBindings(domNode:Node|null, scope:Mapping<any>):void {
+    static applyPropertyBindings(
+        domNode:Node|null, scope:Mapping<any>, renderSlots:boolean = true
+    ):void {
         while (domNode) {
-            /*
-                NOTE: Nested custom components (recognized by their dash in
-                name) should render their slots by themself.
-            */
             if (
-                !domNode.nodeName.toLowerCase().includes('-') &&
-                (domNode as HTMLElement).attributes?.length
+                (domNode as HTMLElement).attributes?.length &&
+                (renderSlots || !(domNode as HTMLElement).getAttribute('slot'))
             )
                 for (
                     let index = 0;
@@ -465,14 +472,17 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             NOTE: Cast to "textContent" to have a writable
                             property here.
                         */
-                        domNode[
-                            attribute.name
-                                .replace(/bind-property-(.+)$/, '$1') as
-                                    'textContent'
-                        ] = evaluated.result
+                        domNode[Tools.stringDelimitedToCamelCase(
+                            attribute.name.replace(/bind-property-(.+)$/, '$1')
+                        ) as 'textContent'] = evaluated.result
                     }
                 }
-            Web.applyPropertyBindings(domNode.firstChild, scope)
+            /*
+                NOTE: Slots of nested custom components (recognized by their
+                dash in name) should be rendered by themself.
+            */
+            if (!domNode.nodeName.toLowerCase().includes('-'))
+                Web.applyPropertyBindings(domNode.firstChild, scope)
             domNode = domNode.nextSibling
         }
     }
@@ -486,7 +496,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param options - Additional compile options.
      * @returns Map of compiled templates.
      */
-    static compileDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
+    compileDomNodeTemplate<NodeType extends Node = Node>(
         domNode:NodeType,
         scope:any = [],
         options:{
@@ -494,20 +504,29 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             map?:CompiledDomNodeTemplate
             unsafe?:boolean
         } = {}
-    ):CompiledDomNodeTemplate {
+    ):CompiledDomNodeTemplate<NodeType> {
         options = {
-            map: new Map(),
+            map: this.domNodeTemplateCache,
             unsafe: false,
             ...options
         }
+        /*
+            NOTE: Slots of nested custom components (recognized by their dash
+            in name) should be rendered by themself.
+        */
+        if (domNode.nodeName?.toLowerCase().includes('-'))
+            return options.map as CompiledDomNodeTemplate<NodeType>
         if (options.unsafe) {
-            let template:string = domNode.innerHTML
+            if (!(domNode as unknown as HTMLElement).innerHTML)
+                return options.map as CompiledDomNodeTemplate<NodeType>
+
+            let template:string = (domNode as unknown as HTMLElement).innerHTML
             if (
-                domNode.innerHTML === '' &&
+                (domNode as unknown as HTMLElement).innerHTML === '' &&
                 (domNode as NodeType & {template:string}).template
             )
                 template = (domNode as NodeType & {template:string}).template
-            if (Web.hasCode(template)) {
+            if (this.self.hasCode(template)) {
                 const result:ReturnType<typeof Tools.stringCompile> =
                     Tools.stringCompile(`\`${template}\``, scope)
                 options.map!.set(
@@ -525,9 +544,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             let template:string|undefined
             if (['a', '#text'].includes(nodeName)) {
                 const content:null|string = nodeName === 'a' ?
-                    domNode.getAttribute('href') :
+                    (domNode as unknown as HTMLLinkElement)
+                        .getAttribute('href') :
                     domNode.textContent
-                if (Web.hasCode(content))
+                if (this.self.hasCode(content))
                     template = content!.replace(/&nbsp;/g, ' ').trim()
             }
             const children:Array<CompiledDomNodeTemplate> = []
@@ -549,15 +569,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             while (currentDomNode) {
                 if (
                     !options.filter ||
-                    options.filter(currentDomNode as NodeType)
+                    options.filter(currentDomNode as unknown as NodeType)
                 )
-                    children.push(Web.compileDomNodeTemplate<NodeType>(
-                        currentDomNode as NodeType, scope, options
+                    children.push(this.compileDomNodeTemplate<NodeType>(
+                        currentDomNode as unknown as NodeType, scope, options
                     ))
                 currentDomNode = currentDomNode.nextSibling
             }
         }
-        return options.map!
+        return options.map as CompiledDomNodeTemplate<NodeType>
     }
     /**
      * Compiles and evaluates given node content and their children. Replaces
@@ -568,7 +588,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param options - Compile options.
      * @returns Map of compiled templates.
      */
-    static evaluateDomNodeTemplate<NodeType extends HTMLElement = HTMLElement>(
+    evaluateDomNodeTemplate<NodeType extends Node = Node>(
         domNode:NodeType,
         scope:any = {},
         options:{
@@ -577,15 +597,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             map?:CompiledDomNodeTemplate
             unsafe?:boolean
         } = {}
-    ):CompiledDomNodeTemplate {
+    ):CompiledDomNodeTemplate<NodeType> {
         options = {
             applyPropertyBindings: true,
-            map: new Map(),
+            map: this.domNodeTemplateCache,
             unsafe: false,
             ...options
         }
         if (!options.map!.has(domNode))
-            Web.compileDomNodeTemplate<NodeType>(domNode, scope, options)
+            this.compileDomNodeTemplate<NodeType>(domNode, scope, options)
         if (options.map!.has(domNode)) {
             const {scopeNames, templateFunction} = options.map!.get(domNode) as
                 CompiledDomNodeTemplateItem
@@ -609,32 +629,35 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 }
                 if (output !== null)
                     if (options.unsafe)
-                        domNode.innerHTML = output
+                        (domNode as unknown as HTMLElement).innerHTML = output
                     else if (domNode.nodeName.toLowerCase() === 'a')
-                        domNode.setAttribute('href', output)
+                        (domNode as unknown as HTMLElement)
+                            .setAttribute('href', output)
                     else
                         domNode.textContent = output
             }
         }
         if (!options.unsafe) {
             // Render content of each nested node.
-            let currentDomNode:ChildNode|null = domNode.firstChild
+            let currentDomNode:NodeType|null = domNode.firstChild as
+                unknown as NodeType
             while (currentDomNode) {
                 if (
                     !options.filter ||
-                    options.filter(currentDomNode as NodeType)
+                    options.filter(currentDomNode)
                 )
-                    Web.evaluateDomNodeTemplate<NodeType>(
+                    this.evaluateDomNodeTemplate<NodeType>(
                         currentDomNode as NodeType,
                         scope,
                         {...options, applyPropertyBindings: false}
                     )
-                currentDomNode = currentDomNode.nextSibling
+                currentDomNode = currentDomNode.nextSibling as
+                    unknown as NodeType
             }
         }
         if (options.applyPropertyBindings)
-            Web.applyPropertyBindings(domNode, scope)
-        return options.map!
+            this.self.applyPropertyBindings(domNode, scope)
+        return options.map as CompiledDomNodeTemplate<NodeType>
     }
     /**
      * Replaces given dom node with given nodes.
@@ -806,32 +829,39 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * slots are not given but a fallback is specified they will be loaded into
      * internal slot mapping.
      * @param targetDomNode - Target dom node to render slots into.
+     * @param scope - Environment to render slots again if specified.
      * @returns Nothing.
      */
-    applySlots(targetDomNode:HTMLElement):void {
+    applySlots(targetDomNode:HTMLElement, scope:Mapping<any>):void {
         for (const domNode of Array.from(
             targetDomNode.querySelectorAll<HTMLElement>('slot')
         )) {
             const name:null|string = domNode.getAttribute('name')
             if (name === null || name === 'default')
                 if (this.slots.default) {
-                    if (this.self.renderSlots)
+                    if (this.self.renderSlots) {
+                        if (this.self.evaluateSlots)
+                            for (const domNode of this.slots.default)
+                                this.evaluateDomNodeTemplate(domNode, scope)
                         this.self.replaceDomNodes(domNode, this.slots.default)
+                    }
                 } else
-                    this.slots.default = (
-                        this.self.unwrapDomNode(domNode) as Array<HTMLElement>
-                    ).map((domNode:HTMLElement):HTMLElement =>
-                        this.grabSlotContent(domNode)
-                    )
+                    this.slots.default = this.self.unwrapDomNode(domNode)
+                        .map((domNode:Node):Node =>
+                            this.grabSlotContent(domNode)
+                        )
             else if (Object.prototype.hasOwnProperty.call(this.slots, name)) {
-                if (this.self.renderSlots)
+                if (this.self.renderSlots) {
+                    if (this.self.evaluateSlots)
+                        this.evaluateDomNodeTemplate(this.slots[name], scope)
                     this.self.replaceDomNodes(domNode, this.slots[name])
+                }
             } else
                 this.slots[name] = this.grabSlotContent(
                     this.self.unwrapDomNode(domNode)
                         .filter((domNode:Node):boolean =>
                             domNode.nodeName.toLowerCase() !== '#text'
-                        )[0] as HTMLElement
+                        )[0]
                 )
         }
     }
@@ -840,22 +870,27 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param slot - Node to grab slot content from.
      * @returns Determined slot.
      */
-    grabSlotContent(slot:HTMLElement):HTMLElement {
+    grabSlotContent(slot:Node):Node {
         /*
             If real (template) code is wrapped in a "textarea" tag unwrap it
             now. This extra wrapping can be used to avoid first dom rendering
             before actual template code has been evaluated.
         */
         if (
-            slot.firstElementChild?.nodeName.toLowerCase() === 'textarea' &&
+            (slot as HTMLElement).firstElementChild?.nodeName.toLowerCase() ===
+                'textarea' &&
             (
-                !slot.firstElementChild.hasAttribute('data-no-template') ||
-                slot.firstElementChild.getAttribute('data-no-template') ===
-                    'false'
+                !(slot as HTMLElement).firstElementChild!.hasAttribute(
+                    'data-no-template'
+                ) ||
+                (slot as HTMLElement).firstElementChild!.getAttribute(
+                    'data-no-template'
+                ) === 'false'
             )
         ) {
             const content:string =
-                (slot.firstElementChild as HTMLInputElement).value
+                ((slot as HTMLElement).firstElementChild as HTMLInputElement)
+                    .value
             /*
                 NOTE: These kind of slots is always used as a template and
                 should therefor be copied in every case.
@@ -864,14 +899,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 NOTE: Remove template content in actual node and returned
                 (copied one) to avoid to render them before being evaluated.
             */
-            slot.innerHTML = ''
-            slot = slot.cloneNode() as HTMLElement
-            ;(slot as HTMLElement & {template:string}).template = content
+            ;(slot as HTMLElement).innerHTML = ''
+            slot = slot.cloneNode()
+            ;(slot as Node & {template:string}).template = content
             return slot
         }
-        return this.self.cloneSlots ?
-            slot.cloneNode(true) as HTMLElement :
-            slot
+        return this.self.cloneSlots ? slot.cloneNode(true) : slot
     }
     /**
      * Saves given slots.
@@ -880,9 +913,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     grabGivenSlots():void {
         this.slots = {}
 
-        for (let slot of Array.from(
-            this.querySelectorAll('[slot]')) as Array<HTMLElement>
-        )
+        for (let slot of Array.from(this.querySelectorAll('[slot]')))
             this.slots[
                 (
                     slot.getAttribute &&
@@ -894,10 +925,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             ] = this.grabSlotContent(slot)
 
         if (this.slots.default)
-            this.slots.default = [this.slots.default as unknown as HTMLElement]
+            this.slots.default = [this.slots.default as unknown as Node]
         else if (this.childNodes.length > 0)
-            this.slots.default = Array.from(this.childNodes) as
-                Array<HTMLElement>
+            this.slots.default = Array.from(this.childNodes)
+                .map((domNode:Node):Node => this.grabSlotContent(domNode))
         else
             this.slots.default = []
     }
@@ -1357,11 +1388,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const renderTargetDomNode:HTMLDivElement =
             document.createElement('div')
         renderTargetDomNode.innerHTML = evaluated.result
-        this.applySlots(renderTargetDomNode)
+        this.applySlots(renderTargetDomNode, scope)
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
 
-        this.self.applyPropertyBindings(this.root as HTMLElement, scope)
+        this.self.applyPropertyBindings(
+            this.root.firstChild, scope, this.self.renderSlots
+        )
     }
     // / endregion
     // endregion

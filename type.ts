@@ -30,8 +30,8 @@ export type CompiledDomNodeTemplateItem = {
     template:string
     templateFunction:ReturnType<typeof Tools.stringCompile>[1]
 }
-export type CompiledDomNodeTemplate =
-    Map<HTMLElement, CompiledDomNodeTemplateItem>
+export type CompiledDomNodeTemplate<NodeType = Node> =
+    Map<NodeType, CompiledDomNodeTemplateItem>
 
 export type EventToPropertyMapping =
     Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
