@@ -124,6 +124,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
         []
     static renderSlots:boolean = true
+    static renderUnsafe:boolean = false
     static shadowDOM:boolean|null|{
         delegateFocus?:boolean
         mode:'closed'|'open'
@@ -148,7 +149,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     root:ShadowRoot|Web<TElement>
     runDomConnectionAndRendringInSameEventQueue:boolean = false
     readonly self:typeof Web = Web
-    slots:Mapping<Node> & {default?:Array<Node>} = {}
+    slots:Mapping<HTMLElement> & {default?:Array<Node>} = {}
     // endregion
     // region live cycle hooks
     /**
@@ -507,7 +508,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     ):CompiledDomNodeTemplate<NodeType> {
         options = {
             map: this.domNodeTemplateCache,
-            unsafe: false,
+            unsafe: this.self.renderUnsafe,
             ...options
         }
         /*
@@ -517,15 +518,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (domNode.nodeName?.toLowerCase().includes('-'))
             return options.map as CompiledDomNodeTemplate<NodeType>
         if (options.unsafe) {
-            if (!(domNode as unknown as HTMLElement).innerHTML)
-                return options.map as CompiledDomNodeTemplate<NodeType>
-
             let template:string = (domNode as unknown as HTMLElement).innerHTML
             if (
                 (domNode as unknown as HTMLElement).innerHTML === '' &&
                 (domNode as NodeType & {template:string}).template
             )
                 template = (domNode as NodeType & {template:string}).template
+
             if (this.self.hasCode(template)) {
                 const result:ReturnType<typeof Tools.stringCompile> =
                     Tools.stringCompile(`\`${template}\``, scope)
@@ -601,7 +600,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         options = {
             applyPropertyBindings: true,
             map: this.domNodeTemplateCache,
-            unsafe: false,
+            unsafe: this.self.renderUnsafe,
             ...options
         }
         if (!options.map!.has(domNode))
@@ -862,7 +861,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         .filter((domNode:Node):boolean =>
                             domNode.nodeName.toLowerCase() !== '#text'
                         )[0]
-                )
+                ) as HTMLElement
         }
     }
     /**
@@ -922,7 +921,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 ) ?
                     slot.getAttribute('slot')!.trim() :
                     slot.nodeName.toLowerCase()
-            ] = this.grabSlotContent(slot)
+            ] = this.grabSlotContent(slot) as HTMLElement
 
         if (this.slots.default)
             this.slots.default = [this.slots.default as unknown as Node]
@@ -1368,9 +1367,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     render():void {
-        // Copy properties to avoid manipulations in nested structures.
         const scope:Mapping<any> = {
-            self: this, Tools, ...Tools.copy(this.internalProperties)
+            self: this, Tools, ...this.internalProperties
         }
         const evaluated:EvaluationResult =
             Tools.stringEvaluate(`\`${this.self.content}\``, scope)
