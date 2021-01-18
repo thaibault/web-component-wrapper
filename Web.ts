@@ -381,8 +381,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     setPropertyValue(name:string, value:any):void {
-        this.reflectProperties({[name]: Tools.copy(value)}, false)
-        this.setInternalPropertyValue(name, Tools.copy(value))
+        this.reflectProperties({[name]: Tools.copy(value, 1)}, false)
+        this.setInternalPropertyValue(name, Tools.copy(value, 1))
 
         if (this.batchPropertyUpdates) {
             if (!(
@@ -520,8 +520,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (options.unsafe) {
             let template:string = (domNode as unknown as HTMLElement).innerHTML
             if (
-                (domNode as unknown as HTMLElement).innerHTML === '' &&
-                (domNode as NodeType & {template:string}).template
+                !template && (domNode as NodeType & {template:string}).template
             )
                 template = (domNode as NodeType & {template:string}).template
 
@@ -895,11 +894,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 should therefor be copied in every case.
                 NOTE: A flat copy should suffice since we will replace nested
                 content either.
-                NOTE: Remove template content in actual node and returned
-                (copied one) to avoid to render them before being evaluated.
+                NOTE: Remove template content in copied node to avoid to render
+                them before being evaluated. We cannot remove template code
+                from source node since this would make it impossible to
+                re-instantiate this slot during whole component
+                re-instantiation.
             */
-            ;(slot as HTMLElement).innerHTML = ''
             slot = slot.cloneNode()
+            ;(slot as HTMLElement).innerHTML = ''
             ;(slot as Node & {template:string}).template = content
             return slot
         }
@@ -1286,7 +1288,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         */
                         this.setInternalPropertyValue(name, evaluated)
                         this.setExternalPropertyValue(
-                            name, Tools.copy(evaluated)
+                            name, Tools.copy(evaluated, 1)
                         )
                     } else {
                         this.setInternalPropertyValue(name, null)
@@ -1349,7 +1351,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         */
                         this.setInternalPropertyValue(name, evaluated.result)
                         this.setExternalPropertyValue(
-                            name, Tools.copy(evaluated.result)
+                            name, Tools.copy(evaluated.result, 1)
                         )
                     } else {
                         this.setInternalPropertyValue(name, null)
