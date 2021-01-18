@@ -431,14 +431,23 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static applyPropertyBindings(
         targetDomNode:HTMLElement, scope:Mapping<any>
     ):void {
-        for (const domNode of Array.from(
-            targetDomNode.querySelectorAll<HTMLElement>('*')
-        ))
-            if (domNode.hasAttributes())
+        let domNode:ChildNode|null = targetDomNode
+        while (domNode) {
+            /*
+                NOTE: Nested custom components (recognized by their dash in
+                name) should render their slots by themself.
+            */
+            if (
+                !domNode.nodeName.toLowerCase().includes('-') &&
+                (domNode as HTMLElement).attributes?.length
+            )
                 for (
-                    let index = 0; index < domNode.attributes.length; index++
+                    let index = 0;
+                    index < (domNode as HTMLElement).attributes.length;
+                    index++
                 ) {
-                    const attribute:Attr = domNode.attributes[index]
+                    const attribute:Attr =
+                        (domNode as HTMLElement).attributes[index]
                     if (
                         attribute.name.length > 'bind-property-'.length &&
                         attribute.name.startsWith('bind-property-')
@@ -466,6 +475,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         ] = evaluated.result
                     }
                 }
+            domNode = domNode.nextSibling
+        }
     }
     /**
      * Compiles given node content and their children. Provides corresponding
