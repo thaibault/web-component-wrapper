@@ -53,26 +53,32 @@ import {
 // endregion
 /**
  * Generic web component to render a content against instance specific values.
- * @property static:cloneSlots - Indicates whether to clone slot nots before
- * transcluding them. If a slot should be used multiple times (e.g. when it
- * works as a template node) they should be copied to avoid unexpected
- * mutations.
  * @property static:content - Content to render when changes happened.
- * @property static:evaluateSlots - Indicates whether to evaluate slot content
- * when before rendering them.
+ *
+ * @property static:shadowDOM - Configures if a shadow dom should be used
+ * during web-component instantiation. Can hold initialize configuration.
+ *
  * @property static:observedAttributes - Attribute names to observe for
  * changes.
+ *
  * @property static:propertyAliases - A mapping of property names to be treated
  * as equal.
  * @property static:propertyTypes - Configuration defining how to convert
  * attributes into properties and reflect property changes back to attributes.
  * @property static:propertiesToReflectAsAttributes - An item, list or mapping
  * of properties to reflect as attributes.
+ *
+ * @property static:cloneSlots - Indicates whether to clone slot nots before
+ * transcluding them. If a slot should be used multiple times (e.g. when it
+ * works as a template node) they should be copied to avoid unexpected
+ * mutations.
+ * @property static:evaluateSlots - Indicates whether to evaluate slot content
+ * when before rendering them.
  * @property static:renderSlots - Indicates whether determined slots should be
  * rendered into root node.
- * @property static:shadowDOM - Configures if a shadow dom should be used
- * during web-component instantiation. Can hold initialize configuration.
  * @property static:trimSlots - Ignore empty text nodes while applying slots.
+ *
+ * @property static:renderUnsafe - Defines default render behavior.
  *
  * @property static:_name - Name to access instance evaluated content or used
  * to derive default component name. Also useful for logging.
@@ -85,74 +91,101 @@ import {
  * @property batchAttributeUpdates - Indicates whether to directly update dom
  * after each attribute mutation or to wait and batch mutations after current
  * queue has been finished.
+ * @property batchPropertyUpdates - Indicates whether to directly update dom
+ * after each property mutation or to wait and batch mutations after current
+ * queue has been finished.
+ * @property batchUpdates - Indicates whether to directly perform a
+ * re-rendering after changes on properties have been made.
+ *
  * @property batchedAttributeUpdateRunning - A boolean indicator to identify
  * if an attribute update is currently batched.
  * @property batchedPropertyUpdateRunning - A boolean indicator to identify
  * if an property update is currently batched.
  * @property batchedUpdateRunning - Indicates whether a batched render update
  * is currently running.
- * @property batchPropertyUpdates - Indicates whether to directly update dom
- * after each property mutation or to wait and batch mutations after current
- * queue has been finished.
- * @property batchUpdates - Indicates whether to directly perform a
- * re-rendering after changes on properties have been made.
+ *
  * @property domNodeTemplateCache - Caches template compilation results.
- * @property eventToPropertyMapping - Explicitly defined output events (a
- * mapping of event names to a potential parameter to properties transformer).
+ *
  * @property externalProperties - Holds currently evaluated or seen properties.
  * @property ignoreAttributeUpdates - Indicates whether attribute updates
  * should be considered (usually only needed internally).
  * @property internalProperties - Holds currently evaluated properties which
  * are owned by this instance and should always be delegated.
- * @property instance - Wrapped component instance.
+ *
+ * @property eventToPropertyMapping - Explicitly defined output events (a
+ * mapping of event names to a potential parameter to properties transformer).
  * @property outputEventNames - Set of determined output event names.
+ *
+ * @property instance - Wrapped component instance.
+ * @property isRoot - Indicates whether their is exists another web derived
+ * component up the tree or not.
+ *
  * @property root - Hosting dom node.
- * @property runDomConnectionAndRendringInSameEventQueue - Indicates whether
+ *
+ * @property runDomConnectionAndRenderingInSameEventQueue - Indicates whether
  * we should render initial dom immediately after the component is connected to
  * dom. Deactivating this allows wrapped components to detect their parents
  * since their parent connected callback will be called before the children's
  * render method.
+ *
  * @property self - Back-reference to this class.
+ *
  * @property slots - Grabbed slots which where present in the connecting phase.
  */
 export class Web<TElement = HTMLElement> extends HTMLElement {
     // region properties
-    static cloneSlots:boolean = false
     static content:any =
         '<slot>Please provide a template to transclude.</slot>'
-    static evaluateSlots:boolean = false
-    static readonly observedAttributes:Array<string> = []
-    static propertyAliases:Mapping = {}
-    static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
-    static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
-        []
-    static renderSlots:boolean = true
-    static renderUnsafe:boolean = false
+
     static shadowDOM:boolean|null|{
         delegateFocus?:boolean
         mode:'closed'|'open'
     } = null
+
+    static readonly observedAttributes:Array<string> = []
+
+    static propertyAliases:Mapping = {}
+    static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
+    static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
+        []
+
+    static cloneSlots:boolean = false
+    static evaluateSlots:boolean = false
+    static renderSlots:boolean = true
     static trimSlots:boolean = true
+
+    static renderUnsafe:boolean = false
+
     static _name:string = 'BaseWeb'
     static _propertyAliasIndex:Mapping|undefined
     static _propertiesToReflectAsAttributes:Map<string, string|ValueOf<typeof PropertyTypes>>|undefined
 
     batchAttributeUpdates:boolean = true
+    batchPropertyUpdates:boolean = true
+    batchUpdates:boolean = true
+
     batchedAttributeUpdateRunning:boolean = true
     batchedPropertyUpdateRunning:boolean = true
     batchedUpdateRunning:boolean = true
-    batchPropertyUpdates:boolean = true
-    batchUpdates:boolean = true
+
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
+
     externalProperties:Mapping<any> = {}
     ignoreAttributeUpdates:boolean = false
-    instance:null|{current?:WebComponentAdapter} = null
     internalProperties:Mapping<any> = {}
+
     eventToPropertyMapping:EventToPropertyMapping = {}
     outputEventNames:Set<string> = new Set<string>()
+
+    instance:null|{current?:WebComponentAdapter} = null
+    isRoot:boolean = true
+
     root:ShadowRoot|Web<TElement>
-    runDomConnectionAndRendringInSameEventQueue:boolean = false
+
+    runDomConnectionAndRenderingInSameEventQueue:boolean = false
+
     readonly self:typeof Web = Web
+
     slots:Mapping<HTMLElement> & {default?:Array<Node>} = {}
     // endregion
     // region live cycle hooks
@@ -258,7 +291,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.grabGivenSlots()
 
-        this.runDomConnectionAndRendringInSameEventQueue ?
+        this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render() :
             Tools.timeout(this.render.bind(this))
     }
@@ -435,7 +468,70 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / region utility
     // // region dom nodes
     /**
-     * Provides properties to given, sibling and nested nodes.
+     * Binds properties and event handler to given dom node.
+     * @param domNode - Node to start traversing from.
+     * @param scope - Scope to render property value again.
+     * @returns Nothing.
+     */
+    static applyBinding(domNode:Node, scope:Mapping<any>):void {
+        if ((domNode as HTMLElement).attributes?.length)
+            for (
+                let index = 0;
+                index < (domNode as HTMLElement).attributes.length;
+                index++
+            ) {
+                const attribute:Attr =
+                    (domNode as HTMLElement).attributes[index]
+                if (
+                    attribute.name.length > 'bind-property-'.length &&
+                    attribute.name.startsWith('bind-property-')
+                ) {
+                    const evaluated:EvaluationResult =
+                        Tools.stringEvaluate(attribute.value, scope)
+                    if (evaluated.error) {
+                        console.warn(
+                            'Error occurred during processing given ' +
+                            `attribute binding "${attribute.name}" on node:`,
+                            domNode,
+                            evaluated.error
+                        )
+                        continue
+                    }
+                    /*
+                        NOTE: Cast to "textContent" to have a writable
+                        property here.
+                    */
+                    domNode[Tools.stringDelimitedToCamelCase(
+                        attribute.name.replace(/bind-property-(.+)$/, '$1')
+                    ) as 'textContent'] = evaluated.result
+                } else if (
+                    attribute.name.length > 'bind-on-'.length &&
+                    attribute.name.startsWith('bind-on-')
+                )
+                    domNode.addEventListener(
+                        Tools.stringLowerCase(
+                            attribute.name.replace(/bind-on-(.+)$/, '$1')
+                        ),
+                        (event:Event):void => {
+                            scope.event = event
+                            const evaluated:EvaluationResult =
+                                Tools.stringEvaluate(
+                                    attribute.value, scope, true, domNode
+                                )
+                            if (evaluated.error)
+                                console.warn(
+                                    'Error occurred during processing ' +
+                                    'given event binding "' +
+                                    `${attribute.name}" on node:`,
+                                    domNode,
+                                    evaluated.error
+                                )
+                        }
+                    )
+            }
+    }
+    /**
+     * Binds properties and event handler to given, sibling and nested nodes.
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
      * @param renderSlots - Indicates whether to render nested elements of
@@ -447,64 +543,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     ):void {
         while (domNode) {
             if (
-                (domNode as HTMLElement).attributes?.length &&
                 (renderSlots || !(domNode as HTMLElement).getAttribute('slot'))
             )
-                for (
-                    let index = 0;
-                    index < (domNode as HTMLElement).attributes.length;
-                    index++
-                ) {
-                    const attribute:Attr =
-                        (domNode as HTMLElement).attributes[index]
-                    if (
-                        attribute.name.length > 'bind-property-'.length &&
-                        attribute.name.startsWith('bind-property-')
-                    ) {
-                        const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(attribute.value, scope)
-                        if (evaluated.error) {
-                            console.warn(
-                                'Error occurred during processing given ' +
-                                `attribute binding "${attribute.name}" on ` +
-                                'node:',
-                                domNode,
-                                evaluated.error
-                            )
-                            continue
-                        }
-                        /*
-                            NOTE: Cast to "textContent" to have a writable
-                            property here.
-                        */
-                        domNode[Tools.stringDelimitedToCamelCase(
-                            attribute.name.replace(/bind-property-(.+)$/, '$1')
-                        ) as 'textContent'] = evaluated.result
-                    } else if (
-                        attribute.name.length > 'bind-on-'.length &&
-                        attribute.name.startsWith('bind-on-')
-                    )
-                        domNode.addEventListener(
-                            Tools.stringLowerCase(
-                                attribute.name.replace(/bind-on-(.+)$/, '$1')
-                            ),
-                            (event:Event):void => {
-                                scope.event = event
-                                const evaluated:EvaluationResult =
-                                    Tools.stringEvaluate(
-                                        attribute.value, scope, true, domNode
-                                    )
-                                if (evaluated.error)
-                                    console.warn(
-                                        'Error occurred during processing ' +
-                                        'given event binding "' +
-                                        `${attribute.name}" on node:`,
-                                        domNode,
-                                        evaluated.error
-                                    )
-                            }
-                        )
-                }
+                Web.applyBinding(domNode, scope)
             /*
                 NOTE: Slots of nested custom components (recognized by their
                 dash in name) should be rendered by themself.
@@ -771,6 +812,28 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.attachImplicitDefinedOutputEventHandler(
             !this.attachExplicitDefinedOutputEventHandler()
         )
+        /*
+            If this component is the root component trigger event handler by
+            its own in global context.
+        */
+        let currentElement:Node|null = this.parentNode
+        while (currentElement) {
+            if (
+                currentElement instanceof Web ||
+                /*
+                    NOTE: Assume none root if determined a wrapped closed
+                    shadow root.
+                */
+                currentElement.parentNode === null &&
+                currentElement.toString() === '[object ShadowRoot]'
+            ) {
+                this.isRoot = false
+                break
+            }
+            currentElement = currentElement.parentNode
+        }
+        if (this.isRoot)
+            this.self.applyBinding(this, globalContext)
     }
     /**
      * Attach explicitly defined event handler to synchronize internal and
@@ -1404,29 +1467,31 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             Tools,
             ...this.internalProperties
         }
-        const evaluated:EvaluationResult =
-            Tools.stringEvaluate(`\`${this.self.content}\``, scope)
-        if (evaluated.error) {
-            console.warn(`Faild to process template: ${evaluated.error}`)
-            return
+        if (this.dispatchEvent(new CustomEvent('render', {detail: scope}))) {
+            const evaluated:EvaluationResult =
+                Tools.stringEvaluate(`\`${this.self.content}\``, scope)
+            if (evaluated.error) {
+                console.warn(`Faild to process template: ${evaluated.error}`)
+                return
+            }
+
+            /*
+                NOTE: We first render into an intermediate render target and
+                apply slot content until we finally publish everything to
+                document. This avoid painting twice and internet explorer bugs
+                with empty node after first overwriting content of "this.root".
+            */
+            const renderTargetDomNode:HTMLDivElement =
+                document.createElement('div')
+            renderTargetDomNode.innerHTML = evaluated.result
+            this.applySlots(renderTargetDomNode, scope)
+
+            this.root.innerHTML = renderTargetDomNode.innerHTML
+
+            this.self.applyBindings(
+                this.root.firstChild, scope, this.self.renderSlots
+            )
         }
-
-        /*
-            NOTE: We first render into an intermediate render target and apply
-            slot content until we finally publish everything to document. This
-            avoid painting twice and internet explorer bugs with empty node
-            after first overwriting content of "this.root".
-        */
-        const renderTargetDomNode:HTMLDivElement =
-            document.createElement('div')
-        renderTargetDomNode.innerHTML = evaluated.result
-        this.applySlots(renderTargetDomNode, scope)
-
-        this.root.innerHTML = renderTargetDomNode.innerHTML
-
-        this.self.applyBindings(
-            this.root.firstChild, scope, this.self.renderSlots
-        )
     }
     // / endregion
     // endregion

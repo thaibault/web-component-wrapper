@@ -140,12 +140,15 @@
 
         <my-web
             id="web-1"
+
             example-boolean
             example-function="console.log(2)"
             example-json='{"key": false, "key2": null, "key3": {"key": 2}, "key4": "value"}'
             example-number="4"
             example-object="{key: false, key2: null, key3: {key: 2}, key4: 'value'}"
             example-string="value"
+
+            bind-on-render="console.log('Render:', this)"
         >
             <h1>Slotted Content</h1>
             <p>Lorem ipsum...</p>
@@ -153,6 +156,11 @@
                 bind-property-placeholder="'Binded number: ' + exampleNumber"
                 bind-on-input="event.target.title = baseWeb.self._name + ': ' + event.target.value"
             />
+
+            <my-web
+                id="nested-web-1"
+                bind-on-render="console.log('Render:', this, 'by', baseWeb.self._name)"
+            ></my-web>
         </my-web>
 
         <hr/>
