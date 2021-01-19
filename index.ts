@@ -16,14 +16,13 @@
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
 */
-export * from './React'
-export * from './Web'
 // region imports
 import Tools from 'clientnode'
 import PropertyTypes from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
 
-import ReactWeb from './React'
+import ReactWebImport, {api as reactWebAPIImport} from './React'
+import WebImport, {api as webAPIImport} from './Web'
 import {
     AttributesReflectionConfiguration,
     ComponentType,
@@ -32,6 +31,10 @@ import {
     WebComponentConfiguration
 } from './type'
 // endregion
+export const ReactWeb = ReactWebImport
+export const reactWebAPI = reactWebAPIImport
+export const webAPI = webAPIImport
+export const Web = WebImport
 /**
  * Wraps given react component as web component.
  * @param component - React component to wrap.

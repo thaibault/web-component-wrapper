@@ -35,7 +35,7 @@ import React, {
 import {render, unmountComponentAtNode} from 'react-dom'
 
 import Web from './Web'
-import {ComponentType, WebComponentAdapter} from './type'
+import {ComponentType, WebComponentAdapter, WebComponentAPI} from './type'
 // endregion
 /*
     Live cycle:
@@ -54,7 +54,6 @@ import {ComponentType, WebComponentAdapter} from './type'
  * wrap with a reference wrapper to get updated about internal state changes.
  * @property static:content - React component to wrap.
  * @property static:react - React namespace.
- * @property static:_name - Provided to name current component.
  *
  * @property preparedSlots - Cache of yet converted slot elements to their
  * react pendants.
@@ -372,6 +371,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 delete properties[name]
     }
     // endregion
+}
+export const api:WebComponentAPI<typeof ReactWeb> = {
+    component: ReactWeb,
+    register: (
+        tagName:string = Tools.stringCamelCaseToDelimited(ReactWeb._name)
+    ):void => customElements.define(tagName, ReactWeb)
 }
 export default ReactWeb
 // region vim modline

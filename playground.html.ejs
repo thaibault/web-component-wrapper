@@ -73,7 +73,7 @@
                         {mode: 'closed'} :
                         null
 
-                customElements.define('my-web', Web)
+                webComponentWrapper.index.webAPI.register('my-web')
                 // endregion
 
                 const oneWeb = document.querySelector('#web-1')
@@ -123,8 +123,7 @@
                 ReactWeb.observedAttributes = Web.observedAttributes
                 ReactWeb.shadowDOM = Web.shadowDOM
 
-                customElements.define('my-react-web', ReactWeb)
-                return
+                webComponentWrapper.index.reactWebAPI.register('my-react-web')
                 // endregion
 
                 const oneReactWeb = document.querySelector('#web-react-1')
@@ -150,7 +149,10 @@
         >
             <h1>Slotted Content</h1>
             <p>Lorem ipsum...</p>
-            <input bind-property-value="'Binded number: ' + exampleNumber" />
+            <input
+                bind-property-placeholder="'Binded number: ' + exampleNumber"
+                bind-on-input="event.target.title = baseWeb.self._name + ': ' + event.target.value"
+            />
         </my-web>
 
         <hr/>
