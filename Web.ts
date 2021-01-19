@@ -834,7 +834,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             currentElement = currentElement.parentNode
         }
         if (this.isRoot)
-            this.self.applyBinding(this, globalContext)
+            this.self.applyBinding(
+                this,
+                {
+                    self: this,
+                    [Tools.stringLowerCase(this.self._name) || 'instance']:
+                        this,
+                    Tools,
+                    ...this.internalProperties
+                }
+            )
     }
     /**
      * Attach explicitly defined event handler to synchronize internal and
