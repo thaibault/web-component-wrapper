@@ -80,6 +80,8 @@ import {
  *
  * @property static:renderUnsafe - Defines default render behavior.
  *
+ * @property static:indicator - Indicates these kind of instances.
+ *
  * @property static:_name - Name to access instance evaluated content or used
  * to derive default component name. Also useful for logging.
  * @property static:_propertyAliasIndex - Internal alias index to quickly match
@@ -821,6 +823,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         while (currentElement) {
             if (
                 currentElement instanceof Web ||
+                currentElement.nodeName?.includes('-') ||
                 /*
                     NOTE: Assume none root if determined a wrapped closed
                     shadow root.
