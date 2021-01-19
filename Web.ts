@@ -47,7 +47,8 @@ import {
     CompiledDomNodeTemplate,
     CompiledDomNodeTemplateItem,
     EventToPropertyMapping,
-    WebComponentAdapter
+    WebComponentAdapter,
+    WebComponentAPI
 } from './type'
 // endregion
 /**
@@ -73,6 +74,8 @@ import {
  * during web-component instantiation. Can hold initialize configuration.
  * @property static:trimSlots - Ignore empty text nodes while applying slots.
  *
+ * @property static:_name - Name to access instance evaluated content or used
+ * to derive default component name. Also useful for logging.
  * @property static:_propertyAliasIndex - Internal alias index to quickly match
  * properties in both directions.
  * @property static:_propertiesToReflectAsAttributes - A mapping of property
@@ -130,6 +133,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         mode:'closed'|'open'
     } = null
     static trimSlots:boolean = true
+    static _name:string = 'BaseWeb'
     static _propertyAliasIndex:Mapping|undefined
     static _propertiesToReflectAsAttributes:Map<string, string|ValueOf<typeof PropertyTypes>>|undefined
 
@@ -438,7 +442,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * slots (determined by an existing corresponding attribute).
      * @returns Nothing.
      */
-    static applyPropertyBindings(
+    static applyBindings(
         domNode:Node|null, scope:Mapping<any>, renderSlots:boolean = true
     ):void {
         while (domNode) {
@@ -476,14 +480,37 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         domNode[Tools.stringDelimitedToCamelCase(
                             attribute.name.replace(/bind-property-(.+)$/, '$1')
                         ) as 'textContent'] = evaluated.result
-                    }
+                    } else if (
+                        attribute.name.length > 'bind-on-'.length &&
+                        attribute.name.startsWith('bind-on-')
+                    )
+                        domNode.addEventListener(
+                            Tools.stringLowerCase(
+                                attribute.name.replace(/bind-on-(.+)$/, '$1')
+                            ),
+                            (event:Event):void => {
+                                scope.event = event
+                                const evaluated:EvaluationResult =
+                                    Tools.stringEvaluate(
+                                        attribute.value, scope, true, domNode
+                                    )
+                                if (evaluated.error)
+                                    console.warn(
+                                        'Error occurred during processing ' +
+                                        'given event binding "' +
+                                        `${attribute.name}" on node:`,
+                                        domNode,
+                                        evaluated.error
+                                    )
+                            }
+                        )
                 }
             /*
                 NOTE: Slots of nested custom components (recognized by their
                 dash in name) should be rendered by themself.
             */
             if (!domNode.nodeName.toLowerCase().includes('-'))
-                Web.applyPropertyBindings(domNode.firstChild, scope)
+                Web.applyBindings(domNode.firstChild, scope)
             domNode = domNode.nextSibling
         }
     }
@@ -590,14 +617,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         domNode:NodeType,
         scope:any = {},
         options:{
-            applyPropertyBindings?:boolean
+            applyBindings?:boolean
             filter?:(domNode:NodeType) => boolean
             map?:CompiledDomNodeTemplate
             unsafe?:boolean
         } = {}
     ):CompiledDomNodeTemplate<NodeType> {
         options = {
-            applyPropertyBindings: true,
+            applyBindings: true,
             map: this.domNodeTemplateCache,
             unsafe: this.self.renderUnsafe,
             ...options
@@ -647,14 +674,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.evaluateDomNodeTemplate<NodeType>(
                         currentDomNode as NodeType,
                         scope,
-                        {...options, applyPropertyBindings: false}
+                        {...options, applyBindings: false}
                     )
                 currentDomNode = currentDomNode.nextSibling as
                     unknown as NodeType
             }
         }
-        if (options.applyPropertyBindings)
-            this.self.applyPropertyBindings(domNode, scope)
+        if (options.applyBindings)
+            this.self.applyBindings(domNode, scope)
         return options.map as CompiledDomNodeTemplate<NodeType>
     }
     /**
@@ -1372,7 +1399,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     render():void {
         const scope:Mapping<any> = {
-            self: this, Tools, ...this.internalProperties
+            self: this,
+            [Tools.stringLowerCase(this.self._name) || 'instance']: this,
+            Tools,
+            ...this.internalProperties
         }
         const evaluated:EvaluationResult =
             Tools.stringEvaluate(`\`${this.self.content}\``, scope)
@@ -1394,12 +1424,18 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
 
-        this.self.applyPropertyBindings(
+        this.self.applyBindings(
             this.root.firstChild, scope, this.self.renderSlots
         )
     }
     // / endregion
     // endregion
+}
+export const api:WebComponentAPI<typeof Web> = {
+    component: Web,
+    register: (
+        tagName:string = Tools.stringCamelCaseToDelimited(Web._name)
+    ):void => customElements.define(tagName, Web)
 }
 export default Web
 // region vim modline
