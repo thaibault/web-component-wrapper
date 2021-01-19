@@ -107,7 +107,7 @@ import {
  * @property instance - Wrapped component instance.
  * @property outputEventNames - Set of determined output event names.
  * @property root - Hosting dom node.
- * @property runDomConnectionAndRendringInSameEventQueue - Indicates whether
+ * @property runDomConnectionAndRenderingInSameEventQueue - Indicates whether
  * we should render initial dom immediately after the component is connected to
  * dom. Deactivating this allows wrapped components to detect their parents
  * since their parent connected callback will be called before the children's
@@ -151,7 +151,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     eventToPropertyMapping:EventToPropertyMapping = {}
     outputEventNames:Set<string> = new Set<string>()
     root:ShadowRoot|Web<TElement>
-    runDomConnectionAndRendringInSameEventQueue:boolean = false
+    runDomConnectionAndRenderingInSameEventQueue:boolean = false
     readonly self:typeof Web = Web
     slots:Mapping<HTMLElement> & {default?:Array<Node>} = {}
     // endregion
@@ -258,7 +258,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.grabGivenSlots()
 
-        this.runDomConnectionAndRendringInSameEventQueue ?
+        this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render() :
             Tools.timeout(this.render.bind(this))
     }
@@ -435,7 +435,70 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / region utility
     // // region dom nodes
     /**
-     * Provides properties to given, sibling and nested nodes.
+     * Binds properties and event handler to given dom node.
+     * @param domNode - Node to start traversing from.
+     * @param scope - Scope to render property value again.
+     * @returns Nothing.
+     */
+    static applyBinding(domNode:Node, scope:Mapping<any>):void {
+        if ((domNode as HTMLElement).attributes?.length)
+            for (
+                let index = 0;
+                index < (domNode as HTMLElement).attributes.length;
+                index++
+            ) {
+                const attribute:Attr =
+                    (domNode as HTMLElement).attributes[index]
+                if (
+                    attribute.name.length > 'bind-property-'.length &&
+                    attribute.name.startsWith('bind-property-')
+                ) {
+                    const evaluated:EvaluationResult =
+                        Tools.stringEvaluate(attribute.value, scope)
+                    if (evaluated.error) {
+                        console.warn(
+                            'Error occurred during processing given ' +
+                            `attribute binding "${attribute.name}" on node:`,
+                            domNode,
+                            evaluated.error
+                        )
+                        continue
+                    }
+                    /*
+                        NOTE: Cast to "textContent" to have a writable
+                        property here.
+                    */
+                    domNode[Tools.stringDelimitedToCamelCase(
+                        attribute.name.replace(/bind-property-(.+)$/, '$1')
+                    ) as 'textContent'] = evaluated.result
+                } else if (
+                    attribute.name.length > 'bind-on-'.length &&
+                    attribute.name.startsWith('bind-on-')
+                )
+                    domNode.addEventListener(
+                        Tools.stringLowerCase(
+                            attribute.name.replace(/bind-on-(.+)$/, '$1')
+                        ),
+                        (event:Event):void => {
+                            scope.event = event
+                            const evaluated:EvaluationResult =
+                                Tools.stringEvaluate(
+                                    attribute.value, scope, true, domNode
+                                )
+                            if (evaluated.error)
+                                console.warn(
+                                    'Error occurred during processing ' +
+                                    'given event binding "' +
+                                    `${attribute.name}" on node:`,
+                                    domNode,
+                                    evaluated.error
+                                )
+                        }
+                    )
+            }
+    }
+    /**
+     * Binds properties and event handler to given, sibling and nested nodes.
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
      * @param renderSlots - Indicates whether to render nested elements of
@@ -447,64 +510,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     ):void {
         while (domNode) {
             if (
-                (domNode as HTMLElement).attributes?.length &&
                 (renderSlots || !(domNode as HTMLElement).getAttribute('slot'))
             )
-                for (
-                    let index = 0;
-                    index < (domNode as HTMLElement).attributes.length;
-                    index++
-                ) {
-                    const attribute:Attr =
-                        (domNode as HTMLElement).attributes[index]
-                    if (
-                        attribute.name.length > 'bind-property-'.length &&
-                        attribute.name.startsWith('bind-property-')
-                    ) {
-                        const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(attribute.value, scope)
-                        if (evaluated.error) {
-                            console.warn(
-                                'Error occurred during processing given ' +
-                                `attribute binding "${attribute.name}" on ` +
-                                'node:',
-                                domNode,
-                                evaluated.error
-                            )
-                            continue
-                        }
-                        /*
-                            NOTE: Cast to "textContent" to have a writable
-                            property here.
-                        */
-                        domNode[Tools.stringDelimitedToCamelCase(
-                            attribute.name.replace(/bind-property-(.+)$/, '$1')
-                        ) as 'textContent'] = evaluated.result
-                    } else if (
-                        attribute.name.length > 'bind-on-'.length &&
-                        attribute.name.startsWith('bind-on-')
-                    )
-                        domNode.addEventListener(
-                            Tools.stringLowerCase(
-                                attribute.name.replace(/bind-on-(.+)$/, '$1')
-                            ),
-                            (event:Event):void => {
-                                scope.event = event
-                                const evaluated:EvaluationResult =
-                                    Tools.stringEvaluate(
-                                        attribute.value, scope, true, domNode
-                                    )
-                                if (evaluated.error)
-                                    console.warn(
-                                        'Error occurred during processing ' +
-                                        'given event binding "' +
-                                        `${attribute.name}" on node:`,
-                                        domNode,
-                                        evaluated.error
-                                    )
-                            }
-                        )
-                }
+                Web.applyBinding(domNode, scope)
             /*
                 NOTE: Slots of nested custom components (recognized by their
                 dash in name) should be rendered by themself.
@@ -771,6 +779,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.attachImplicitDefinedOutputEventHandler(
             !this.attachExplicitDefinedOutputEventHandler()
         )
+        /*
+            If this component is the root component trigger event handler by
+            its own in global context.
+        */
+        let currentElement:HTMLElement|null = this.parentElement
+        let isRoot:boolean = true
+        while (currentElement) {
+            if (currentElement instanceof Web) {
+                isRoot = false
+                break
+            }
+            currentElement = currentElement.parentElement
+        }
+        if (isRoot)
+            this.self.applyBinding(this, globalContext)
     }
     /**
      * Attach explicitly defined event handler to synchronize internal and
