@@ -543,6 +543,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     ):void {
         while (domNode) {
             if (
+                (domNode as HTMLElement).attributes?.length &&
                 (renderSlots || !(domNode as HTMLElement).getAttribute('slot'))
             )
                 Web.applyBinding(domNode, scope)
