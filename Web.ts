@@ -511,9 +511,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     attribute.name.startsWith('bind-on-')
                 )
                     domNode.addEventListener(
-                        Tools.stringLowerCase(
+                        Tools.stringLowerCase(Tools.stringDelimitedToCamelCase(
                             attribute.name.replace(/bind-on-(.+)$/, '$1')
-                        ),
+                        )),
                         (event:Event):void => {
                             scope.event = event
                             const evaluated:EvaluationResult =
