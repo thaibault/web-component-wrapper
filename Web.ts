@@ -417,11 +417,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      *
      * @param name - Property name to write.
      * @param value - New value to write.
+     * @param render - Indicates to trigger a new render cycle.
      * @returns Nothing.
      */
-    setPropertyValue(name:string, value:any):void {
+    setPropertyValue(name:string, value:any, render:boolean = true):void {
         this.reflectProperties({[name]: Tools.copy(value, 1)}, false)
         this.setInternalPropertyValue(name, Tools.copy(value, 1))
+
+        if (!render)
+            return
 
         if (this.batchPropertyUpdates) {
             if (!(
