@@ -924,7 +924,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     forwardEvent(name:string, parameter:Array<any>):boolean {
         if (name.length > 'onX'.length && name.startsWith('on'))
-            name = name.substring(2)
+            name = Tools.stringLowerCase(name.substring(2))
         return this.dispatchEvent(
             new CustomEvent(name, {detail: {target: this, parameter}})
         )
