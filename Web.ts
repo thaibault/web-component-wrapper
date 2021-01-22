@@ -926,7 +926,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (name.length > 'onX'.length && name.startsWith('on'))
             name = Tools.stringLowerCase(name.substring(2))
         return this.dispatchEvent(
-            new CustomEvent(name, {detail: {target: this, parameter}})
+            new CustomEvent(name, {detail: {parameter}})
         )
     }
     // / endregion
