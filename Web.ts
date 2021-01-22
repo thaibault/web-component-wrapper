@@ -1499,33 +1499,35 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             Tools,
             ...this.internalProperties
         }
-        if (this.dispatchEvent(new CustomEvent(
+
+        if (!this.dispatchEvent(new CustomEvent(
             'render', {detail: {reason, scope}}
-        ))) {
-            const evaluated:EvaluationResult =
-                Tools.stringEvaluate(`\`${this.self.content}\``, scope)
-            if (evaluated.error) {
-                console.warn(`Faild to process template: ${evaluated.error}`)
-                return
-            }
+        )))
+            return
 
-            /*
-                NOTE: We first render into an intermediate render target and
-                apply slot content until we finally publish everything to
-                document. This avoid painting twice and internet explorer bugs
-                with empty node after first overwriting content of "this.root".
-            */
-            const renderTargetDomNode:HTMLDivElement =
-                document.createElement('div')
-            renderTargetDomNode.innerHTML = evaluated.result
-            this.applySlots(renderTargetDomNode, scope)
-
-            this.root.innerHTML = renderTargetDomNode.innerHTML
-
-            this.self.applyBindings(
-                this.root.firstChild, scope, this.self.renderSlots
-            )
+        const evaluated:EvaluationResult =
+            Tools.stringEvaluate(`\`${this.self.content}\``, scope)
+        if (evaluated.error) {
+            console.warn(`Faild to process template: ${evaluated.error}`)
+            return
         }
+
+        /*
+            NOTE: We first render into an intermediate render target and apply
+            slot content until we finally publish everything to document. This
+            avoid painting twice and internet explorer bugs with empty node
+            after first overwriting content of "this.root".
+        */
+        const renderTargetDomNode:HTMLDivElement =
+            document.createElement('div')
+        renderTargetDomNode.innerHTML = evaluated.result
+        this.applySlots(renderTargetDomNode, scope)
+
+        this.root.innerHTML = renderTargetDomNode.innerHTML
+
+        this.self.applyBindings(
+            this.root.firstChild, scope, this.self.renderSlots
+        )
     }
     // / endregion
     // endregion
