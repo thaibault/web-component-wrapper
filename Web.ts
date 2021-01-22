@@ -300,7 +300,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render('connected') :
-            Tools.timeout(this.render.bind(this))
+            Tools.timeout(():void => {
+                this.render('connected')
+            })
     }
     /**
      * Frees some memory.
