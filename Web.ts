@@ -53,6 +53,10 @@ import {
 // endregion
 /**
  * Generic web component to render a content against instance specific values.
+ * @property static:applyRootBinding - If checked this component determines if
+ * it is a root component (not wrapped by another web-component). If determined
+ * as root that declarative event and property bindings will be applied to
+ * itself..
  * @property static:content - Content to render when changes happened.
  *
  * @property static:shadowDOM - Configures if a shadow dom should be used
@@ -78,7 +82,7 @@ import {
  * rendered into root node.
  * @property static:trimSlots - Ignore empty text nodes while applying slots.
  *
- * @property static:renderUnsafe - Defines default render behavior.
+ * @property static:reventChanchenderUnsafe - Defines default render behavior.
  *
  * @property static:indicator - Indicates these kind of instances.
  *
@@ -136,6 +140,7 @@ import {
  */
 export class Web<TElement = HTMLElement> extends HTMLElement {
     // region properties
+    static applyRootBinding:boolean = false
     static content:any =
         '<slot>Please provide a template to transclude.</slot>'
 
@@ -819,38 +824,41 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.attachImplicitDefinedOutputEventHandler(
             !this.attachExplicitDefinedOutputEventHandler()
         )
-        /*
-            If this component is the root component trigger event handler by
-            its own in global context.
-        */
-        let currentElement:Node|null = this.parentNode
-        while (currentElement) {
-            if (
-                currentElement instanceof Web ||
-                currentElement.nodeName?.includes('-') ||
-                /*
-                    NOTE: Assume none root if determined a wrapped closed
-                    shadow root.
-                */
-                currentElement.parentNode === null &&
-                currentElement.toString() === '[object ShadowRoot]'
-            ) {
-                this.isRoot = false
-                break
-            }
-            currentElement = currentElement.parentNode
-        }
-        if (this.isRoot)
-            this.self.applyBinding(
-                this,
-                {
-                    self: this,
-                    [Tools.stringLowerCase(this.self._name) || 'instance']:
-                        this,
-                    Tools,
-                    ...this.internalProperties
+
+        if (this.self.applyRootBinding) {
+            /*
+                If this component is the root component trigger event handler
+                by its own in global context.
+            */
+            let currentElement:Node|null = this.parentNode
+            while (currentElement) {
+                if (
+                    currentElement instanceof Web ||
+                    currentElement.nodeName?.includes('-') ||
+                    /*
+                        NOTE: Assume none root if determined a wrapped closed
+                        shadow root.
+                    */
+                    currentElement.parentNode === null &&
+                    currentElement.toString() === '[object ShadowRoot]'
+                ) {
+                    this.isRoot = false
+                    break
                 }
-            )
+                currentElement = currentElement.parentNode
+            }
+            if (this.isRoot)
+                this.self.applyBinding(
+                    this,
+                    {
+                        self: this,
+                        [Tools.stringLowerCase(this.self._name) || 'instance']:
+                            this,
+                        Tools,
+                        ...this.internalProperties
+                    }
+                )
+        }
     }
     /**
      * Attach explicitly defined event handler to synchronize internal and
