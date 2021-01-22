@@ -279,11 +279,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.batchedAttributeUpdateRunning = false
                     this.batchedUpdateRunning = false
 
-                    this.render()
+                    this.render('attributeChanged')
                 })
             }
         } else
-            this.render()
+            this.render('attributeChanged')
     }
     /**
      * Triggered when this component is mounted into the document. Event
@@ -299,7 +299,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.grabGivenSlots()
 
         this.runDomConnectionAndRenderingInSameEventQueue ?
-            this.render() :
+            this.render('connected') :
             Tools.timeout(this.render.bind(this))
     }
     /**
@@ -440,7 +440,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.batchedUpdateRunning = true
                 Tools.timeout(():void => {
                     if (value !== undefined && this.isStateProperty(name)) {
-                        this.render()
+                        this.render('preStatePropertyChanged')
 
                         Tools.timeout(():void => {
                             this.setInternalPropertyValue(name, undefined)
@@ -448,7 +448,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             this.batchedPropertyUpdateRunning = false
                             this.batchedUpdateRunning = false
 
-                            this.render()
+                            this.render('postStatePropertyChanged')
 
                             this.triggerOuputEvents()
                         })
@@ -456,19 +456,23 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         this.batchedPropertyUpdateRunning = false
                         this.batchedUpdateRunning = false
 
-                        this.render()
+                        this.render('propertyChanged')
 
                         this.triggerOuputEvents()
                     }
                 })
             }
         } else {
-            this.render()
+            const isStateProperty:boolean = this.isStateProperty(name)
 
-            if (value !== undefined && this.isStateProperty(name)) {
+            this.render(
+                isStateProperty ? 'preStatePropertyChanged' : 'propertyChanged'
+            )
+
+            if (value !== undefined && isStateProperty) {
                 this.setInternalPropertyValue(name, undefined)
 
-                this.render()
+                this.render('postStatePropertyChanged')
             }
 
             this.triggerOuputEvents()
@@ -1226,11 +1230,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.batchedUpdateRunning = true
                     Tools.timeout(():void => {
                         this.batchedUpdateRunning = false
-                        this.render()
+                        this.render('propertyReflected')
                     })
                 }
             } else
-                this.render()
+                this.render('propertyReflected')
     }
     /**
      * Triggers a re-evaluation of all attributes.
@@ -1485,16 +1489,19 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
+     * @param reason - Description why rendering is necessary.
      * @returns Nothing.
      */
-    render():void {
+    render(reason:string = 'unknown'):void {
         const scope:Mapping<any> = {
             self: this,
             [Tools.stringLowerCase(this.self._name) || 'instance']: this,
             Tools,
             ...this.internalProperties
         }
-        if (this.dispatchEvent(new CustomEvent('render', {detail: scope}))) {
+        if (this.dispatchEvent(new CustomEvent(
+            'render', {detail: {reason, scope}}
+        ))) {
             const evaluated:EvaluationResult =
                 Tools.stringEvaluate(`\`${this.self.content}\``, scope)
             if (evaluated.error) {
