@@ -20,7 +20,7 @@
 import PropertyTypes, {string} from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
 
-import {ConfigurableDecorator, Decorator} from './type'
+import {PropertyDecorator} from './type'
 import Web from './Web'
 // endregion
 /**
@@ -37,7 +37,7 @@ export function property<Type = unknown, InstanceType = unknown>(
         update?:boolean
         writeAttribute?:boolean|string|ValueOf<typeof PropertyTypes>
     } = {}
-):Decorator<Type, InstanceType> {
+):PropertyDecorator<Type, InstanceType> {
     options = {readAttribute: true, type: string, ...options}
     /**
      * Registers given property to different property / attribute conversion
@@ -47,12 +47,12 @@ export function property<Type = unknown, InstanceType = unknown>(
      * @param descriptor - Reference to property which should by wrapped.
      * @returns Modified given property.
      */
-    return (target:InstanceType, name:string, descriptor:Type):Type => {
+    return function(target:InstanceType, name:string, descriptor:Type):void {
         type TargetType = typeof target & typeof Web
 
         const self:TargetType =
-            (descriptor as unknown as {self:TargetType}).self ||
-            (descriptor as unknown as {constructor:TargetType}).constructor
+            (target as unknown as {self:TargetType}).self ||
+            (target as unknown as {constructor:TargetType}).constructor
 
         if (options.readAttribute) {
             if (!self.observedAttributes)
@@ -127,8 +127,6 @@ export function property<Type = unknown, InstanceType = unknown>(
             if (options.update || !self.propertyAliases.hasOwnProperty(name))
                 self.propertyAliases[name] = options.alias
         }
-
-        return descriptor
     }
 }
 export default property
