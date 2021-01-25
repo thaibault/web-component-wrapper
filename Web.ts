@@ -4,7 +4,7 @@
 'use strict'
 /* !
     region header
-    [Project page](https://torben.website/react-material-input)
+    [Project page](https://torben.website/web-component-wrapper)
 
     Copyright Torben Sickert (info["~at~"]torben.website) 16.12.2012
 
@@ -149,7 +149,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         mode:'closed'|'open'
     } = null
 
-    static readonly observedAttributes:Array<string> = []
+    static observedAttributes:Array<string> = []
 
     static propertyAliases:Mapping = {}
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}

@@ -20,13 +20,15 @@
   ],
   "main": "index.js",
   "files": [
+    "decorator.js",
+    "decorator.ts",
     "index.ts",
     "polyfill.html.ejs",
-    "React.ts",
     "React.js",
+    "React.ts",
     "ReactNext.js",
-    "Web.ts",
     "Web.js",
+    "Web.ts",
     "WebNext.js",
     "type.ts"
   ],
@@ -107,7 +109,7 @@
     },
     "injection": {
       "entry": {
-        "__evaluate__": "2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2].startsWith('test') ? './test.ts' : 2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2] === 'serve' ? {clientnode: 'clientnode', index: './index'} : {index: './index.ts', React: './React.ts', Web: './Web.ts'}"
+        "__evaluate__": "2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2].startsWith('test') ? './test.ts' : 2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2] === 'serve' ? {clientnode: 'clientnode', index: './index'} : {decorator: './decorator.ts', index: './index.ts', React: './React.ts', Web: './Web.ts'}"
       }
     },
     "module": {
