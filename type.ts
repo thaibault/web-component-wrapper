@@ -60,6 +60,12 @@ export type WebComponentAPI<WebComponent extends typeof Web = typeof Web> = {
     component:WebComponent
     register:(tagName?:string) => void
 }
+export type Decorator<Type = unknown, InstanceType = unknown> = (
+    target:InstanceType, name:string, decriptor:Type
+) => Type
+export type ConfigurableDecorator<Type = unknown, InstanceType = unknown> = (
+    ...parameters:Array<any>
+) => Decorator<Type, InstanceType>
 // endregion
 // region vim modline
 // vim: set tabstop=4 shiftwidth=4 expandtab:

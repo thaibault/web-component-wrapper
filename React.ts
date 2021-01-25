@@ -1,10 +1,10 @@
 // #!/usr/bin/env babel-node
 // -*- coding: utf-8 -*-
-/** @module react-input-material */
+/** @module react */
 'use strict'
 /* !
     region header
-    [Project page](https://torben.website/react-material-input)
+    [Project page](https://torben.website/web-component-wrapper)
 
     Copyright Torben Sickert (info["~at~"]torben.website) 16.12.2012
 
