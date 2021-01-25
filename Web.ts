@@ -339,7 +339,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             )
     }
     /**
-     * Creats an index to match alias source and target against each other on
+     * Creates an index to match alias source and target against each other on
      * constant runtime.
      * @param name - Name to search an alternate name for.
      * @returns Found alias or "null".
