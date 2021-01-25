@@ -323,7 +323,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 .concat(Object.keys(this.self.propertyAliases))
                 .concat(Object.values(this.self.propertyAliases))
         )
-        for (const propertyName of allPropertyNames)
+        for (const propertyName of allPropertyNames) {
+            // If there already exists a local value use them.
+            if (Object.prototype.hasOwnProperty.call(this, propertyName))
+                this.setPropertyValue(
+                    propertyName, this[propertyName as keyof Web], false
+                )
+
             Object.defineProperty(
                 this,
                 propertyName,
@@ -337,6 +343,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     }
                 }
             )
+        }
     }
     /**
      * Creates an index to match alias source and target against each other on
@@ -440,6 +447,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             )) {
                 this.batchedPropertyUpdateRunning = true
                 this.batchedUpdateRunning = true
+
                 Tools.timeout(():void => {
                     if (value !== undefined && this.isStateProperty(name)) {
                         this.render('preStatePropertyChanged')
