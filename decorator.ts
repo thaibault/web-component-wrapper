@@ -17,6 +17,7 @@
     endregion
 */
 // region imports
+import Tools from 'clientnode'
 import PropertyTypes, {string} from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
 
@@ -59,8 +60,9 @@ export function property(
             if (!self.observedAttributes)
                 self.observedAttributes = []
 
-            if (!self.observedAttributes.includes(name))
-                self.observedAttributes.push(name)
+            const attributeName:string = Tools.stringCamelCaseToDelimited(name)
+            if (!self.observedAttributes.includes(attributeName))
+                self.observedAttributes.push(attributeName)
         }
 
         if (options.type) {
