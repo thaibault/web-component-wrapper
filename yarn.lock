@@ -3082,9 +3082,9 @@ cli-table3@^0.5.0:
     colors "^1.1.2"
 
 clientnode@*:
-  version "3.0.661"
-  resolved "https://registry.yarnpkg.com/clientnode/-/clientnode-3.0.661.tgz#5684dc16667cfacd82339f4e9b8c1039b9ac2314"
-  integrity sha512-gkX6l7T65l8pAbwWd90izTgtFdr/3EYScCTPOMaAMvBMhhutpEXxXwhbJ32YpNC35QFj8dgwp9T0bnDpfQL1ZA==
+  version "3.0.663"
+  resolved "https://registry.yarnpkg.com/clientnode/-/clientnode-3.0.663.tgz#a009dd9ddbd5d3e078804986960cbcf1ffb70dc8"
+  integrity sha512-U4uCsRTgNHKRKPna44gtgyjwVDUid6KZfC6X/2h1cSGxgeO1ECH+ug06pvcFiDflPAO8l+j+Qq3Kibp3uEHOag==
 
 cliui@^4.0.0:
   version "4.1.0"
@@ -4303,9 +4303,9 @@ flatted@^3.1.0:
   integrity sha512-zAoAQiudy+r5SvnSw3KJy5os/oRJYHzrzja/tBDqrZtNhUw8bt6y8OBzMWcjWr+8liV8Eb6yOhw8WZ7VFZ5ZzA==
 
 follow-redirects@^1.0.0:
-  version "1.13.1"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.13.1.tgz#5f69b813376cee4fd0474a3aba835df04ab763b7"
-  integrity sha512-SSG5xmZh1mkPGyKzjZP8zLjltIfpW32Y5QpdNJyjcfGxK3qo3NDDkZOZSFiGn1A6SclQxY9GzEwAHQ3dmYRWpg==
+  version "1.13.2"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.13.2.tgz#dd73c8effc12728ba5cf4259d760ea5fb83e3147"
+  integrity sha512-6mPTgLxYm3r6Bkkg0vNM0HTjfGrOEtsfbhagQvbxDEsEkpNhw582upBaoRZylzen6krEmxXJgt9Ju6HiI4O7BA==
 
 for-in@^1.0.2:
   version "1.0.2"
@@ -4387,9 +4387,9 @@ get-caller-file@^2.0.1:
   integrity sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==
 
 get-intrinsic@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/get-intrinsic/-/get-intrinsic-1.0.2.tgz#6820da226e50b24894e08859469dc68361545d49"
-  integrity sha512-aeX0vrFm21ILl3+JpFFRNe9aUvp6VFZb2/CTbgLb8j75kOhvoNYjt9d8KA/tJG4gSo8nzEDedRl0h7vDmBYRVg==
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/get-intrinsic/-/get-intrinsic-1.1.0.tgz#892e62931e6938c8a23ea5aaebcfb67bd97da97e"
+  integrity sha512-M11rgtQp5GZMZzDL7jLTNxbDfurpzuau5uqRWDPvlHjfvg3TdScAZo96GLvhMjImrmR8uAt0FS2RLoMrfWGKlg==
   dependencies:
     function-bind "^1.1.1"
     has "^1.0.3"
@@ -8337,9 +8337,9 @@ webidl-conversions@^6.1.0:
   integrity sha512-qBIvFLGiBpLjfwmYAaHPXsn+ho5xZnGvyGvsarywGNc8VyQJUMHJ8OBKGGrPER0okBeMDaan4mNBlgBROxuI8w==
 
 weboptimizer@*:
-  version "2.0.889"
-  resolved "https://registry.yarnpkg.com/weboptimizer/-/weboptimizer-2.0.889.tgz#0000ec5933aac4e546b9ed4c6fb29c31751ae79b"
-  integrity sha512-ZQn45WJCNnNpsocwzx8F42TAkWn9QymgLVKftNyu6bLf7ok/7Q0UnVKgaslIA6q4B0P9Dn9Jf7CRySGy13DvxA==
+  version "2.0.891"
+  resolved "https://registry.yarnpkg.com/weboptimizer/-/weboptimizer-2.0.891.tgz#cf1e5f8decbfdac8f5337b137448c19723afe3c3"
+  integrity sha512-Gc7j3mnK7P6/Z97gMd6p8sKrrtYFP4JsgpTamLgYhg27ZgNh9q7IF32qCtb5MG/mordwPhXFEnrEs4RCCrQ28Q==
   dependencies:
     "@babel/core" "*"
     "@babel/plugin-proposal-class-properties" "*"
