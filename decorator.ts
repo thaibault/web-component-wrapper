@@ -20,7 +20,6 @@
 import PropertyTypes, {string} from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
 
-import {PropertyDecorator} from './type'
 import Web from './Web'
 // endregion
 /**
@@ -29,7 +28,7 @@ import Web from './Web'
  * and properties into each other.
  * @returns Generated decorator.
  */
-export function property<Type = unknown, InstanceType = unknown>(
+export function property(
     options:{
         alias?:string
         readAttribute?:boolean
@@ -37,17 +36,19 @@ export function property<Type = unknown, InstanceType = unknown>(
         update?:boolean
         writeAttribute?:boolean|string|ValueOf<typeof PropertyTypes>
     } = {}
-):PropertyDecorator<Type, InstanceType> {
+):PropertyDecorator {
     options = {readAttribute: true, type: string, ...options}
     /**
      * Registers given property to different property / attribute conversion
      * data structures.
      * @param target - Instance to apply given property to.
      * @param name - Field name to apply.
-     * @param descriptor - Reference to property which should by wrapped.
      * @returns Modified given property.
      */
-    return function(target:InstanceType, name:string, descriptor:Type):void {
+    return function(target:Object, name:string|symbol):void {
+        if (typeof name !== 'string')
+            return
+
         type TargetType = typeof target & typeof Web
 
         const self:TargetType =
