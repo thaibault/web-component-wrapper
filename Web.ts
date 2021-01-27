@@ -82,9 +82,7 @@ import {
  * rendered into root node.
  * @property static:trimSlots - Ignore empty text nodes while applying slots.
  *
- * @property static:reventChanchenderUnsafe - Defines default render behavior.
- *
- * @property static:indicator - Indicates these kind of instances.
+ * @property static:renderUnsafe - Defines default render behavior.
  *
  * @property static:_name - Name to access instance evaluated content or used
  * to derive default component name. Also useful for logging.
