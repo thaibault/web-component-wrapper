@@ -175,7 +175,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     batchedPropertyUpdateRunning:boolean = true
     batchedUpdateRunning:boolean = true
 
-    domNodeEventBindings:Map<Node, Function> = new Map()
+    domNodeEventBindings:Map<Node, Map<string, Function>> = new Map()
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
     externalProperties:Mapping<any> = {}
@@ -309,8 +309,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Frees some memory.
      */
     disconnectedCallback():void {
-        for (const [domNode, deregister] of this.domNodeEventBindings)
-            deregister()
+        for (const [domNode, map] of this.domNodeEventBindings)
+            for (const deregister of map.values())
+                deregister()
 
         this.slots = {}
     }
@@ -511,61 +512,64 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             ) {
                 const attribute:Attr =
                     (domNode as HTMLElement).attributes[index]
-                if (
-                    attribute.name.length > 'bind-property-'.length &&
-                    attribute.name.startsWith('bind-property-')
-                ) {
-                    const evaluated:EvaluationResult =
-                        Tools.stringEvaluate(attribute.value, scope)
-                    if (evaluated.error) {
-                        console.warn(
-                            'Error occurred during processing given ' +
-                            `attribute binding "${attribute.name}" on node:`,
-                            domNode,
-                            evaluated.error
-                        )
-                        continue
-                    }
-                    /*
-                        NOTE: Cast to "textContent" to have a writable
-                        property here.
-                    */
-                    domNode[Tools.stringDelimitedToCamelCase(
-                        attribute.name.replace(/bind-property-(.+)$/, '$1')
-                    ) as 'textContent'] = evaluated.result
-                } else if (
-                    attribute.name.length > 'bind-on-'.length &&
-                    attribute.name.startsWith('bind-on-')
-                ) {
-                    if (this.domNodeEventBindings.has(domNode))
-                        this.domNodeEventBindings.get(domNode)!()
-
-                    const name:string = Tools.stringLowerCase(
-                        Tools.stringDelimitedToCamelCase(
-                            attribute.name.replace(/bind-on-(.+)$/, '$1')
-                        )
-                    )
-                    const handler:EventListener = (event:Event):void => {
-                        scope.event = event
+                if (attribute.name.startsWith('bind-'))
+                    if (attribute.name.startsWith('bind-property-')) {
                         const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(
-                                attribute.value, scope, true, domNode
-                            )
-                        if (evaluated.error)
+                            Tools.stringEvaluate(attribute.value, scope)
+                        if (evaluated.error) {
                             console.warn(
-                                'Error occurred during processing ' +
-                                'given event binding "' +
-                                `${attribute.name}" on node:`,
+                                'Error occurred during processing given ' +
+                                `attribute binding "${attribute.name}" on ` +
+                                'node:',
                                 domNode,
                                 evaluated.error
                             )
+                            continue
+                        }
+                        /*
+                            NOTE: Cast to "textContent" to have a writable
+                            property here.
+                        */
+                        domNode[Tools.stringDelimitedToCamelCase(
+                            attribute.name.replace(/bind-property-(.+)$/, '$1')
+                        ) as 'textContent'] = evaluated.result
+                    } else if (attribute.name.startsWith('bind-on-')) {
+                        const eventMap:Map<string, Function> =
+                            this.domNodeEventBindings.has(domNode) ?
+                                this.domNodeEventBindings.get(domNode)! :
+                                new Map()
+                        const name:string = Tools.stringLowerCase(
+                            Tools.stringDelimitedToCamelCase(
+                                attribute.name.replace(/bind-on-(.+)$/, '$1')
+                            )
+                        )
+                        if (eventMap.has(name))
+                            eventMap.get(name)!()
+
+                        const handler:EventListener = (event:Event):void => {
+                            scope.event = event
+                            const evaluated:EvaluationResult =
+                                Tools.stringEvaluate(
+                                    attribute.value, scope, true, domNode
+                                )
+                            if (evaluated.error)
+                                console.warn(
+                                    'Error occurred during processing ' +
+                                    'given event binding "' +
+                                    `${attribute.name}" on node:`,
+                                    domNode,
+                                    evaluated.error
+                                )
+                        }
+                        domNode.addEventListener(name, handler)
+                        eventMap.set(name, ():void => {
+                            domNode.removeEventListener(name, handler)
+
+                            eventMap.delete(name)
+                            if (eventMap.size === 0)
+                                this.domNodeEventBindings.delete(domNode)
+                        })
                     }
-                    domNode.addEventListener(name, handler)
-                    this.domNodeEventBindings.set(domNode, ():void => {
-                        domNode.removeEventListener(name, handler)
-                        this.domNodeEventBindings.delete(domNode)
-                    })
-                }
             }
     }
     /**
@@ -874,6 +878,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 }
                 currentElement = currentElement.parentNode
             }
+
             if (this.isRoot)
                 this.applyBinding(
                     this,
