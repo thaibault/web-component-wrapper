@@ -110,6 +110,8 @@ import {
  * @property batchedUpdateRunning - Indicates whether a batched render update
  * is currently running.
  *
+ * @property domNodeEventBindings - Holds a mapping from nodes with registered
+ * event handlers mapped to their de-registration function.
  * @property domNodeTemplateCache - Caches template compilation results.
  *
  * @property externalProperties - Holds currently evaluated or seen properties.
@@ -175,6 +177,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     batchedPropertyUpdateRunning:boolean = true
     batchedUpdateRunning:boolean = true
 
+    domNodeEventBindings:Map<Node, Function> = new Map()
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
     externalProperties:Mapping<any> = {}
@@ -308,6 +311,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Frees some memory.
      */
     disconnectedCallback():void {
+        for (const [domNode, deregister] of this.domNodeEventBindings)
+            deregister()
+
         this.slots = {}
     }
     // endregion
@@ -498,7 +504,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param scope - Scope to render property value again.
      * @returns Nothing.
      */
-    static applyBinding(domNode:Node, scope:Mapping<any>):void {
+    applyBinding(domNode:Node, scope:Mapping<any>):void {
         if ((domNode as HTMLElement).attributes?.length)
             for (
                 let index = 0;
@@ -532,27 +538,36 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 } else if (
                     attribute.name.length > 'bind-on-'.length &&
                     attribute.name.startsWith('bind-on-')
-                )
-                    domNode.addEventListener(
-                        Tools.stringLowerCase(Tools.stringDelimitedToCamelCase(
+                ) {
+                    if (this.domNodeEventBindings.has(domNode))
+                        this.domNodeEventBindings.get(domNode)!()
+
+                    const name:string = Tools.stringLowerCase(
+                        Tools.stringDelimitedToCamelCase(
                             attribute.name.replace(/bind-on-(.+)$/, '$1')
-                        )),
-                        (event:Event):void => {
-                            scope.event = event
-                            const evaluated:EvaluationResult =
-                                Tools.stringEvaluate(
-                                    attribute.value, scope, true, domNode
-                                )
-                            if (evaluated.error)
-                                console.warn(
-                                    'Error occurred during processing ' +
-                                    'given event binding "' +
-                                    `${attribute.name}" on node:`,
-                                    domNode,
-                                    evaluated.error
-                                )
-                        }
+                        )
                     )
+                    const handler:EventListener = (event:Event):void => {
+                        scope.event = event
+                        const evaluated:EvaluationResult =
+                            Tools.stringEvaluate(
+                                attribute.value, scope, true, domNode
+                            )
+                        if (evaluated.error)
+                            console.warn(
+                                'Error occurred during processing ' +
+                                'given event binding "' +
+                                `${attribute.name}" on node:`,
+                                domNode,
+                                evaluated.error
+                            )
+                    }
+                    domNode.addEventListener(name, handler)
+                    this.domNodeEventBindings.set(domNode, ():void => {
+                        domNode.removeEventListener(name, handler)
+                        this.domNodeEventBindings.delete(domNode)
+                    })
+                }
             }
     }
     /**
@@ -563,7 +578,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * slots (determined by an existing corresponding attribute).
      * @returns Nothing.
      */
-    static applyBindings(
+    applyBindings(
         domNode:Node|null, scope:Mapping<any>, renderSlots:boolean = true
     ):void {
         while (domNode) {
@@ -571,13 +586,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 (domNode as HTMLElement).attributes?.length &&
                 (renderSlots || !(domNode as HTMLElement).getAttribute('slot'))
             )
-                Web.applyBinding(domNode, scope)
+                this.applyBinding(domNode, scope)
             /*
                 NOTE: Slots of nested custom components (recognized by their
                 dash in name) should be rendered by themself.
             */
             if (!domNode.nodeName.toLowerCase().includes('-'))
-                Web.applyBindings(domNode.firstChild, scope)
+                this.applyBindings(domNode.firstChild, scope)
             domNode = domNode.nextSibling
         }
     }
@@ -748,7 +763,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             }
         }
         if (options.applyBindings)
-            this.self.applyBindings(domNode, scope)
+            this.applyBindings(domNode, scope)
         return options.map as CompiledDomNodeTemplate<NodeType>
     }
     /**
@@ -862,7 +877,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 currentElement = currentElement.parentNode
             }
             if (this.isRoot)
-                this.self.applyBinding(
+                this.applyBinding(
                     this,
                     {
                         self: this,
@@ -1535,9 +1550,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
 
-        this.self.applyBindings(
-            this.root.firstChild, scope, this.self.renderSlots
-        )
+        this.applyBindings(this.root.firstChild, scope, this.self.renderSlots)
     }
     // / endregion
     // endregion
