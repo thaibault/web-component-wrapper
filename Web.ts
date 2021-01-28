@@ -113,7 +113,7 @@ import {
  * @property domNodeTemplateCache - Caches template compilation results.
  *
  * @property externalProperties - Holds currently evaluated or seen properties.
- * @property ignoreAttributeUpdates - Indicates whether attribute updates
+ * @property ignoreAttributeUpdateObservations - Indicates whether attribute updates
  * should be considered (usually only needed internally).
  * @property internalProperties - Holds currently evaluated properties which
  * are owned by this instance and should always be delegated.
@@ -179,7 +179,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
     externalProperties:Mapping<any> = {}
-    ignoreAttributeUpdates:boolean = false
+    ignoreAttributeUpdateObservations:boolean = false
     internalProperties:Mapping<any> = {}
 
     eventToPropertyMapping:EventToPropertyMapping = {}
@@ -263,7 +263,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     ):void {
         if (
             !forceReEvaluation &&
-            (this.ignoreAttributeUpdates || oldValue === newValue)
+            (this.ignoreAttributeUpdateObservations || oldValue === newValue)
         )
             return
 
@@ -293,11 +293,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     connectedCallback():void {
         this.attachEventHandler()
+
         this.batchedAttributeUpdateRunning = false
         this.batchedPropertyUpdateRunning = false
         this.batchedUpdateRunning = false
 
         this.grabGivenSlots()
+
+        this.reflectPropertiesAsAttributes(this.externalProperties)
 
         this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render('connected') :
@@ -332,7 +335,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             // If there already exists a local value use them.
             if (Object.prototype.hasOwnProperty.call(this, propertyName))
                 this.setPropertyValue(
-                    propertyName, this[propertyName as keyof Web], false
+                    propertyName, this[propertyName as keyof Web]
                 )
 
             Object.defineProperty(
@@ -345,6 +348,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     },
                     set: function(value:any):void {
                         this.setPropertyValue(propertyName, value)
+                        this.triggerPropertySpecificRendering(
+                            propertyName, value
+                        )
                     }
                 }
             )
@@ -436,16 +442,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      *
      * @param name - Property name to write.
      * @param value - New value to write.
+     * @returns Nothing.
+     */
+    setPropertyValue(name:string, value:any):void {
+        this.reflectProperties({[name]: Tools.copy(value, 1)})
+        this.setInternalPropertyValue(name, Tools.copy(value, 1))
+    }
+    /*
+     * Triggers a new rendering cycle and respects property specific state
+     * connection.
+     * @param name - Property name to write.
+     * @param value - New value to write.
      * @param render - Indicates to trigger a new render cycle.
      * @returns Nothing.
      */
-    setPropertyValue(name:string, value:any, render:boolean = true):void {
-        this.reflectProperties({[name]: Tools.copy(value, 1)}, false)
-        this.setInternalPropertyValue(name, Tools.copy(value, 1))
-
-        if (!render)
-            return
-
+    triggerPropertySpecificRendering(name:string, value:any):void {
         if (this.batchPropertyUpdates) {
             if (!(
                 this.batchedPropertyUpdateRunning || this.batchedUpdateRunning
@@ -1123,24 +1134,23 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         }
     }
     /**
-     * Reflects wrapped component state back to web-component's attributes and
-     * properties.
-     * @param properties - Properties to update in reflected property state.
-     * @param render - Indicates whether an additional re-render should be
-     * triggered.
+     * Reflects wrapped component state back to web-component's attributes.
+     * @param properties - Properties to update in reflected attribute state.
      * @returns Nothing.
      */
-    reflectProperties(properties:Mapping<any>, render:boolean = true):void {
+    reflectPropertiesAsAttributes(properties:Mapping<any>):void {
         /*
             NOTE: We can avoid an additional attribute parsing for this
             reflections.
         */
-        this.ignoreAttributeUpdates = true
+        this.ignoreAttributeUpdateObservations = true
         for (const [name, value] of Object.entries(properties)) {
             this.setExternalPropertyValue(name, value)
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
             if (this.self._propertiesToReflectAsAttributes!.has(name))
-                switch (this.self._propertiesToReflectAsAttributes!.get(name)) {
+                switch (
+                    this.self._propertiesToReflectAsAttributes!.get(name)
+                ) {
                     case boolean:
                     case 'boolean':
                         if (value) {
@@ -1222,6 +1232,17 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         break
                 }
         }
+        this.ignoreAttributeUpdateObservations = false
+    }
+    /**
+     * Reflects wrapped component state back to web-component's attributes and
+     * properties.
+     * @param properties - Properties to update in reflected property state.
+     * @returns Nothing.
+     */
+    reflectProperties(properties:Mapping<any>):void {
+        if (this.isConnected)
+            this.reflectPropertiesAsAttributes(properties)
         /*
             NOTE: Do not reflect properties which are hold in state. These
             values are only set once when they are explicitly set (see
@@ -1244,25 +1265,30 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         which properties exists on the underlying instance.
                     */
                     this.setInternalPropertyValue(name, undefined)
+
         if (this.internalProperties.model?.state) {
             delete this.internalProperties.model.state
             this.setInternalPropertyValue(
                 'model', this.internalProperties.model
             )
         }
-
-        this.ignoreAttributeUpdates = false
-        if (render)
-            if (this.batchUpdates) {
-                if (!this.batchedUpdateRunning) {
-                    this.batchedUpdateRunning = true
-                    Tools.timeout(():void => {
-                        this.batchedUpdateRunning = false
-                        this.render('propertyReflected')
-                    })
-                }
-            } else
-                this.render('propertyReflected')
+    }
+    /**
+     * Triggers a new rendering cycle by respecting batching configuration.
+     * @param reason - A description why rendering should be triggered.
+     * @returns Nothing.
+     */
+    triggerRender(reason:string):void {
+        if (this.batchUpdates) {
+            if (!this.batchedUpdateRunning) {
+                this.batchedUpdateRunning = true
+                Tools.timeout(():void => {
+                    this.batchedUpdateRunning = false
+                    this.render(reason)
+                })
+            }
+        } else
+            this.render(reason)
     }
     /**
      * Triggers a re-evaluation of all attributes.
@@ -1293,6 +1319,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         */
         const oldBatchUpdatesConfiguration:boolean = this.batchUpdates
         this.batchUpdates = false
+
         if (
             Object.prototype.hasOwnProperty.call(
                 this.eventToPropertyMapping, name
@@ -1343,8 +1370,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             newProperties[name] = currentValue
                     }
             }
+
             this.reflectProperties(newProperties)
         }
+
+        this.triggerRender('propertyReflected')
+
         this.batchUpdates = oldBatchUpdatesConfiguration
     }
     /**
