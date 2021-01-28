@@ -327,8 +327,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             )
                 this.reflectProperties(
                     (this.instance as {current:WebComponentAdapter}).current
-                        .properties as Mapping<any>,
-                    false
+                        .properties as Mapping<any>
                 )
         }
     }
