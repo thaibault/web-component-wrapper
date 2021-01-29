@@ -1,6 +1,6 @@
 {
   "name": "web-component-wrapper",
-  "version": "0.0.186",
+  "version": "0.0.187",
   "license": "CC-BY-3.0",
   "description": "Generic web-component base class and framework specific wrapper.",
   "homepage": "https://torben.website/web-component-wrapper",
