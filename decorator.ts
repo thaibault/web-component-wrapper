@@ -16,7 +16,7 @@
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
 */
-// region imports
+// region impor ts
 import Tools from 'clientnode'
 import PropertyTypes, {string} from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
@@ -42,8 +42,13 @@ export function property(
     /**
      * Registers given property to different property / attribute conversion
      * data structures.
+     * NOTE: It is important to set static configuration properties on its
+     * "own" properties instead of some inherited one. So we have to check via
+     * "hasOwnProperty" for existence in this decorator.
+     *
      * @param target - Instance to apply given property to.
      * @param name - Field name to apply.
+     *
      * @returns Modified given property.
      */
     return function(target:Object, name:string|symbol):void {
@@ -57,7 +62,7 @@ export function property(
             (target as unknown as {constructor:TargetType}).constructor
 
         if (options.readAttribute) {
-            if (!self.observedAttributes)
+            if (!self.hasOwnProperty('observedAttributes'))
                 self.observedAttributes = []
 
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
@@ -66,7 +71,7 @@ export function property(
         }
 
         if (options.type) {
-            if (!self.propertyTypes)
+            if (!self.hasOwnProperty('propertyTypes'))
                 self.propertyTypes = {}
 
             if (options.update || !self.propertyTypes.hasOwnProperty(name))
@@ -74,7 +79,7 @@ export function property(
         }
 
         if (options.writeAttribute) {
-            if (!self.propertiesToReflectAsAttributes)
+            if (!self.hasOwnProperty('propertiesToReflectAsAttributes'))
                 self.propertiesToReflectAsAttributes = new Map()
 
             if (
@@ -124,7 +129,7 @@ export function property(
         }
 
         if (options.alias) {
-            if (!self.propertyAliases)
+            if (!self.hasOwnProperty('propertyAliases'))
                 self.propertyAliases = {}
 
             if (options.update || !self.propertyAliases.hasOwnProperty(name))
