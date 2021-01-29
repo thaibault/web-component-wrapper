@@ -18,6 +18,7 @@
 */
 // region imports
 import Tools from 'clientnode'
+import {NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
 import {Mapping} from 'clientnode/type'
 import React, {
     Attributes,
@@ -131,6 +132,51 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             this.reflectInstanceProperties()
         else
             Tools.timeout(this.reflectInstanceProperties)
+    }
+    // endregion
+    // region property handling
+    /**
+     * Generic property setter. Forwards field writes into internal and
+     * external property representations.
+     *
+     * In general it is a bad idea to write properties which shadow state
+     * properties (move to a controlled component instance) and re-set the
+     * property to "undefined" later to lose control.
+     *
+     * The reason causes in avoiding this scenario:
+     *
+     * 1. Property overwrites state.
+     * 2. State changes but is shadowed by recent changes in property.
+     *
+     * Ensure:
+     *
+     * 1. Property overwrites state.
+     * 2. Property is overwritten to "undefined" to lose control over state.
+     * 3. State can change post property adaption didn't take effect anymore:
+     *    Communicate change back by triggering output events.
+     *
+     * @param name - Property name to write.
+     * @param value - New value to write.
+     *
+     * @returns Nothing.
+     */
+    setPropertyValue(name:string, value:any):void {
+        this.reflectProperties({[name]: Tools.copy(value, 1)})
+        this.setInternalPropertyValue(name, Tools.copy(value, 1))
+    }
+    /**
+     * Internal property setter. Respects configured aliases.
+     * @param name - Property name to write.
+     * @param value - New value to write.
+     * @returns Nothing.
+     */
+    setInternalPropertyValue(name:string, value:any):void {
+        if (value === null)
+            value = NullSymbol
+        else if (value === undefined)
+            value = UndefinedSymbol
+
+        super.setInternalPropertyValue(name, value)
     }
     // endregion
     // region handle slots

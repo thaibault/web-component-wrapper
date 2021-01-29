@@ -28,7 +28,6 @@ import PropertyTypes, {
     instanceOf,
     func,
     node,
-    NullSymbol,
     number,
     object,
     objectOf,
@@ -37,8 +36,7 @@ import PropertyTypes, {
     exact,
     shape,
     string,
-    symbol,
-    UndefinedSymbol
+    symbol
 } from 'clientnode/property-types'
 import {EvaluationResult, Mapping, PlainObject, ValueOf} from 'clientnode/type'
 
@@ -411,11 +409,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     setInternalPropertyValue(name:string, value:any):void {
-        if (value === null)
-            value = NullSymbol
-        else if (value === undefined)
-            value = UndefinedSymbol
-
         this.internalProperties[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
@@ -426,30 +419,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Generic property setter. Forwards field writes into internal and
      * external property representations.
      *
-     * In general it is a bad idea to write properties which shadow state
-     * properties (move to a controlled component instance) and re-set the
-     * property to "undefined" later to lose control.
-     *
-     * The reason causes in avoiding this scenario:
-     *
-     * 1. Property overwrites state.
-     * 2. State changes but is shadowed by recent changes in property.
-     *
-     * Ensure:
-     *
-     * 1. Property overwrites state.
-     * 2. Property is overwritten to "undefined" to lose control over state.
-     * 3. State can change post property adaption didn't take effect anymore:
-     *    Communicate change back by triggering output events.
-     *
      * @param name - Property name to write.
      * @param value - New value to write.
      *
      * @returns Nothing.
      */
     setPropertyValue(name:string, value:any):void {
-        this.reflectProperties({[name]: Tools.copy(value, 1)})
-        this.setInternalPropertyValue(name, Tools.copy(value, 1))
+        this.reflectProperties({[name]: value})
+        this.setInternalPropertyValue(name, value)
     }
     /*
      * Triggers a new rendering cycle and respects property specific state
