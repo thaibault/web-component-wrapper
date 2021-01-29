@@ -420,9 +420,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.internalProperties[alias] = value
     }
     /**
-     * Generic property setter. Forwards field writes into "properties" field
-     * and triggers re-rendering (optionally batched). After rendering all
-     * known output events are triggered.
+     * Generic property setter. Forwards field writes into internal and
+     * external property representations.
      *
      * In general it is a bad idea to write properties which shadow state
      * properties (move to a controlled component instance) and re-set the
@@ -442,6 +441,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      *
      * @param name - Property name to write.
      * @param value - New value to write.
+     *
      * @returns Nothing.
      */
     setPropertyValue(name:string, value:any):void {
