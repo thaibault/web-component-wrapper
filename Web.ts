@@ -251,22 +251,25 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param name - Attribute name which was updates.
      * @param oldValue - Old attribute value.
      * @param newValue - New updated value.
-     * @param forceReEvaluation - Indicates if a re-evaluation should be
-     * performed if given old and new value are the same.
      * @returns Nothing.
      */
     attributeChangedCallback(
-        name:string,
-        oldValue:string,
-        newValue:string,
-        forceReEvaluation:boolean = false
+        name:string, oldValue:string, newValue:string
     ):void {
-        if (
-            !forceReEvaluation &&
-            (this.ignoreAttributeUpdateObservations || oldValue === newValue)
-        )
+        if (this.ignoreAttributeUpdateObservations || oldValue === newValue)
             return
 
+        this.updateAttribute(name, newValue)
+    }
+    /**
+     * Updates given attribute representation.
+     *
+     * @param name - Attribute name which was updates.
+     * @param newValue - New updated value.
+     *
+     * @returns Nothing.
+     */
+    updateAttribute(name:string, newValue:string):void {
         this.evaluateStringOrNullAndSetAsProperty(name, newValue)
 
         if (this.batchAttributeUpdates) {
@@ -1291,17 +1294,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.render(reason)
     }
     /**
-     * Triggers a re-evaluation of all attributes.
-     * @returns Nothing.
-     */
-    updateAllAttributeEvaluations():void {
-        for (const name of this.self.observedAttributes)
-            if (this.hasAttribute(name)) {
-                const value:any = this.getAttribute(name)
-                this.attributeChangedCallback(name, value, value, true)
-            }
-    }
-    /**
      * Reflect given event handler call with given parameter back to current
      * properties state.
      * @param name - Event name.
@@ -1398,22 +1390,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         )) {
             const type:ValueOf<typeof PropertyTypes>|string =
                 this.self.propertyTypes[name]
-            if (
-                value === null && [boolean, 'boolean'].includes(type as string)
-            ) {
-                delete this.externalProperties[name]
-                delete this.internalProperties[name]
-                const alias:null|string = this.getPropertyAlias(name)
-                if (alias) {
-                    delete this.externalProperties[alias]
-                    delete this.internalProperties[alias]
-                }
-                return
-            }
             switch (type) {
                 case boolean:
                 case 'boolean':
-                    const booleanValue:boolean = ![null, 'false'].includes(value)
+                    const booleanValue:boolean =
+                        ![null, 'false'].includes(value)
                     this.setInternalPropertyValue(name, booleanValue)
                     this.setExternalPropertyValue(name, booleanValue)
                     break
