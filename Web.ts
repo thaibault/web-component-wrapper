@@ -526,8 +526,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             ) {
                 const attribute:Attr =
                     (domNode as HTMLElement).attributes[index]
-                if (attribute.name.startsWith('bind-'))
-                    if (attribute.name.startsWith('bind-property-')) {
+                let name:string = ''
+                if (attribute.name.startsWith('data-bind-'))
+                    name = attribute.name.substring('data-bind-'.length)
+                else if (attribute.name.startsWith('bind-'))
+                    name = attribute.name.substring('bind-'.length)
+                if (name)
+                    if (name.startsWith('property-')) {
                         const evaluated:EvaluationResult =
                             Tools.stringEvaluate(attribute.value, scope)
                         if (evaluated.error) {
@@ -545,16 +550,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             property here.
                         */
                         domNode[Tools.stringDelimitedToCamelCase(
-                            attribute.name.replace(/bind-property-(.+)$/, '$1')
+                            name.replace(/property-(.+)$/, '$1')
                         ) as 'textContent'] = evaluated.result
-                    } else if (attribute.name.startsWith('bind-on-')) {
+                    } else if (name.startsWith('on-')) {
                         const eventMap:Map<string, Function> =
                             this.domNodeEventBindings.has(domNode) ?
                                 this.domNodeEventBindings.get(domNode)! :
                                 new Map()
-                        const name:string = Tools.stringLowerCase(
+                        name = Tools.stringLowerCase(
                             Tools.stringDelimitedToCamelCase(
-                                attribute.name.replace(/bind-on-(.+)$/, '$1')
+                                name.replace(/on-(.+)$/, '$1')
                             )
                         )
                         if (eventMap.has(name))
