@@ -293,6 +293,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     connectedCallback():void {
+        // NOTE: Hack to support IE 11 here.
+        try {
+            ;(this as {isConnected:boolean}).isConnected = true
+        } catch (error) {}
+
         this.attachEventHandler()
 
         this.batchedAttributeUpdateRunning = false
@@ -313,6 +318,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Frees some memory.
      */
     disconnectedCallback():void {
+        // NOTE: Hack to support IE 11 here.
+        try {
+            ;(this as {isConnected:boolean}).isConnected = false
+        } catch (error) {}
+
         for (const [domNode, map] of this.domNodeEventBindings)
             for (const deregister of map.values())
                 deregister()
