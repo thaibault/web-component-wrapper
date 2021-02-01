@@ -26,6 +26,7 @@ import Web from './Web'
 // region exports
 export type CompiledDomNodeTemplateItem = {
     children:Array<CompiledDomNodeTemplate>
+    error:null|string
     scopeNames:Array<string>
     template:string
     templateFunction:TemplateFunction
