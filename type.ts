@@ -15,10 +15,10 @@
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
 */
-// region imports
+// region imports 
 import Tools from 'clientnode'
 import PropertyTypes from 'clientnode/property-types'
-import {Mapping, ValueOf} from 'clientnode/type'
+import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
 import {ComponentType as ReactComponentType} from 'react'
 
 import Web from './Web'
@@ -28,7 +28,7 @@ export type CompiledDomNodeTemplateItem = {
     children:Array<CompiledDomNodeTemplate>
     scopeNames:Array<string>
     template:string
-    templateFunction:ReturnType<typeof Tools.stringCompile>[1]
+    templateFunction:TemplateFunction
 }
 export type CompiledDomNodeTemplate<NodeType = Node> =
     Map<NodeType, CompiledDomNodeTemplateItem>
