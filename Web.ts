@@ -39,7 +39,12 @@ import PropertyTypes, {
     symbol
 } from 'clientnode/property-types'
 import {
-    CompilationResult, EvaluationResult, Mapping, PlainObject, ValueOf
+    CompilationResult,
+    EvaluationResult,
+    Mapping,
+    PlainObject,
+    TemplateFunction,
+    ValueOf
 } from 'clientnode/type'
 
 import {
@@ -726,12 +731,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (!options.map!.has(domNode))
             this.compileDomNodeTemplate<NodeType>(domNode, scope, options)
         if (options.map!.has(domNode)) {
-            const {scopeNames, templateFunction} = options.map!.get(domNode) as
-                CompiledDomNodeTemplateItem
-            if (typeof templateFunction === 'string')
+            const {error, scopeNames, templateFunction} =
+                options.map!.get(domNode) as CompiledDomNodeTemplateItem
+            if (error)
                 console.warn(
-                    `Error occurred during compiling node content: ` +
-                    templateFunction
+                    `Error occurred during compiling node content: ${error}`
                 )
             else {
                 let output:null|string = null
@@ -743,7 +747,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     console.warn(
                         `Error occurred when running "${templateFunction}": ` +
                         `with bound names "${scopeNames.join('", "')}": "` +
-                        `${Tools.represent(error)}".`
+                        `${error}".`
                     )
                 }
                 if (output !== null)
@@ -1396,11 +1400,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     break
                 case func:
                 case 'function':
-                    let error:Error
+                    let error:null|string = null
                     let templateFunction:TemplateFunction
                     if (value) {
-                        {error, templateFunction} =
+                        const result:CompilationResult =
                             Tools.stringCompile(value, 'parameter')
+                        error = result.error
+                        templateFunction = result.templateFunction
                         if (error)
                             console.warn(
                                 `'Failed to process event handler "${name}":` +
@@ -1427,8 +1433,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             this.forwardEvent(name, parameter)
                         }
                     )
-                    if (typeof callback === 'function')
-                        this.setExternalPropertyValue(name, callback)
+                    if (!error)
+                        this.setExternalPropertyValue(name, templateFunction!)
                     break
                 case 'json':
                     if (value) {
