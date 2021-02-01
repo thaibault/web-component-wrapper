@@ -38,7 +38,9 @@ import PropertyTypes, {
     string,
     symbol
 } from 'clientnode/property-types'
-import {EvaluationResult, Mapping, PlainObject, ValueOf} from 'clientnode/type'
+import {
+    CompilationResult, EvaluationResult, Mapping, PlainObject, ValueOf
+} from 'clientnode/type'
 
 import {
     AttributesReflectionConfiguration,
@@ -642,15 +644,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 template = (domNode as NodeType & {template:string}).template
 
             if (this.self.hasCode(template)) {
-                const result:ReturnType<typeof Tools.stringCompile> =
+                const result:CompilationResult =
                     Tools.stringCompile(`\`${template}\``, scope)
                 options.map!.set(
                     domNode,
                     {
                         children: [],
-                        scopeNames: result[0],
+                        error: result.error,
+                        scopeNames: result.scopeNames,
                         template,
-                        templateFunction: result[1]
+                        templateFunction: result.templateFunction
                     }
                 )
             }
@@ -667,15 +670,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             }
             const children:Array<CompiledDomNodeTemplate> = []
             if (template) {
-                const result:ReturnType<typeof Tools.stringCompile> =
+                const result:CompilationResult =
                     Tools.stringCompile(`\`${template}\``, scope)
                 options.map!.set(
                     domNode,
                     {
                         children,
-                        scopeNames: result[0],
+                        error: result.error,
+                        scopeNames: result.scopeNames,
                         template,
-                        templateFunction: result[1]
+                        templateFunction: result.templateFunction
                     }
                 )
             }
@@ -1392,13 +1396,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     break
                 case func:
                 case 'function':
-                    let callback:Function|string|undefined
+                    let error:Error
+                    let templateFunction:TemplateFunction
                     if (value) {
-                        callback = Tools.stringCompile(value, 'parameter')[1]
-                        if (typeof callback === 'string')
+                        {error, templateFunction} =
+                            Tools.stringCompile(value, 'parameter')
+                        if (error)
                             console.warn(
                                 `'Failed to process event handler "${name}":` +
-                                ` ${callback}.`
+                                ` ${error}.`
                             )
                     }
                     this.setInternalPropertyValue(
@@ -1406,16 +1412,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         (...parameter:Array<any>):void => {
                             if (this.outputEventNames.has(name))
                                 this.reflectEventToProperties(name, parameter)
-                            if (typeof callback === 'function')
+                            if (!error)
                                 try {
-                                    callback.call(this, parameter)
+                                    templateFunction.call(this, parameter)
                                 } catch (error) {
                                     console.warn(
                                         `'Failed to evaluate event handler "` +
                                         `${name}" with expression "${value}"` +
                                         ` and scope variable "parameter" set` +
                                         ` to "${Tools.represent(parameter)}"` +
-                                        `: "${Tools.represent(error)}".`
+                                        `: "${error}".`
                                     )
                                 }
                             this.forwardEvent(name, parameter)
