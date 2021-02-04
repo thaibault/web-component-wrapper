@@ -54,8 +54,9 @@
                                 '<slot>Fallback Slot content</slot>' +
                             '</div>'
                         )
-                Web.propertiesToReflectAsAttributes = 'exampleBoolean'
-                Web.propertyTypes = {
+                Web.propertiesToReflectAsAttributes.push('exampleBoolean')
+
+                const propertyTypes = {
                     exampleBoolean: 'boolean',
                     exampleFunction: 'function',
                     exampleJson: 'json',
@@ -64,6 +65,9 @@
                     exampleString: 'string',
                     id: 'string'
                 }
+                for (let name in propertyTypes)
+                    Web.propertyTypes[name] = propertyTypes[name]
+
                 Web.observedAttributes = Object.keys(Web.propertyTypes)
                     .map(function(name) {
                         return Tools.stringCamelCaseToDelimited(name)
