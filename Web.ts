@@ -349,8 +349,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     defineGetterAndSetterInterface():void {
         const allPropertyNames:Array<string> = Tools.arrayUnique(
             Object.keys(this.self.propertyTypes)
-                .concat(Object.keys(this.self.propertyAliases))
-                .concat(Object.values(this.self.propertyAliases))
+                .concat(Object.keys(this.self._propertyAliasIndex!))
         )
         for (const propertyName of allPropertyNames) {
             // If there already exists a local value use them.
@@ -397,7 +396,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Retrieved property value.
      */
     getPropertyValue(name:string):any {
-        const result:any = this.instance?.current?.properties ?
+        const result:any = (
+            this.instance?.current?.properties &&
+            (
+                // NOTE: Base properties should not be shadowed.
+                !Web.propertyTypes.hasOwnProperty(name) ||
+                this.instance.current.properties.hasOwnProperty(name)
+            )
+        ) ?
             this.instance.current.properties[name] :
             this.externalProperties[name]
         if (
