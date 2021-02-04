@@ -70,6 +70,37 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
             .concat(Object.keys(propertyAliases))
             .concat(Object.values(propertyAliases))
     )
+
+    // NOTE: We extend given configuration properties by base class defined.
+    let propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
+        configuration.propertiesToReflectAsAttributes ||
+        component.propertiesToReflectAsAttributes ||
+        []
+    if (ReactWeb.propertiesToReflectAsAttributes)
+        if (Array.isArray(propertiesToReflectAsAttributes))
+            propertiesToReflectAsAttributes = [
+                ...ReactWeb.propertiesToReflectAsAttributes as Array<string>,
+                ...propertiesToReflectAsAttributes
+            ]
+        else if (propertiesToReflectAsAttributes instanceof Map)
+            for (
+                const name of ReactWeb.propertiesToReflectAsAttributes as
+                    Array<string>
+            )
+                propertiesToReflectAsAttributes.set(
+                    name, ReactWeb.propertyTypes[name]
+                )
+            if (
+                propertiesToReflectAsAttributes !== null &&
+                typeof propertiesToReflectAsAttributes === 'object'
+            )
+                for (
+                    const name of ReactWeb.propertiesToReflectAsAttributes as
+                        Array<string>
+                )
+                    (propertiesToReflectAsAttributes as unknown as Mapping)[
+                        name
+                    ] = ReactWeb.propertyTypes[name] as string
     /**
      * Runtime generated web component.
      */
@@ -80,16 +111,20 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
                     configuration.attachWebComponentAdapterIfNotExists :
                     true
         static content:ComponentType = component
-        static propertyAliases:Mapping = propertyAliases
+        static propertyAliases:Mapping = {
+            ...ReactWeb.propertyAliases, ...propertyAliases
+        }
         static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
-            configuration.propertiesToReflectAsAttributes ||
-            component.propertiesToReflectAsAttributes ||
-            []
-        static propertyTypes:Mapping<string|ValueOf<typeof PropertyTypes>> =
-            propertyTypes
+            propertiesToReflectAsAttributes
+        static propertyTypes:Mapping<string|ValueOf<typeof PropertyTypes>> = {
+            ...ReactWeb.propertyTypes,
+            ...propertyTypes
+        }
         static readonly observedAttributes:Array<string> =
-            allPropertyNames.map((name:string):string =>
-                Tools.stringCamelCaseToDelimited(name)
+            ReactWeb.observedAttributes.concat(
+                allPropertyNames.map((name:string):string =>
+                    Tools.stringCamelCaseToDelimited(name)
+                )
             )
 
         static _name:string = name

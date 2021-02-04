@@ -63,7 +63,9 @@ export function property(
 
         if (options.readAttribute) {
             if (!self.hasOwnProperty('observedAttributes'))
-                self.observedAttributes = []
+                self.observedAttributes = self.observedAttributes ?
+                    [...self.observedAttributes] :
+                    []
 
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
             if (!self.observedAttributes.includes(attributeName))
@@ -72,7 +74,9 @@ export function property(
 
         if (options.type) {
             if (!self.hasOwnProperty('propertyTypes'))
-                self.propertyTypes = {}
+                self.propertyTypes = self.propertyTypes ?
+                    {...self.propertyTypes} :
+                    {}
 
             if (options.update || !self.propertyTypes.hasOwnProperty(name))
                 self.propertyTypes[name] = options.type
@@ -80,7 +84,10 @@ export function property(
 
         if (options.writeAttribute) {
             if (!self.hasOwnProperty('propertiesToReflectAsAttributes'))
-                self.propertiesToReflectAsAttributes = new Map()
+                self.propertiesToReflectAsAttributes =
+                    self.propertiesToReflectAsAttributes ?
+                        Tools.copy(self.propertiesToReflectAsAttributes) :
+                        new Map()
 
             if (
                 options.update ||
@@ -130,7 +137,9 @@ export function property(
 
         if (options.alias) {
             if (!self.hasOwnProperty('propertyAliases'))
-                self.propertyAliases = {}
+                self.propertyAliases = self.propertyAliases ?
+                    {...self.propertyAliases} :
+                    {}
 
             if (options.update || !self.propertyAliases.hasOwnProperty(name))
                 self.propertyAliases[name] = options.alias
