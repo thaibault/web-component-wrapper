@@ -47,6 +47,7 @@ import {
     ValueOf
 } from 'clientnode/type'
 
+import property from './decorator'
 import {
     AttributesReflectionConfiguration,
     CompiledDomNodeTemplate,
@@ -58,11 +59,11 @@ import {
 // endregion
 /**
  * Generic web component to render a content against instance specific values.
- * @property static:applyRootBinding - If checked this component determines if
- * it is a root component (not wrapped by another web-component). If determined
- * as root that declarative event and property bindings will be applied to
- * itself..
+ * @property static:applyRootBinding - If determined itself as root declarative
+ * event and property bindings will be applied to itself.
  * @property static:content - Content to render when changes happened.
+ * @property static:determineRootBinding - If checked this component determines
+ * if it is a root component (not wrapped by another web-component).
  *
  * @property static:shadowDOM - Configures if a shadow dom should be used
  * during web-component instantiation. Can hold initialize configuration.
@@ -145,9 +146,10 @@ import {
  */
 export class Web<TElement = HTMLElement> extends HTMLElement {
     // region properties
-    static applyRootBinding:boolean = false
+    static applyRootBinding:boolean = true
     static content:any =
         '<slot>Please provide a template to transclude.</slot>'
+    static determineRootBinding:boolean = true
 
     static shadowDOM:boolean|null|{
         delegateFocus?:boolean
@@ -191,6 +193,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     outputEventNames:Set<string> = new Set<string>()
 
     instance:null|{current?:WebComponentAdapter} = null
+    @property({type: boolean, writeAttribute: true})
     isRoot:boolean = true
 
     root:ShadowRoot|Web<TElement>
@@ -870,7 +873,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             !this.attachExplicitDefinedOutputEventHandler()
         )
 
-        if (this.self.applyRootBinding) {
+        if (this.self.determineRootBinding) {
             /*
                 If this component is the root component trigger event handler
                 by its own in global context.
@@ -887,13 +890,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     currentElement.parentNode === null &&
                     currentElement.toString() === '[object ShadowRoot]'
                 ) {
-                    this.isRoot = false
+                    this.setPropertyValue('isRoot', false)
                     break
                 }
                 currentElement = currentElement.parentNode
             }
 
-            if (this.isRoot)
+            if (this.self.applyRootBinding && this.isRoot)
                 this.applyBinding(
                     this,
                     {
