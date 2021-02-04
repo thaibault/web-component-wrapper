@@ -390,7 +390,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (typeof this.self.content === 'string')
             return
         // NOTE: Known root of errors caused by browsers dev-tools.
-        for (const name of ['isTrusted', '__composed'])
+        for (const name of ['isRoot', 'isTrusted', '__composed'])
             if (
                 Object.prototype.hasOwnProperty.call(properties, name) &&
                 (
