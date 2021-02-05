@@ -316,7 +316,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.grabGivenSlots()
 
-        this.reflectPropertiesAsAttributes(this.externalProperties)
+        this.reflectExternalProperties(this.externalProperties)
 
         this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render('connected') :
@@ -1150,7 +1150,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param properties - Properties to update in reflected attribute state.
      * @returns Nothing.
      */
-    reflectPropertiesAsAttributes(properties:Mapping<any>):void {
+    reflectExternalProperties(properties:Mapping<any>):void {
         /*
             NOTE: We can avoid an additional attribute parsing for this
             reflections.
@@ -1158,6 +1158,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.ignoreAttributeUpdateObservations = true
         for (const [name, value] of Object.entries(properties)) {
             this.setExternalPropertyValue(name, value)
+
+            if (!this.isConnected)
+                continue
+
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
             if (this.self._propertiesToReflectAsAttributes!.has(name))
                 switch (
@@ -1253,8 +1257,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     reflectProperties(properties:Mapping<any>):void {
-        if (this.isConnected)
-            this.reflectPropertiesAsAttributes(properties)
+        this.reflectExternalProperties(properties)
         /*
             NOTE: Do not reflect properties which are hold in state. These
             values are only set once when they are explicitly set (see
