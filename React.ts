@@ -219,8 +219,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 createElement(Fragment, {children: value, key}) :
                 value ? value : null
         }
-        const type:typeof ReactWeb = (node as ReactWeb).constructor as
-            typeof ReactWeb
+        const type:typeof ReactWeb =
+            (node as ReactWeb).constructor as typeof ReactWeb
         if (
             typeof type.content === 'object' &&
             (
@@ -237,6 +237,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 (node as ReactWeb).internalProperties ?? {}
             if (!Object.prototype.hasOwnProperty.call(properties, 'key'))
                 properties.key = key
+            this.self.removeKnownUnwantedPropertyKeys(
+                (node as ReactWeb).self, properties
+            )
+
             return createElement(type.content, properties)
         }
         return createElement(
@@ -345,7 +349,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     prepareInternalProperties():void {
         this.applySlotsToInternalProperties()
-        this.removeKnownUnwantedPropertyKeys(this.internalProperties)
+        this.self.removeKnownUnwantedPropertyKeys(
+            this.self, this.internalProperties
+        )
         this.instance = createRef() as {current?:WebComponentAdapter}
         this.internalProperties.ref = this.instance
     }
@@ -383,12 +389,16 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Removes unwanted known and not specified properties from given
      * properties object (usually added by dev-tools).
+     * @param target - ReactElement where properties belong to.
      * @param properties - Properties object to trim.
      * @returns Nothing.
      */
-    removeKnownUnwantedPropertyKeys(properties:Mapping<any>):void {
-        if (typeof this.self.content === 'string')
+    static removeKnownUnwantedPropertyKeys(
+        target:typeof ReactWeb, properties:Mapping<any>
+    ):void {
+        if (typeof target.content === 'string')
             return
+
         // NOTE: Known root of errors caused by browsers dev-tools.
         for (const name of ['isRoot', 'isTrusted', '__composed'])
             if (
@@ -396,22 +406,21 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 (
                     (
                         Object.prototype.hasOwnProperty.call(
-                            this.self.content, 'propTypes'
+                            target.content, 'propTypes'
                         ) &&
                         !Object.prototype.hasOwnProperty.call(
-                            (this.self.content as ComponentType).propTypes,
-                            name
+                            (target.content as ComponentType).propTypes, name
                         )
                     ) ||
                     (
                         Object.prototype.hasOwnProperty.call(
-                            this.self.content, 'wrapped'
+                            target.content, 'wrapped'
                         ) &&
                         Object.prototype.hasOwnProperty.call(
-                            this.self.content.wrapped, 'propTypes'
+                            target.content.wrapped, 'propTypes'
                         ) &&
                         !Object.prototype.hasOwnProperty.call(
-                            this.self.content.wrapped!.propTypes, name
+                            target.content.wrapped!.propTypes, name
                         )
                     )
                 )
