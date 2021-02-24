@@ -237,9 +237,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 (node as ReactWeb).internalProperties ?? {}
             if (!Object.prototype.hasOwnProperty.call(properties, 'key'))
                 properties.key = key
-            this.self.removeKnownUnwantedPropertyKeys(
-                (node as ReactWeb).self, properties
-            )
+            this.self.removeKnownUnwantedPropertyKeys(type, properties)
 
             return createElement(type.content, properties)
         }
