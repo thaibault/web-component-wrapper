@@ -1373,7 +1373,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         if (currentValue !== this.externalProperties[name])
                             newProperties[name] = currentValue
                     }
-            }
+            } else if (newProperties.detail?.value)
+                newProperties = {...newProperties.detail}
 
             this.reflectProperties(newProperties)
         }
