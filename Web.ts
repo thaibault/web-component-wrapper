@@ -1375,6 +1375,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     }
             } else if (newProperties.detail?.value)
                 newProperties = {...newProperties.detail}
+            else if (
+                Array.isArray(newProperties.detail?.parameter) &&
+                newProperties.detail?.parameter.length &&
+                newProperties.detail?.parameter[0]?.detail?.value
+            )
+                newProperties = {...newProperties.detail?.parameter[0].detail}
 
             this.reflectProperties(newProperties)
         }
