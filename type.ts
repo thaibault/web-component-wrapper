@@ -33,9 +33,9 @@ export type CompiledDomNodeTemplateItem = {
 }
 export type CompiledDomNodeTemplate<NodeType = Node> =
     Map<NodeType, CompiledDomNodeTemplateItem>
-
+export type EventMapping = [Mapping<any>, Mapping<any>]|Mapping<any>
 export type EventToPropertyMapping =
-    Mapping<true|((...parameter:Array<any>) => Mapping<any>)>
+    Mapping<true|((...parameter:Array<any>) => EventMapping)>
 export type AttributesReflectionConfiguration =
     Array<string>|Map<string, string|ValueOf<typeof PropertyTypes>>|string|Mapping<ValueOf<typeof PropertyTypes>|string>
 export interface WebComponentConfiguration {
