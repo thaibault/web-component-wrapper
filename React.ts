@@ -120,10 +120,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.hasParentWithPreparedSlots())
             return
 
+        console.log('TODO R', this.internalProperties.value)
         render(
             createElement(this.self.content, this.internalProperties),
             this.root
         )
+
         /*
             NOTE: Update current instance if we have a newly created one
             otherwise check after current queue has been finished.
@@ -317,10 +319,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 properties:Attributes, reference:Ref<WebComponentAdapter>
             ):ReactElement => {
                 useImperativeHandle(
-                    reference,
-                    useCallback(
-                        ():WebComponentAdapter => ({properties}), [properties]
-                    )
+                    reference, ():WebComponentAdapter => ({properties})
                 )
                 return createElement(wrapped, properties)
             }) as ComponentType

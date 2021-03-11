@@ -52,6 +52,7 @@ import {
     AttributesReflectionConfiguration,
     CompiledDomNodeTemplate,
     CompiledDomNodeTemplateItem,
+    EventMapping,
     EventToPropertyMapping,
     WebComponentAdapter,
     WebComponentAPI
@@ -932,7 +933,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.setInternalPropertyValue(
                     name,
                     (...parameter:Array<any>):void => {
-                        this.reflectEventToProperties(name, parameter)
+                        const result:Mapping<any>|null =
+                            this.reflectEventToProperties(name, parameter)
+                        if (result)
+                            parameter[0] = result
                         this.forwardEvent(name, parameter)
                     }
                 )
@@ -1267,11 +1271,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.instance?.current?.state &&
             typeof this.instance.current.state === 'object'
         )
-            for (const name of Object.keys(this.instance.current.state).concat(
-                this.instance.current.state.modelState ?
-                    Object.keys(this.instance.current.state.modelState) :
-                    []
-            ))
+            for (const name of Object.keys(this.instance.current.state)
+                .concat(
+                    this.instance.current.state.modelState ?
+                        Object.keys(this.instance.current.state.modelState) :
+                        []
+                )
+            )
                 if (Object.prototype.hasOwnProperty.call(
                     this.internalProperties, name
                 ))
@@ -1287,6 +1293,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 'model', this.internalProperties.model
             )
         }
+
+        // TODO set internal properties if to be controlled.
     }
     /**
      * Triggers a new rendering cycle by respecting batching configuration.
@@ -1310,9 +1318,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * properties state.
      * @param name - Event name.
      * @param parameter - List of parameter to given event handler call.
-     * @returns Nothing.
+     * @returns Mapped properties or null if nothing could be mapped.
      */
-    reflectEventToProperties(name:string, parameter:Array<any>):void {
+    reflectEventToProperties(
+        name:string, parameter:Array<any>
+    ):Mapping<any>|null {
         /*
             NOTE: We enforce to update components state immediately after an
             event occurs since batching usually does not make sense here. An
@@ -1324,16 +1334,26 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const oldBatchUpdatesConfiguration:boolean = this.batchUpdates
         this.batchUpdates = false
 
+        let result:Mapping<any>|null = null
+
         if (
             Object.prototype.hasOwnProperty.call(
                 this.eventToPropertyMapping, name
             ) &&
             Tools.isFunction(this.eventToPropertyMapping[name])
-        )
-            this.reflectProperties(
-                (this.eventToPropertyMapping[name] as Function)(...parameter)
-            )
-        else if (
+        ) {
+            const mapping:EventMapping = (
+                this.eventToPropertyMapping[name] as Function
+            )(...parameter, this)
+            if (Array.isArray(mapping)) {
+                result = mapping[0]
+                this.reflectProperties(result)
+                Tools.extend(true, this.internalProperties, mapping[1])
+            } else if (mapping !== null && typeof mapping === 'object') {
+                result = mapping
+                this.reflectProperties(mapping)
+            }
+        } else if (
             parameter.length > 0 &&
             parameter[0] !== null &&
             typeof parameter[0] === 'object'
@@ -1373,21 +1393,20 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         if (currentValue !== this.externalProperties[name])
                             newProperties[name] = currentValue
                     }
-            } else if (newProperties.detail?.value)
-                newProperties = {...newProperties.detail}
-            else if (
-                Array.isArray(newProperties.detail?.parameter) &&
-                newProperties.detail?.parameter.length &&
-                newProperties.detail?.parameter[0]?.detail?.value
+            } else if (
+                ![null, undefined].includes(newProperties.detail?.value)
             )
-                newProperties = {...newProperties.detail?.parameter[0].detail}
+                newProperties = {...newProperties.detail}
 
+            result = newProperties
             this.reflectProperties(newProperties)
         }
 
         this.triggerRender('propertyReflected')
 
         this.batchUpdates = oldBatchUpdatesConfiguration
+
+        return result
     }
     /**
      * Evaluates given property value depending on its type specification and
