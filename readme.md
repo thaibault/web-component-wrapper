@@ -11,11 +11,10 @@ Data can flow into a component via
 Data can be communicated back via:
 
 - Properties `console.log(instance.value)`
-- observable events `instance.addEventListener('click', (event) => console.log(event.detail.value))`
+- Observable events `instance.addEventListener('click', (event) => console.log(event.detail.value))`
 
 ### Configuring Data-Flow
 
 A Web-Component-Wrapper component forwards (transformed) given properties into
 a wrapped react component via `props` and reads data via provided callbacks
-as part of `props` or as part of the reacts `ref` object as property
-`ref.properties`.
+as part of `props` or as part of reacts `ref` object.

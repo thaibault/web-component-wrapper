@@ -1289,6 +1289,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 'model', this.internalProperties.model
             )
         }
+
+        // TODO set internal properties if to be controlled.
     }
     /**
      * Triggers a new rendering cycle by respecting batching configuration.
