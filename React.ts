@@ -120,7 +120,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.hasParentWithPreparedSlots())
             return
 
-        console.log('TODO R', this.internalProperties.value)
         render(
             createElement(this.self.content, this.internalProperties),
             this.root
