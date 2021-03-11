@@ -1373,14 +1373,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         if (currentValue !== this.externalProperties[name])
                             newProperties[name] = currentValue
                     }
-            } else if (newProperties.detail?.value)
-                newProperties = {...newProperties.detail}
-            else if (
-                Array.isArray(newProperties.detail?.parameter) &&
-                newProperties.detail?.parameter.length &&
-                newProperties.detail?.parameter[0]?.detail?.value
+            } else if (
+                ![null, undefined].includes(newProperties.detail?.value)
             )
-                newProperties = {...newProperties.detail?.parameter[0].detail}
+                newProperties = {...newProperties.detail}
 
             this.reflectProperties(newProperties)
         }
