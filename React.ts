@@ -396,7 +396,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             return
 
         // NOTE: Known root of errors caused by browsers dev-tools.
-        for (const name of ['isRoot', 'isTrusted', '__composed'])
+        for (const name of ['isRoot', 'isTrusted', '__composed'] as const)
             if (
                 Object.prototype.hasOwnProperty.call(properties, name) &&
                 (
