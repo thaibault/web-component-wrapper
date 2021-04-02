@@ -108,10 +108,10 @@ import {
  * @property batchUpdates - Indicates whether to directly perform a
  * re-rendering after changes on properties have been made.
  *
- * @property batchedAttributeUpdateRunning - A boolean indicator to identify
- * if an attribute update is currently batched.
- * @property batchedPropertyUpdateRunning - A boolean indicator to identify
- * if an property update is currently batched.
+ * @property batchedAttributeUpdateRunning - A boolean indicator to identify if
+ * an attribute update is currently batched.
+ * @property batchedPropertyUpdateRunning - A boolean indicator to identify if
+ * an property update is currently batched.
  * @property batchedUpdateRunning - Indicates whether a batched render update
  * is currently running.
  *
@@ -120,8 +120,8 @@ import {
  * @property domNodeTemplateCache - Caches template compilation results.
  *
  * @property externalProperties - Holds currently evaluated or seen properties.
- * @property ignoreAttributeUpdateObservations - Indicates whether attribute updates
- * should be considered (usually only needed internally).
+ * @property ignoreAttributeUpdateObservations - Indicates whether attribute
+ * updates should be considered (usually only needed internally).
  * @property internalProperties - Holds currently evaluated properties which
  * are owned by this instance and should always be delegated.
  *
@@ -992,6 +992,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     forwardEvent(name:string, parameter:Array<any>):boolean {
         if (name.length > 'onX'.length && name.startsWith('on'))
             name = Tools.stringLowerCase(name.substring(2))
+
         return this.dispatchEvent(
             new CustomEvent(name, {detail: {parameter}})
         )
@@ -1262,6 +1263,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     reflectProperties(properties:Mapping<any>):void {
         this.reflectExternalProperties(properties)
+
+        for (const [name, value] of Object.entries(properties))
+            this.setInternalPropertyValue(name, value)
+
         /*
             NOTE: Do not reflect properties which are hold in state. These
             values are only set once when they are explicitly set (see
@@ -1293,11 +1298,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 'model', this.internalProperties.model
             )
         }
-
-        // TODO set internal properties if to be controlled.
     }
     /**
-     * Triggers a new rendering cycle by respecting batching configuration.
+     * Triggers a new rendering cycle by respecting batch configuration.
      * @param reason - A description why rendering should be triggered.
      * @returns Nothing.
      */

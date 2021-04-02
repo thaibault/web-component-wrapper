@@ -297,6 +297,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     applyComponentWrapper():void {
         if (typeof this.self.content === 'string' || this.isWrapped)
             return
+
         this.isWrapped = true
 
         const wrapped:ComponentType =
