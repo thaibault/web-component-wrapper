@@ -159,6 +159,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
     static observedAttributes:Array<string> = []
 
+    static controllableProperties:Array<string> = []
     static propertyAliases:Mapping = {}
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
@@ -1264,6 +1265,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     reflectProperties(properties:Mapping<any>):void {
         this.reflectExternalProperties(properties)
 
+        // TODO do only for controllable properties.
         for (const [name, value] of Object.entries(properties))
             this.setInternalPropertyValue(name, value)
 

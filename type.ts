@@ -40,6 +40,7 @@ export type AttributesReflectionConfiguration =
     Array<string>|Map<string, string|ValueOf<typeof PropertyTypes>>|string|Mapping<ValueOf<typeof PropertyTypes>|string>
 export interface WebComponentConfiguration {
     attachWebComponentAdapterIfNotExists?:boolean
+    controllableProperties?:Array<string>
     eventToPropertyMapping?:EventToPropertyMapping
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
