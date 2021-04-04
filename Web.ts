@@ -1267,10 +1267,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     reflectProperties(properties:Mapping<any>):void {
         this.reflectExternalProperties(properties)
 
-        for (const name of this.self.controllableProperties)
-            if (Object.prototype.hasOwnProperty.call(properties, name))
-                this.setInternalPropertyValue(name, properties[name])
-
         /*
             NOTE: Do not reflect properties which are hold in state. These
             values are only set once when they are explicitly set (see
@@ -1302,6 +1298,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 'model', this.internalProperties.model
             )
         }
+
+        for (const name of this.self.controllableProperties)
+            if (Object.prototype.hasOwnProperty.call(properties, name))
+                this.setInternalPropertyValue(name, properties[name])
     }
     /**
      * Triggers a new rendering cycle by respecting batch configuration.
