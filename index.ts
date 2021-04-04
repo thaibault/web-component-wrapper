@@ -111,6 +111,10 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
                     configuration.attachWebComponentAdapterIfNotExists :
                     true
         static content:ComponentType = component
+        static controllableProperties:Array<string> =
+            component.controllableProperties ||
+            configuration.controllableProperties ||
+            []
         static propertyAliases:Mapping = {
             ...ReactWeb.propertyAliases, ...propertyAliases
         }
