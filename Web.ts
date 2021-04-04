@@ -72,6 +72,8 @@ import {
  * @property static:observedAttributes - Attribute names to observe for
  * changes.
  *
+ * @property static:controllableProperties - A list of controllable property
+ * names.
  * @property static:propertyAliases - A mapping of property names to be treated
  * as equal.
  * @property static:propertyTypes - Configuration defining how to convert
@@ -1265,9 +1267,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     reflectProperties(properties:Mapping<any>):void {
         this.reflectExternalProperties(properties)
 
-        // TODO do only for controllable properties.
-        for (const [name, value] of Object.entries(properties))
-            this.setInternalPropertyValue(name, value)
+        for (const name of this.self.controllableProperties)
+            if (Object.prototype.hasOwnProperty.call(properties, name))
+                this.setInternalPropertyValue(name, properties[name])
 
         /*
             NOTE: Do not reflect properties which are hold in state. These
