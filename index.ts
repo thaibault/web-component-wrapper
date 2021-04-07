@@ -136,10 +136,19 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
         static _name:string = name
 
         readonly eventToPropertyMapping:EventToPropertyMapping =
-            configuration.eventToPropertyMapping ||
-            component.eventToPropertyMapping ||
-            {}
+            configuration.eventToPropertyMapping ?
+                {...configuration.eventToPropertyMapping} :
+                component.eventToPropertyMapping ?
+                    {...component.eventToPropertyMapping} :
+                    {}
         readonly self:typeof ConcreteComponent = ConcreteComponent
+
+        internalProperties:Mapping<any> =
+            configuration.internalProperties ?
+                {...configuration.internalProperties} :
+                component.internalProperties ?
+                    {...component.internalProperties} :
+                    {}
     }
 
     const webComponentAPI:WebComponentAPI<typeof ConcreteComponent> = {
