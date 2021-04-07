@@ -1294,6 +1294,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         if (this.internalProperties.model?.state) {
             delete this.internalProperties.model.state
+
             this.setInternalPropertyValue(
                 'model', this.internalProperties.model
             )

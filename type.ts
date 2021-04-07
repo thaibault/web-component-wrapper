@@ -42,6 +42,7 @@ export interface WebComponentConfiguration {
     attachWebComponentAdapterIfNotExists?:boolean
     controllableProperties?:Array<string>
     eventToPropertyMapping?:EventToPropertyMapping
+    internalProperties?:Mapping<any>
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
