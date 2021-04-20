@@ -242,15 +242,19 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             return createElement(type.content, properties)
         }
-        return createElement(
-            (node as HTMLElement).tagName.toLowerCase(),
-            {
-                children: this.convertDomNodesIntoReactElements(
-                    Array.from(node.childNodes)
-                ),
-                key
-            }
-        )
+
+        if ((node as HTMLElement).tagName)
+            return createElement(
+                (node as HTMLElement).tagName.toLowerCase(),
+                {
+                    children: this.convertDomNodesIntoReactElements(
+                        Array.from(node.childNodes)
+                    ),
+                    key
+                }
+            )
+
+        return null
     }
     /**
       * Forward named slots as properties to component.
