@@ -1436,6 +1436,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         )) {
             const type:ValueOf<typeof PropertyTypes>|string =
                 this.self.propertyTypes[name]
+
             switch (type) {
                 case boolean:
                 case 'boolean':
@@ -1566,6 +1567,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         this.setExternalPropertyValue(
                             name, Tools.copy(evaluated.result, 1)
                         )
+                    } else if (this.hasAttribute(name)) {
+                        this.setInternalPropertyValue(name, true)
+                        this.setExternalPropertyValue(name, true)
                     } else {
                         this.setInternalPropertyValue(name, null)
                         this.setExternalPropertyValue(name, null)
