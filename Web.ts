@@ -1419,12 +1419,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Evaluates given property value depending on its type specification and
      * registers in properties mapping object.
-     * @param name - Name of given value.
+     * @param attributeName - Name of given value.
      * @param value - Value to evaluate.
      * @returns Nothing.
      */
-    evaluateStringOrNullAndSetAsProperty(name:string, value:null|string):void {
-        name = Tools.stringDelimitedToCamelCase(name)
+    evaluateStringOrNullAndSetAsProperty(
+        attributeName:string, value:null|string
+    ):void {
+        let name:string = Tools.stringDelimitedToCamelCase(attributeName)
         const alias:null|string = this.getPropertyAlias(name)
         if (
             alias &&
@@ -1567,7 +1569,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         this.setExternalPropertyValue(
                             name, Tools.copy(evaluated.result, 1)
                         )
-                    } else if (this.hasAttribute(name)) {
+                    } else if (this.hasAttribute(attributeName)) {
                         this.setInternalPropertyValue(name, true)
                         this.setExternalPropertyValue(name, true)
                     } else {
