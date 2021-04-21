@@ -212,6 +212,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     convertDomNodeIntoReactElement(
         node:Node, key?:string
     ):null|ReactElement|string {
+        // TODO respect children propType! It can be everything an expression can return!
         if (node.nodeType === Node.TEXT_NODE) {
             const value:string = typeof (node as Node).nodeValue === 'string' ?
                 ((node as Node).nodeValue as string).trim() :

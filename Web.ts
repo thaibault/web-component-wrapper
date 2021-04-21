@@ -654,6 +654,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         */
         if (domNode.nodeName?.toLowerCase().includes('-'))
             return options.map as CompiledDomNodeTemplate<NodeType>
+
         if (options.unsafe) {
             let template:string = (domNode as unknown as HTMLElement).innerHTML
             if (
