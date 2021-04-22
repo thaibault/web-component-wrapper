@@ -100,12 +100,24 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     ):void {
         if (this.isRoot)
             super.attributeChangedCallback(name, oldValue, newValue)
-        else
-            /*
-                NOTE: We simply save value to be evaluated by root component
-                (and their context).
-            */
-            this.setInternalPropertyValue(name, newValue)
+        else {
+            name = Tools.stringDelimitedToCamelCase(
+                name.startsWith('data-') ?
+                    name.substring('data-'.length) :
+                    name
+            )
+
+            if (typeof newValue === 'string')
+                /*
+                    NOTE: We simply save value to be evaluated by parent root
+                    component (and their context).
+                */
+                this.setInternalPropertyValue(name, newValue)
+            else if (Object.prototype.hasOwnProperty.call(
+                this.internalProperties, name
+            ))
+                delete this.internalProperties[name]
+        }
     }
     /**
      * Triggered when this component is mounted into the document. Event
@@ -121,7 +133,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
         /*
             We apply properties initially to allow wrapping components access
-            them during there slot preparations.
+            them during there slot preparations. It will be done on each render
+            also.
         */
         this.applySlotsToInternalProperties()
     }
@@ -303,7 +316,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
                 if (evaluationResult.error)
                     console.warn(
-                        `Failed to evaluate property "${name}":`,
+                        `Failed to evaluate property "${name}" for "` + 
+                        `${(node as ReactWeb).constructor._name}":`,
                         evaluationResult.error
                     )
                 else
