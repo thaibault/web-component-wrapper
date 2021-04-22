@@ -304,6 +304,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             /*
                 NOTE: Nested components are already instantiated so use their
                 properties.
+                TODO Problem they already have converted react elements in
+                their "slots"! Who has the final render responsibility? Parent
+                or component?
             */
             const properties:Mapping =
                 (node as ReactWeb).internalProperties ?? {}
