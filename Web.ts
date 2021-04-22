@@ -260,9 +260,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Triggered when ever a given attribute has changed and triggers to update
      * configured dom content.
+     *
      * @param name - Attribute name which was updates.
      * @param oldValue - Old attribute value.
      * @param newValue - New updated value.
+     *
      * @returns Nothing.
      */
     attributeChangedCallback(
@@ -1437,7 +1439,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (Object.prototype.hasOwnProperty.call(
             this.self.propertyTypes, name
         )) {
-            const type:ValueOf<typeof PropertyTypes>|string =
+            const type:string|ValueOf<typeof PropertyTypes> =
                 this.self.propertyTypes[name]
 
             switch (type) {

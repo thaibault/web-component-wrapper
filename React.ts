@@ -18,8 +18,10 @@
 */
 // region imports
 import Tools from 'clientnode'
-import {NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
-import {Mapping} from 'clientnode/type'
+import {
+    func, NullSymbol, PropertyTypes, UndefinedSymbol
+} from 'clientnode/property-types'
+import {EvaluationResult, Mapping, ValueOf} from 'clientnode/type'
 import React, {
     Attributes,
     createElement,
@@ -36,7 +38,14 @@ import React, {
 import {render, unmountComponentAtNode} from 'react-dom'
 
 import Web from './Web'
-import {ComponentType, WebComponentAdapter, WebComponentAPI} from './type'
+import {
+    ComponentType,
+    ReactRenderBaseItem,
+    ReactRenderItem,
+    ReactRenderItems,
+    WebComponentAdapter,
+    WebComponentAPI
+} from './type'
 // endregion
 /*
     Live cycle:
@@ -69,15 +78,35 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     static react:typeof React = React
     static _name:string = 'ReactWebComponent'
 
-    preparedSlots:Mapping<null|ReactElement|string> & {
-        children?:Array<ReactElement|string>|null|ReactElement|string
-    } = {}
+    preparedSlots:Mapping<ReactRenderItems> & {children?:ReactRenderItems} = {}
 
     readonly self:typeof ReactWeb = ReactWeb
 
     wrapMemorizingWrapper:boolean|null = null
     isWrapped:boolean = false
     // region live-cycle
+    /**
+     * Triggered when ever a given attribute has changed and triggers to update
+     * configured dom content.
+     *
+     * @param name - Attribute name which was updates.
+     * @param oldValue - Old attribute value.
+     * @param newValue - New updated value.
+     *
+     * @returns Nothing.
+     */
+    attributeChangedCallback(
+        name:string, oldValue:string, newValue:string
+    ):void {
+        if (this.isRoot)
+            super.attributeChangedCallback(name, oldValue, newValue)
+        else
+            /*
+                NOTE: We simply save value to be evaluated by root component
+                (and their context).
+            */
+            this.setInternalPropertyValue(name, newValue)
+    }
     /**
      * Triggered when this component is mounted into the document. Event
      * handlers will be attached and final render proceed.
@@ -184,43 +213,71 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Converts given html dom nodes into a single react element or a react
      * element list.
+     *
      * @param domNodes - Nodes to convert.
+     * @param isFunction - Indicates whether given nodes should be provided as
+     * function (render property).
+     *
      * @returns Transformed react elements.
      */
     convertDomNodesIntoReactElements(
-        nodes:Array<Node>
-    ):Array<ReactElement|string>|null|ReactElement|string {
+        nodes:Array<Node>, isFunction:boolean = false
+    ):ReactRenderItems {
         if (nodes.length === 1)
-            return this.convertDomNodeIntoReactElement(nodes[0])
+            return this.convertDomNodeIntoReactElement(nodes[0], isFunction)
+
         let index:number = 1
-        const result:Array<ReactElement|string> = []
+        const result:Array<ReactRenderItem> = []
         for (const node of nodes) {
-            const element:null|ReactElement|string =
-                this.convertDomNodeIntoReactElement(node, index.toString())
+            const element:ReactRenderItem =
+                this.convertDomNodeIntoReactElement(
+                    node, isFunction, index.toString()
+                )
+
             if (element) {
                 result.push(element)
                 index += 1
             }
         }
+
         return result
     }
     /**
      * Converts given html dom node into a react element.
+     *
      * @param node - Node to convert.
+     * @param isFunction - Indicates whether given nodes should be provided as
+     * function (render property).
+     * @param key - Optional key to add to component properties.
+     * @param scope - Additional scope to render sub components against.
+     *
      * @returns Transformed react element.
      */
     convertDomNodeIntoReactElement(
-        node:Node, key?:string
-    ):null|ReactElement|string {
-        // TODO respect children propType! It can be everything an expression can return!
+        node:Node,
+        isFunction:boolean = false,
+        key?:string,
+        scope:Mapping<unknown> = {}
+    ):ReactRenderItem {
+        // region render prop
+        if (isFunction)
+            return (...parameters:Array<unknown>):ReactRenderBaseItem =>
+                this.convertDomNodeIntoReactElement(
+                    node, false, key, {...scope, parameters}
+                ) as ReactRenderBaseItem
+        // endregion
+        // region text node
         if (node.nodeType === Node.TEXT_NODE) {
             const value:string = typeof (node as Node).nodeValue === 'string' ?
                 ((node as Node).nodeValue as string).trim() :
                 ''
+
             return (key && value) ?
                 createElement(Fragment, {children: value, key}) :
                 value ? value : null
         }
+        // endregion
+        // region known component
         const type:typeof ReactWeb =
             (node as ReactWeb).constructor as typeof ReactWeb
         if (
@@ -235,26 +292,70 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 NOTE: Nested components are already instantiated so use their
                 properties.
             */
-            const properties:Mapping<any> =
+            const properties:Mapping =
                 (node as ReactWeb).internalProperties ?? {}
-            if (!Object.prototype.hasOwnProperty.call(properties, 'key'))
-                properties.key = key
-            this.self.removeKnownUnwantedPropertyKeys(type, properties)
 
-            return createElement(type.content, properties)
-        }
+            const evaluatedProperties:Mapping<unknown> = {}
+            for (const [name, value] of Object.entries(properties)) {
+                const evaluationResult:EvaluationResult = Tools.stringEvaluate(
+                    value, {parent: this, ...scope}, false, node
+                )
 
-        if ((node as HTMLElement).tagName)
-            return createElement(
-                (node as HTMLElement).tagName.toLowerCase(),
-                {
-                    children: this.convertDomNodesIntoReactElements(
-                        Array.from(node.childNodes)
-                    ),
-                    key
-                }
+                if (evaluationResult.error)
+                    console.warn(
+                        `Failed to evaluate property "${name}": `,
+                        evaluationResult.error
+                    )
+                else
+                    evaluatedProperties[name] = evaluationResult.result
+            }
+
+            if (!Object.prototype.hasOwnProperty.call(
+                evaluatedProperties, 'key'
+            ))
+                evaluatedProperties.key = key
+
+            this.self.removeKnownUnwantedPropertyKeys(
+                type, evaluatedProperties
             )
 
+            return createElement(type.content, evaluatedProperties)
+        }
+        // endregion
+        // region html element
+        if ((node as HTMLElement).tagName) {
+            const evaluatedProperties:Mapping<unknown> = {
+                children: this.convertDomNodesIntoReactElements(
+                    Array.from(node.childNodes)
+                ),
+                key
+            }
+
+            for (const name of (node as HTMLElement).getAttributeNames()) {
+                const value:null|string =
+                    (node as HTMLElement).getAttribute(name)
+                if (typeof value === 'string') {
+                    const evaluationResult:EvaluationResult =
+                        Tools.stringEvaluate(
+                            value, {parent: this, ...scope}, false, node
+                        )
+
+                    if (evaluationResult.error)
+                        console.warn(
+                            `Failed to evaluate property "${name}": `,
+                            evaluationResult.error
+                        )
+                    else
+                        evaluatedProperties[name] = evaluationResult.result
+                }
+            }
+
+            return createElement(
+                (node as HTMLElement).tagName.toLowerCase(),
+                evaluatedProperties
+            )
+        }
+        // endregion
         return null
     }
     /**
@@ -280,17 +381,29 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     prepareSlots():void {
         this.preparedSlots = {}
+
         for (const name in this.slots)
             if (Object.prototype.hasOwnProperty.call(this.slots, name))
                 if (name === 'default') {
                     if (this.slots.default && this.slots.default.length > 0)
                         this.preparedSlots.children =
                             this.convertDomNodesIntoReactElements(
-                                this.slots.default
+                                this.slots.default,
+                                ([func, 'function'] as
+                                    Array<ValueOf<typeof PropertyTypes>|string>
+                                ).includes(this.self.propertyTypes?.children)
                             )
                 } else
                     this.preparedSlots[name] =
-                        this.convertDomNodeIntoReactElement(this.slots[name])
+                        this.convertDomNodeIntoReactElement(
+                            this.slots[name],
+                            ([func, 'function'] as
+                                Array<ValueOf<typeof PropertyTypes>|string>
+                            ).includes(
+                                this.self.propertyTypes &&
+                                this.self.propertyTypes[name]
+                            )
+                        )
     }
     // endregion
     // region helper
@@ -367,8 +480,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         while (parent) {
             if ((parent as ReactWeb).preparedSlots)
                 return true
+
             parent = parent.parentElement
         }
+
         return false
     }
     /**

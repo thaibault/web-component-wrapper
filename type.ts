@@ -19,7 +19,7 @@
 import Tools from 'clientnode'
 import PropertyTypes from 'clientnode/property-types'
 import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
-import {ComponentType as ReactComponentType} from 'react'
+import {ComponentType as ReactComponentType, ReactElement} from 'react'
 
 import Web from './Web'
 // endregion 
@@ -38,6 +38,10 @@ export type EventToPropertyMapping =
     Mapping<true|((...parameter:Array<any>) => EventMapping)>
 export type AttributesReflectionConfiguration =
     Array<string>|Map<string, string|ValueOf<typeof PropertyTypes>>|string|Mapping<ValueOf<typeof PropertyTypes>|string>
+export type ReactRenderBaseItem = ReactElement|string|null
+export type ReactRenderItem =
+    ((...parameters:Array<unknown>) => ReactRenderBaseItem)|ReactRenderBaseItem
+export type ReactRenderItems = Array<ReactRenderItem>|ReactRenderItem
 export interface WebComponentConfiguration {
     attachWebComponentAdapterIfNotExists?:boolean
     controllableProperties?:Array<string>
