@@ -303,7 +303,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
                 if (evaluationResult.error)
                     console.warn(
-                        `Failed to evaluate property "${name}": `,
+                        `Failed to evaluate property "${name}":`,
                         evaluationResult.error
                     )
                 else
