@@ -346,7 +346,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                             evaluationResult.error
                         )
                     else
-                        evaluatedProperties[name] = evaluationResult.result
+                        evaluatedProperties[
+                            name === 'class' ? 'className' : name
+                        ] = evaluationResult.result
                 }
             }
 
