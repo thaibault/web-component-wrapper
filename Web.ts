@@ -938,12 +938,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
                     name,
-                    (...parameter:Array<any>):void => {
+                    (...parameters:Array<any>):void => {
                         const result:Mapping<any>|null =
-                            this.reflectEventToProperties(name, parameter)
+                            this.reflectEventToProperties(name, parameters)
                         if (result)
-                            parameter[0] = result
-                        this.forwardEvent(name, parameter)
+                            parameters[0] = result
+                        this.forwardEvent(name, parameters)
                     }
                 )
             }
@@ -972,10 +972,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
                     name,
-                    (...parameter:Array<any>):void => {
+                    (...parameters:Array<any>):void => {
                         if (reflectProperties)
-                            this.reflectEventToProperties(name, parameter)
-                        this.forwardEvent(name, parameter)
+                            this.reflectEventToProperties(name, parameters)
+                        this.forwardEvent(name, parameters)
                     }
                 )
             }
@@ -992,15 +992,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Forwards given event as native web event.
      * @param name - Event name.
-     * @param parameter - Event parameter.
+     * @param parameters - Event parameters.
      * @returns Nothing.
      */
-    forwardEvent(name:string, parameter:Array<any>):boolean {
+    forwardEvent(name:string, parameters:Array<any>):boolean {
         if (name.length > 'onX'.length && name.startsWith('on'))
             name = Tools.stringLowerCase(name.substring(2))
 
         return this.dispatchEvent(
-            new CustomEvent(name, {detail: {parameter}})
+            new CustomEvent(name, {detail: {parameters}})
         )
     }
     // / endregion
@@ -1328,11 +1328,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Reflect given event handler call with given parameter back to current
      * properties state.
      * @param name - Event name.
-     * @param parameter - List of parameter to given event handler call.
+     * @param parameters - List of parameter to given event handler call.
      * @returns Mapped properties or null if nothing could be mapped.
      */
     reflectEventToProperties(
-        name:string, parameter:Array<any>
+        name:string, parameters:Array<any>
     ):Mapping<any>|null {
         /*
             NOTE: We enforce to update components state immediately after an
@@ -1355,7 +1355,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         ) {
             const mapping:EventMapping = (
                 this.eventToPropertyMapping[name] as Function
-            )(...parameter, this)
+            )(...parameters, this)
             if (Array.isArray(mapping)) {
                 result = mapping[0]
                 this.reflectProperties(result)
@@ -1365,19 +1365,19 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.reflectProperties(mapping)
             }
         } else if (
-            parameter.length > 0 &&
-            parameter[0] !== null &&
-            typeof parameter[0] === 'object'
+            parameters.length > 0 &&
+            parameters[0] !== null &&
+            typeof parameters[0] === 'object'
         ) {
             /*
                 Identified as some how throw data back event (no synthetic
                 event; derived from a user triggered one) when following
                 condition does not hold.
             */
-            let newProperties:Mapping<any> = parameter[0]
+            let newProperties:Mapping<any> = parameters[0]
             if (
-                'persist' in parameter[0] &&
-                Tools.isFunction(parameter[0].persist)
+                'persist' in parameters[0] &&
+                Tools.isFunction(parameters[0].persist)
             ) {
                 newProperties = {}
                 for (const propertyName of Object.keys(this.self.propertyTypes))
@@ -1386,16 +1386,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     )) {
                         const currentValue:any =
                             (
-                                parameter[0].currentTarget &&
+                                parameters[0].currentTarget &&
                                 Object.prototype.hasOwnProperty.call(
-                                    parameter[0].currentTarget, name
+                                    parameters[0].currentTarget, name
                                 )
                             ) ?
                                 /*
                                     Update all known properties from event
                                     target instance.
                                 */
-                                parameter[0].currentTarget[name] :
+                                parameters[0].currentTarget[name] :
                                 /*
                                     Update all known properties from adapter
                                     instance.
@@ -1456,7 +1456,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     let templateFunction:TemplateFunction
                     if (value) {
                         const result:CompilationResult =
-                            Tools.stringCompile(value, 'parameter')
+                            Tools.stringCompile(value, 'parameters')
                         error = result.error
                         templateFunction = result.templateFunction
                         if (error)
@@ -1467,22 +1467,23 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     }
                     this.setInternalPropertyValue(
                         name,
-                        (...parameter:Array<any>):void => {
+                        (...parameters:Array<any>):void => {
                             if (this.outputEventNames.has(name))
-                                this.reflectEventToProperties(name, parameter)
+                                this.reflectEventToProperties(name, parameters)
                             if (!error)
                                 try {
-                                    templateFunction.call(this, parameter)
+                                    templateFunction.call(this, parameters)
                                 } catch (error) {
                                     console.warn(
                                         `'Failed to evaluate event handler "` +
                                         `${name}" with expression "${value}"` +
-                                        ` and scope variable "parameter" set` +
-                                        ` to "${Tools.represent(parameter)}"` +
-                                        `: "${error}".`
+                                        ` and scope variable "parameters" ` +
+                                        `set to "` +
+                                        `${Tools.represent(parameters)}": "` +
+                                        `${error}".`
                                     )
                                 }
-                            this.forwardEvent(name, parameter)
+                            this.forwardEvent(name, parameters)
                         }
                     )
                     if (!error)
