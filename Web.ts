@@ -117,6 +117,8 @@ import {
  * @property batchedUpdateRunning - Indicates whether a batched render update
  * is currently running.
  *
+ * @property parent - Parent component instance.
+ * @property rootInstance - Root component instance.
  * @property domNodeEventBindings - Holds a mapping from nodes with registered
  * event handlers mapped to their de-registration function.
  * @property domNodeTemplateCache - Caches template compilation results.
@@ -186,6 +188,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     batchedPropertyUpdateRunning:boolean = true
     batchedUpdateRunning:boolean = true
 
+    parent:null|Web = null
+    rootInstance:null|Web = null
     domNodeEventBindings:Map<Node, Map<string, Function>> = new Map()
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
@@ -304,8 +308,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.render('attributeChanged')
     }
     /**
-     * Triggered when this component is mounted into the document. Event
-     * handlers will be attached and final render proceed.
+     * Triggered when this component is mounted into the document.
+     * Attaches event handler, grabs given slots, reflects external properties
+     * and enqueues first rendering.
+     *
      * @returns Nothing.
      */
     connectedCallback():void {
@@ -314,7 +320,51 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             ;(this as {isConnected:boolean}).isConnected = true
         } catch (error) {}
 
+        this.parent = this
+        this.rootInstance = this
+
         this.attachEventHandler()
+
+        if (this.self.determineRootBinding) {
+            /*
+                If this component is the root component trigger event handler
+                by its own in global context.
+            */
+            let currentElement:Node|null = this.parentNode
+            while (currentElement) {
+                if (
+                    currentElement instanceof Web ||
+                    currentElement.nodeName?.includes('-') ||
+                    /*
+                        NOTE: Assume none root if determined a wrapped closed
+                        shadow root.
+                    */
+                    currentElement.parentNode === null &&
+                    currentElement.toString() === '[object ShadowRoot]'
+                ) {
+                    if (this.rootInstance === this) {
+                        this.parent = currentElement
+                        this.rootInstance = currentElement
+
+                        this.setPropertyValue('isRoot', false)
+                    } else
+                        this.rootInstance = currentElement
+                }
+                currentElement = currentElement.parentNode
+            }
+        }
+
+        if (this.self.applyRootBinding && this.isRoot)
+            this.applyBinding(
+                this,
+                {
+                    self: this,
+                    [Tools.stringLowerCase(this.self._name) || 'instance']:
+                        this,
+                    Tools,
+                    ...this.internalProperties
+                }
+            )
 
         this.batchedAttributeUpdateRunning = false
         this.batchedPropertyUpdateRunning = false
@@ -326,9 +376,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render('connected') :
-            Tools.timeout(():void => {
-                this.render('connected')
-            })
+            Tools.timeout(():void => this.render('connected'))
     }
     /**
      * Frees some memory.
@@ -527,78 +575,93 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applyBinding(domNode:Node, scope:Mapping<any>):void {
-        if ((domNode as HTMLElement).attributes?.length)
-            for (
-                let index = 0;
-                index < (domNode as HTMLElement).attributes.length;
-                index++
-            ) {
-                const attribute:Attr =
-                    (domNode as HTMLElement).attributes[index]
-                let name:string = ''
-                if (attribute.name.startsWith('data-bind-'))
-                    name = attribute.name.substring('data-bind-'.length)
-                else if (attribute.name.startsWith('bind-'))
-                    name = attribute.name.substring('bind-'.length)
-                if (name)
-                    if (name.startsWith('property-')) {
-                        const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(attribute.value, scope)
-                        if (evaluated.error) {
-                            console.warn(
-                                'Error occurred during processing given ' +
-                                `attribute binding "${attribute.name}" on ` +
-                                'node:',
-                                domNode,
-                                evaluated.error
-                            )
-                            continue
-                        }
+        if (!(node as HTMLElement).tagName)
+            return
+
+        for (const attributeName of (domNode as HTMLElement).getAttributeNames(
+        )) {
+            let name:string = ''
+            if (attributeName.startsWith('data-bind-'))
+                name = attributeName.substring('data-bind-'.length)
+            else if (attributeName.startsWith('bind-'))
+                name = attributeName.substring('bind-'.length)
+
+            if (name) {
+                const value:null|string =
+                    (domNode as HTMLElement).getAttribute(givenName)
+
+                if (
+                    name.startsWith('attribute-') ||
+                    name.startsWith('property-')
+                ) {
+                    const evaluated:EvaluationResult =
+                        Tools.stringEvaluate(value, scope, false, domNode)
+
+                    if (evaluated.error) {
+                        console.warn(
+                            'Error occurred during processing given ' +
+                            `attribute binding "${attributeName}" on node:`,
+                            domNode,
+                            evaluated.error
+                        )
+                        continue
+                    }
+
+                    if (name.startsWith('property-'))
                         /*
                             NOTE: Cast to "textContent" to have a writable
                             property here.
                         */
                         domNode[Tools.stringDelimitedToCamelCase(
-                            name.replace(/property-(.+)$/, '$1')
+                            name.substring('property-'.length)
                         ) as 'textContent'] = evaluated.result
-                    } else if (name.startsWith('on-')) {
-                        const eventMap:Map<string, Function> =
-                            this.domNodeEventBindings.has(domNode) ?
-                                this.domNodeEventBindings.get(domNode)! :
-                                new Map()
-                        name = Tools.stringLowerCase(
-                            Tools.stringDelimitedToCamelCase(
-                                name.replace(/on-(.+)$/, '$1')
-                            )
+                    else
+                        domNode.setAttribute(
+                            name.substring('attribute-'.length),
+                            evaluated.result
                         )
-                        if (eventMap.has(name))
-                            eventMap.get(name)!()
+                } else if (name.startsWith('on-')) {
+                    const eventMap:Map<string, Function> =
+                        this.domNodeEventBindings.has(domNode) ?
+                            this.domNodeEventBindings.get(domNode)! :
+                            new Map()
 
-                        const handler:EventListener = (event:Event):void => {
-                            scope.event = event
-                            const evaluated:EvaluationResult =
-                                Tools.stringEvaluate(
-                                    attribute.value, scope, true, domNode
-                                )
-                            if (evaluated.error)
-                                console.warn(
-                                    'Error occurred during processing ' +
-                                    'given event binding "' +
-                                    `${attribute.name}" on node:`,
-                                    domNode,
-                                    evaluated.error
-                                )
-                        }
-                        domNode.addEventListener(name, handler)
-                        eventMap.set(name, ():void => {
-                            domNode.removeEventListener(name, handler)
+                    name = Tools.stringLowerCase(
+                        Tools.stringDelimitedToCamelCase(
+                            name.replace(/on-(.+)$/, '$1')
+                        )
+                    )
 
-                            eventMap.delete(name)
-                            if (eventMap.size === 0)
-                                this.domNodeEventBindings.delete(domNode)
-                        })
+                    if (eventMap.has(name))
+                        eventMap.get(name)!()
+
+                    const handler:EventListener = (event:Event):void => {
+                        scope.event = event
+                        const evaluated:EvaluationResult =
+                            Tools.stringEvaluate(
+                                value, scope, true, domNode
+                            )
+                        if (evaluated.error)
+                            console.warn(
+                                'Error occurred during processing given ' +
+                                `event binding "${attributeName}" on node:`,
+                                domNode,
+                                evaluated.error
+                            )
                     }
+
+                    domNode.addEventListener(name, handler)
+                    eventMap.set(name, ():void => {
+                        domNode.removeEventListener(name, handler)
+
+                        eventMap.delete(name)
+
+                        if (eventMap.size === 0)
+                            this.domNodeEventBindings.delete(domNode)
+                    })
+                }
             }
+        }
     }
     /**
      * Binds properties and event handler to given, sibling and nested nodes.
@@ -667,6 +730,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             if (this.self.hasCode(template)) {
                 const result:CompilationResult =
                     Tools.stringCompile(`\`${template}\``, scope)
+
                 options.map!.set(
                     domNode,
                     {
@@ -744,8 +808,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             unsafe: this.self.renderUnsafe,
             ...options
         }
+
         if (!options.map!.has(domNode))
             this.compileDomNodeTemplate<NodeType>(domNode, scope, options)
+
         if (options.map!.has(domNode)) {
             const {error, scopeNames, templateFunction} =
                 options.map!.get(domNode) as CompiledDomNodeTemplateItem
@@ -776,6 +842,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         domNode.textContent = output
             }
         }
+
         if (!options.unsafe) {
             // Render content of each nested node.
             let currentDomNode:NodeType|null = domNode.firstChild as
@@ -794,8 +861,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     unknown as NodeType
             }
         }
+
         if (options.applyBindings)
             this.applyBindings(domNode, scope)
+
         return options.map as CompiledDomNodeTemplate<NodeType>
     }
     /**
@@ -832,7 +901,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             result.push(domNode.firstChild)
             parent.insertBefore(domNode.firstChild, domNode)
         }
+
         parent.removeChild(domNode)
+
         return result
     }
     // // endregion
@@ -860,6 +931,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     ):Map<string, string|ValueOf<typeof PropertyTypes>> {
         if (typeof value === 'string')
             value = [value]
+
         if (Array.isArray(value)) {
             const givenValue:Array<string> = value
             value = new Map<string, string|ValueOf<typeof PropertyTypes>>()
@@ -868,6 +940,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     value.set(name, Web.propertyTypes[name])
         } else
             value = Tools.convertPlainObjectToMap(value)
+
         return value as Map<string, string|ValueOf<typeof PropertyTypes>>
     }
     // / endregion
@@ -885,42 +958,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.attachImplicitDefinedOutputEventHandler(
             !this.attachExplicitDefinedOutputEventHandler()
         )
-
-        if (this.self.determineRootBinding) {
-            /*
-                If this component is the root component trigger event handler
-                by its own in global context.
-            */
-            let currentElement:Node|null = this.parentNode
-            while (currentElement) {
-                if (
-                    currentElement instanceof Web ||
-                    currentElement.nodeName?.includes('-') ||
-                    /*
-                        NOTE: Assume none root if determined a wrapped closed
-                        shadow root.
-                    */
-                    currentElement.parentNode === null &&
-                    currentElement.toString() === '[object ShadowRoot]'
-                ) {
-                    this.setPropertyValue('isRoot', false)
-                    break
-                }
-                currentElement = currentElement.parentNode
-            }
-
-            if (this.self.applyRootBinding && this.isRoot)
-                this.applyBinding(
-                    this,
-                    {
-                        self: this,
-                        [Tools.stringLowerCase(this.self._name) || 'instance']:
-                            this,
-                        Tools,
-                        ...this.internalProperties
-                    }
-                )
-        }
     }
     /**
      * Attach explicitly defined event handler to synchronize internal and
@@ -1461,7 +1498,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         templateFunction = result.templateFunction
                         if (error)
                             console.warn(
-                                `'Failed to process event handler "${name}":` +
+                                `Failed to process event handler "${name}":` +
                                 ` ${error}.`
                             )
                     }
@@ -1475,10 +1512,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                                     templateFunction.call(this, parameters)
                                 } catch (error) {
                                     console.warn(
-                                        `'Failed to evaluate event handler "` +
+                                        'Failed to evaluate event handler "' +
                                         `${name}" with expression "${value}"` +
-                                        ` and scope variable "parameters" ` +
-                                        `set to "` +
+                                        ' and scope variable "parameters" ' +
+                                        'set to "' +
                                         `${Tools.represent(parameters)}": "` +
                                         `${error}".`
                                     )
@@ -1589,7 +1626,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
+     *
      * @param reason - Description why rendering is necessary.
+     *
      * @returns Nothing.
      */
     render(reason:string = 'unknown'):void {

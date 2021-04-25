@@ -98,7 +98,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     attributeChangedCallback(
         name:string, oldValue:string, newValue:string
     ):void {
-        if (this.isRoot)
+        if ('TODO not in render prop')
             super.attributeChangedCallback(name, oldValue, newValue)
         else {
             name = Tools.stringDelimitedToCamelCase(
@@ -122,11 +122,16 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Triggered when this component is mounted into the document. Event
      * handlers will be attached and final render proceed.
+     *
      * @returns Nothing.
      */
     connectedCallback():void {
         this.applyComponentWrapper()
 
+        /*
+            Attaches event handler, grabs given slots, reflects external
+            properties and enqueues first rendering.
+        */
         super.connectedCallback()
 
         this.prepareSlots()
@@ -258,7 +263,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Converts given html dom node into a react element.
      *
-     * @param node - Node to convert.
+     * @param domNode - Node to convert.
      * @param isFunction - Indicates whether given nodes should be provided as
      * function (render property).
      * @param key - Optional key to add to component properties.
@@ -267,22 +272,22 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Transformed react element.
      */
     convertDomNodeIntoReactElement(
-        node:Node,
+        domNode:Node,
         isFunction:boolean = false,
         key?:string,
         scope:Mapping<unknown> = {}
     ):ReactRenderItem {
-        // region render prop
+        // region render property
         if (isFunction)
             return (...parameters:Array<unknown>):ReactRenderBaseItem =>
                 this.convertDomNodeIntoReactElement(
-                    node, false, key, {...scope, parameters}
+                    domNode, false, key, {...scope, parameters}
                 ) as ReactRenderBaseItem
         // endregion
         // region text node
-        if (node.nodeType === Node.TEXT_NODE) {
-            const value:string = typeof (node as Node).nodeValue === 'string' ?
-                ((node as Node).nodeValue as string).trim() :
+        if (domNode.nodeType === Node.TEXT_NODE) {
+            const value:string = typeof (domNode as Node).nodeValue === 'string' ?
+                ((domNode as Node).nodeValue as string).trim() :
                 ''
 
             return (key && value) ?
@@ -292,7 +297,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         // endregion
         // region known component
         const type:typeof ReactWeb =
-            (node as ReactWeb).constructor as typeof ReactWeb
+            (domNode as ReactWeb).constructor as typeof ReactWeb
         if (
             typeof type.content === 'object' &&
             (
@@ -310,22 +315,23 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 or component?
             */
             const properties:Mapping =
-                (node as ReactWeb).internalProperties ?? {
+                (domNode as ReactWeb).internalProperties ?? {
                     /* TODO children: this.convertDomNodesIntoReactElements(
-                        Array.from(node.childNodes)
+                        Array.from(domNode.childNodes)
                     ),*/
                 }
 
+            /*
             const evaluatedProperties:Mapping<unknown> = {}
             for (const [name, value] of Object.entries(properties)) {
                 const evaluationResult:EvaluationResult = Tools.stringEvaluate(
-                    value, {parent: this, ...scope}, false, node
+                    value, {parent: this, ...scope}, false, domNode
                 )
 
                 if (evaluationResult.error)
                     console.warn(
-                        `Failed to evaluate property "${name}" for "` + 
-                        `${(node as ReactWeb).constructor._name}":`,
+                        `Failed to evaluate property "${name}" for "` +
+                        `${(domNode as ReactWeb).constructor._name}":`,
                         evaluationResult.error
                     )
                 else
@@ -336,51 +342,82 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 evaluatedProperties, 'key'
             ))
                 evaluatedProperties.key = key
+            */
+            if (!Object.prototype.hasOwnProperty.call(properties, 'key'))
+                properties.key = key
 
-            this.self.removeKnownUnwantedPropertyKeys(
-                type, evaluatedProperties
-            )
+            this.self.removeKnownUnwantedPropertyKeys(type, properties)
 
-            return createElement(type.content, evaluatedProperties)
+            return createElement(type.content, properties)
         }
         // endregion
+        if (!(domNode as HTMLElement).tagName)
+            return null
         // region html element
-        if ((node as HTMLElement).tagName) {
-            const evaluatedProperties:Mapping<unknown> = {
-                children: this.convertDomNodesIntoReactElements(
-                    Array.from(node.childNodes)
-                ),
-                key
-            }
+        const evaluatedProperties:Mapping<unknown> = {key}
 
-            for (const name of (node as HTMLElement).getAttributeNames()) {
-                const value:null|string =
-                    (node as HTMLElement).getAttribute(name)
-                if (typeof value === 'string') {
-                    const evaluationResult:EvaluationResult =
-                        Tools.stringEvaluate(
-                            value, {parent: this, ...scope}, false, node
-                        )
+        const childNodes:Array<Node> = Array.from(domNode.childNodes)
+        if (childNodes.length)
+            evaluatedProperties.children =
+                this.convertDomNodesIntoReactElements(childNodes)
 
-                    if (evaluationResult.error)
-                        console.warn(
-                            `Failed to evaluate property "${name}": `,
-                            evaluationResult.error
-                        )
-                    else
-                        evaluatedProperties[
-                            name === 'class' ? 'className' : name
-                        ] = evaluationResult.result
+        for (const attributeName of (domNode as HTMLElement).getAttributeNames()) {
+            const value:null|string =
+                (domNode as HTMLElement).getAttribute(attributeName)
+
+            let name:string = ''
+            if (attributeName.startsWith('data-bind-'))
+                name = attributeName.substring('data-bind-'.length)
+            else if (attributeName.startsWith('bind-'))
+                name = attributeName.substring('bind-'.length)
+            /*
+                NOTE: We only slice common prefixes to be compatible to base
+                web-component implementation.
+                In react all this prefix doesn't really make a difference since
+                everything forwarded to component is a property.
+            */
+            if (name.startsWith('attribute-'))
+                name = name.substring('attribute-'.length)
+            else if (name.startsWith('property-'))
+                name = name.substring('property-'.length)
+
+            if (name) {
+                // TODO handle event listener separatly and only compile as in Web.ts!
+                const evaluated:EvaluationResult = Tools.stringEvaluate(
+                    name.startsWith('on-') ?
+                        `function(event, parameters) { return ${value} }` :
+                        value,
+                    {parent: this, ...scope},
+                    false,
+                    domNode
+                )
+
+                if (evaluated.error) {
+                    console.warn(
+                        'Error occurred during processing given ' +
+                        `attribute binding "${attributeName}" on node:`,
+                        domNode,
+                        evaluated.error
+                    )
+                    continue
                 }
-            }
 
-            return createElement(
-                (node as HTMLElement).tagName.toLowerCase(),
-                evaluatedProperties
-            )
+                value = evaluated.result
+            } else
+                name = attributeName
+
+            if (name === 'class')
+                name = 'className'
+
+            evaluatedProperties[Tools.stringDelimitedToCamelCase(name)] = value
         }
+
+        console.log(evaluatedProperties)
+
+        return createElement(
+            (domNode as HTMLElement).tagName.toLowerCase(), evaluatedProperties
+        )
         // endregion
-        return null
     }
     /**
       * Forward named slots as properties to component.
