@@ -21,7 +21,9 @@ import Tools from 'clientnode'
 import {
     func, NullSymbol, PropertyTypes, UndefinedSymbol
 } from 'clientnode/property-types'
-import {EvaluationResult, Mapping, ValueOf} from 'clientnode/type'
+import {
+    CompilationResult, Mapping, TemplateFunction, ValueOf
+} from 'clientnode/type'
 import React, {
     Attributes,
     createElement,
@@ -284,12 +286,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 NOTE: Nested components are already instantiated so use their
                 properties.
             */
-            const properties:Mapping =
-                (domNode as ReactWeb).internalProperties ?? {
-                    /* TODO children: this.convertDomNodesIntoReactElements(
-                        Array.from(domNode.childNodes)
-                    ),*/
-                }
+            const properties:Mapping = (domNode as ReactWeb).internalProperties
 
             /*
             const evaluatedProperties:Mapping<unknown> = {}
@@ -355,7 +352,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     name.startsWith('on-') ?
                         `function(event, parameters) { return ${value} }` :
                         value,
-                    {parent: this, ...scope},
+                    {key, parent: this, ...scope},
                     false,
                     domNode
                 )
@@ -371,6 +368,37 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 }
 
                 value = evaluated.result
+            } else if (name.startsWith('on-')) {
+                name = Tools.stringDelimitedToCamelCase(
+                    name.substring('on-'.length)
+                )
+
+                const handler:EventListener = (event:Event):void => {
+                    scope.event = event
+
+                    const evaluated:EvaluationResult =
+                        Tools.stringEvaluate(
+                            value, {key, parent: this, ...scope}, true, domNode
+                        )
+
+                    if (evaluated.error)
+                        console.warn(
+                            'Error occurred during processing given ' +
+                            `event binding "${attributeName}" on node:`,
+                            domNode,
+                            evaluated.error
+                        )
+                }
+
+                domNode.addEventListener(name, handler)
+                eventMap.set(name, ():void => {
+                    domNode.removeEventListener(name, handler)
+
+                    eventMap.delete(name)
+
+                    if (eventMap.size === 0)
+                        this.domNodeEventBindings.delete(domNode)
+                })
             } else
                 name = attributeName
 
@@ -379,8 +407,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             evaluatedProperties[Tools.stringDelimitedToCamelCase(name)] = value
         }
-
-        console.log(evaluatedProperties)
 
         return createElement(
             (domNode as HTMLElement).tagName.toLowerCase(), evaluatedProperties

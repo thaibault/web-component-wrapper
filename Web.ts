@@ -595,44 +595,74 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             evaluated.result
                         )
                 } else if (name.startsWith('on-')) {
-                    const eventMap:Map<string, Function> =
-                        this.domNodeEventBindings.has(domNode) ?
-                            this.domNodeEventBindings.get(domNode)! :
-                            new Map()
-
-                    name = Tools.stringLowerCase(
-                        Tools.stringDelimitedToCamelCase(
-                            name.replace(/on-(.+)$/, '$1')
+                    if (this.domNodeEventBindings.has(domNode))
+                        this.domNodeEventBindings.set(
+                            domNode, new Map<string, Function>()
                         )
+
+                    const eventMap:Map<string, Function> =
+                        this.domNodeEventBindings.get(domNode)!
+
+                    name = Tools.stringDelimitedToCamelCase(
+                        name.substring('on-'.length)
                     )
 
                     if (eventMap.has(name))
                         eventMap.get(name)!()
 
-                    const handler:EventListener = (event:Event):void => {
-                        scope.event = event
-                        const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(
-                                value, scope, true, domNode
-                            )
-                        if (evaluated.error)
-                            console.warn(
-                                'Error occurred during processing given ' +
-                                `event binding "${attributeName}" on node:`,
-                                domNode,
-                                evaluated.error
-                            )
+                    const compilation:CompilationResult =
+                        Tools.stringCompile(value, {event, ...scope}, true)
+
+                    if (compilation.error)
+                        console.warn(
+                            'Error occurred during compiling given event ' +
+                            `binding "${attributeName}" on node:`,
+                            domNode,
+                            compilation.error
+                        )
+                    else {
+                        const templateFunction:TemplateFunction =
+                            compilation.templateFunction.bind(domNode)
+
+                        const handler:EventListener = (event:Event):void => {
+                            try {
+                                templateFunction(
+                                    /*
+                                        NOTE: We want to be ensure to have same
+                                        ordering as we have for the scope names
+                                        and to call internal registered getter
+                                        by retrieving values. So simple using
+                                        "...Object.values(scope)" is not
+                                        appreciate here.
+                                    */
+                                    ...compilation.originalScopeNames.map(
+                                        (name:string):any => scope[name]
+                                    )
+                                )
+                            } catch (error) {
+                                console.warn(
+                                    'Error occurred during processing given ' +
+                                    `event binding "${attributeName}" on ` +
+                                    'node:',
+                                    domNode,
+                                    `Given expression "${expression}" could ` +
+                                    'not be evaluated with given scope names' +
+                                    `"${scopeNames.join('", "')}": ` +
+                                    Tools.represent(error)
+                                )
+                            }
+                        }
+
+                        domNode.addEventListener(name, handler)
+                        eventMap.set(name, ():void => {
+                            domNode.removeEventListener(name, handler)
+
+                            eventMap.delete(name)
+
+                            if (eventMap.size === 0)
+                                this.domNodeEventBindings.delete(domNode)
+                        })
                     }
-
-                    domNode.addEventListener(name, handler)
-                    eventMap.set(name, ():void => {
-                        domNode.removeEventListener(name, handler)
-
-                        eventMap.delete(name)
-
-                        if (eventMap.size === 0)
-                            this.domNodeEventBindings.delete(domNode)
-                    })
                 }
             }
         }
