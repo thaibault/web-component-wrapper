@@ -156,7 +156,9 @@
             bind-on-render="console.log('Render:', this)"
         >
             <h1>Slotted Content</h1>
+
             <p>Lorem ipsum...</p>
+
             <input
                 bind-property-disabled="true"
                 bind-attribute-class="'class-' + exampleNumber"
@@ -198,6 +200,7 @@
             <h1 id="simple-id" bind-attribute-class="'class-' + parent.id">
                 Slotted Content
             </h1>
+
             <p bind-attribute-id="parent.id">Lorem ipsum...</p>
 
             <my-react-web bind-property-number="2" id="web-react-2-sub">
@@ -205,9 +208,10 @@
                 <h2
                     bind-attribute-class="'class-' + parent.number"
                 ></h2>
+
                 <input
                     default-value="test"
-                    bind-property-on-change="console.log(event)"
+                    bind-on-change="console.log('test', event)"
                 />
             </my-react-web>
         </my-react-web>

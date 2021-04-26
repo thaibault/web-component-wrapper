@@ -549,7 +549,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applyBinding(domNode:Node, scope:Mapping<any>):void {
-        if (!(node as HTMLElement).tagName)
+        if (!(node as unknown as HTMLElement).tagName)
             return
 
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
@@ -561,8 +561,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 name = attributeName.substring('bind-'.length)
 
             if (name) {
-                const value:null|string =
-                    (domNode as HTMLElement).getAttribute(givenName)
+                const value:null|string = (domNode as unknown as HTMLElement)
+                    .getAttribute(attributeName)
+
+                if (value === null)
+                    continue
 
                 if (
                     name.startsWith('attribute-') ||
@@ -581,7 +584,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         continue
                     }
 
-                    if (name.startsWith('property-'))
+                    if (name.startsWith('attribute-'))
+                        (domNode as HTMLElement).setAttribute(
+                            name.substring('attribute-'.length),
+                            evaluated.result
+                        )
+                    else
                         /*
                             NOTE: Cast to "textContent" to have a writable
                             property here.
@@ -589,11 +597,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         domNode[Tools.stringDelimitedToCamelCase(
                             name.substring('property-'.length)
                         ) as 'textContent'] = evaluated.result
-                    else
-                        domNode.setAttribute(
-                            name.substring('attribute-'.length),
-                            evaluated.result
-                        )
                 } else if (name.startsWith('on-')) {
                     if (this.domNodeEventBindings.has(domNode))
                         this.domNodeEventBindings.set(
@@ -610,8 +613,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     if (eventMap.has(name))
                         eventMap.get(name)!()
 
+                    scope = {event: undefined, parameters: undefined, ...scope}
+                    /*
+                        NOTE: We pre-compile event listener since they should
+                        usually be called more than it would be re-rendered.
+                    */
                     const compilation:CompilationResult =
-                        Tools.stringCompile(value, {event, ...scope}, true)
+                        Tools.stringCompile(value, scope, true)
 
                     if (compilation.error)
                         console.warn(
@@ -624,7 +632,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         const templateFunction:TemplateFunction =
                             compilation.templateFunction.bind(domNode)
 
-                        const handler:EventListener = (event:Event):void => {
+                        const handler:EventListener = (
+                            ...parameters:Array<unknown>
+                        ):void => {
+                            scope.event = parameters[0]
+                            scope.parameters = parameters
+
                             try {
                                 templateFunction(
                                     /*
@@ -636,7 +649,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                                         appreciate here.
                                     */
                                     ...compilation.originalScopeNames.map(
-                                        (name:string):any => scope[name]
+                                        (name:string):unknown => scope[name]
                                     )
                                 )
                             } catch (error) {
@@ -645,10 +658,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                                     `event binding "${attributeName}" on ` +
                                     'node:',
                                     domNode,
-                                    `Given expression "${expression}" could ` +
-                                    'not be evaluated with given scope names' +
-                                    `"${scopeNames.join('", "')}": ` +
-                                    Tools.represent(error)
+                                    `Given expression "${value}" could not ` +
+                                    'be evaluated with given scope names "' +
+                                    `${compilation.scopeNames.join('", "')}"` +
+                                    `: ${Tools.represent(error)}`
                                 )
                             }
                         }
@@ -690,6 +703,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             */
             if (!domNode.nodeName.toLowerCase().includes('-'))
                 this.applyBindings(domNode.firstChild, scope)
+
             domNode = domNode.nextSibling
         }
     }
@@ -929,12 +943,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 currentElement.toString() === '[object ShadowRoot]'
             ) {
                 if (this.rootInstance === this) {
-                    this.parent = currentElement
-                    this.rootInstance = currentElement
+                    this.parent = currentElement as Web
+                    this.rootInstance = currentElement as Web
 
                     this.setPropertyValue('isRoot', false)
                 } else
-                    this.rootInstance = currentElement
+                    this.rootInstance = currentElement as Web
             }
 
             currentElement = currentElement.parentNode
@@ -1657,6 +1671,22 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / endregion
     // / region render
     /**
+     * Determines new scope object with useful default set of environment
+     * values.
+     * @param scope - To apply to generated scope.
+     * @returns Generated scope.
+     */
+    determineRenderScope(scope:Mapping<unknown> = {}):Mapping<unknown> {
+        return {
+            parent: this.parent,
+            root: this.rootInstance,
+            self: this,
+            [Tools.stringLowerCase(this.self._name) || 'instance']: this,
+            Tools,
+            ...scope
+        }
+    }
+    /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      *
@@ -1665,12 +1695,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     render(reason:string = 'unknown'):void {
-        const scope:Mapping<any> = {
-            self: this,
-            [Tools.stringLowerCase(this.self._name) || 'instance']: this,
-            Tools,
-            ...this.internalProperties
-        }
+        const scope:Mapping<any> =
+            this.determineRenderScope(this.internalProperties)
 
         if (!this.dispatchEvent(new CustomEvent(
             'render', {detail: {reason, scope}}
@@ -1693,7 +1719,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const renderTargetDomNode:HTMLDivElement =
             document.createElement('div')
         renderTargetDomNode.innerHTML = evaluated.result
-        this.applySlots(renderTargetDomNode, scope)
+        this.applySlots(renderTargetDomNode, {...scope, parent: this})
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
 

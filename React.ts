@@ -22,7 +22,7 @@ import {
     func, NullSymbol, PropertyTypes, UndefinedSymbol
 } from 'clientnode/property-types'
 import {
-    CompilationResult, Mapping, TemplateFunction, ValueOf
+    CompilationResult, EvaluationResult, Mapping, TemplateFunction, ValueOf
 } from 'clientnode/type'
 import React, {
     Attributes,
@@ -134,6 +134,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         */
         if (this.hasParentWithPreparedSlots())
             return
+
+        // Remove template nodes to be replaced by reacts render result.
+        if (this.root !== this) {
+            let domNode:HTMLElement = this.firstChild
+            while (domNode) {
+                this.removeChild(domNode)
+                domNode = domNode.nextSibling
+            }
+        }
 
         render(
             createElement(this.self.content, this.internalProperties),
@@ -265,6 +274,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         // endregion
         if (!(domNode as HTMLElement).tagName)
             return null
+
+        scope = this.determineRenderScope({key, ...scope})
         // region known component
         /*
             TODO
@@ -310,7 +321,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             ))
                 evaluatedProperties.key = key
             */
-            if (!Object.prototype.hasOwnProperty.call(properties, 'key'))
+            if (
+                key && !Object.prototype.hasOwnProperty.call(properties, 'key')
+            )
                 properties.key = key
 
             this.self.removeKnownUnwantedPropertyKeys(type, properties)
@@ -326,35 +339,25 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             evaluatedProperties.children =
                 this.convertDomNodesIntoReactElements(childNodes)
 
-        for (const attributeName of (domNode as HTMLElement).getAttributeNames()) {
-            const value:null|string =
+        for (const attributeName of (domNode as HTMLElement).getAttributeNames(
+        )) {
+            let value:unknown =
                 (domNode as HTMLElement).getAttribute(attributeName)
+
+            if (value === null)
+                continue
 
             let name:string = ''
             if (attributeName.startsWith('data-bind-'))
                 name = attributeName.substring('data-bind-'.length)
             else if (attributeName.startsWith('bind-'))
                 name = attributeName.substring('bind-'.length)
-            /*
-                NOTE: We only slice common prefixes to be compatible to base
-                web-component implementation.
-                In react all this prefix doesn't really make a difference since
-                everything forwarded to component is a property.
-            */
-            if (name.startsWith('attribute-'))
-                name = name.substring('attribute-'.length)
-            else if (name.startsWith('property-'))
-                name = name.substring('property-'.length)
 
-            if (name) {
-                // TODO handle event listener separatly and only compile as in Web.ts!
+            if (
+                name.startsWith('attribute-') || name.startsWith('property-')
+            ) {
                 const evaluated:EvaluationResult = Tools.stringEvaluate(
-                    name.startsWith('on-') ?
-                        `function(event, parameters) { return ${value} }` :
-                        value,
-                    {key, parent: this, ...scope},
-                    false,
-                    domNode
+                    value as string, scope, false, domNode
                 )
 
                 if (evaluated.error) {
@@ -367,38 +370,66 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     continue
                 }
 
+                name = name.startsWith('attribute-') ?
+                    name.substring('attribute-'.length) :
+                    name.substring('property-'.length)
+
                 value = evaluated.result
             } else if (name.startsWith('on-')) {
-                name = Tools.stringDelimitedToCamelCase(
-                    name.substring('on-'.length)
+                name = Tools.stringDelimitedToCamelCase(name)
+
+                scope = {event: undefined, parameters: undefined, ...scope}
+                /*
+                    NOTE: We pre-compile event listener since they should
+                    usually be called more than it would be re-rendered.
+                */
+                const compilation:CompilationResult = Tools.stringCompile(
+                    value as string, {event, ...scope}, true
                 )
 
-                const handler:EventListener = (event:Event):void => {
-                    scope.event = event
-
-                    const evaluated:EvaluationResult =
-                        Tools.stringEvaluate(
-                            value, {key, parent: this, ...scope}, true, domNode
-                        )
-
-                    if (evaluated.error)
-                        console.warn(
-                            'Error occurred during processing given ' +
-                            `event binding "${attributeName}" on node:`,
-                            domNode,
-                            evaluated.error
-                        )
+                if (compilation.error) {
+                    console.warn(
+                        'Error occurred during compiling given event ' +
+                        `binding "${attributeName}" on node:`,
+                        domNode,
+                        compilation.error
+                    )
+                    continue
                 }
 
-                domNode.addEventListener(name, handler)
-                eventMap.set(name, ():void => {
-                    domNode.removeEventListener(name, handler)
+                const templateFunction:TemplateFunction =
+                    compilation.templateFunction.bind(domNode)
 
-                    eventMap.delete(name)
+                value = (...parameters:Array<unknown>):void => {
+                    scope.event = parameters[0]
+                    scope.parameters = parameters
 
-                    if (eventMap.size === 0)
-                        this.domNodeEventBindings.delete(domNode)
-                })
+                    try {
+                        templateFunction(
+                            /*
+                                NOTE: We want to be ensure to have same
+                                ordering as we have for the scope names
+                                and to call internal registered getter
+                                by retrieving values. So simple using
+                                "...Object.values(scope)" is not
+                                appreciate here.
+                            */
+                            ...compilation.originalScopeNames.map(
+                                (name:string):unknown => scope[name]
+                            )
+                        )
+                    } catch (error) {
+                        console.warn(
+                            'Error occurred during processing given ' +
+                            `event binding "${attributeName}" on node: `,
+                            domNode,
+                            `Given expression "${value}" could not be ` +
+                            'evaluated with given scope names "' +
+                            `${compilation.scopeNames.join('", "')}": ` +
+                            Tools.represent(error)
+                        )
+                    }
+                }
             } else
                 name = attributeName
 
