@@ -139,8 +139,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.root !== this) {
             let domNode:HTMLElement = this.firstChild
             while (domNode) {
+                const nextDomNode:HTMLElement = domNode.nextSibling
                 this.removeChild(domNode)
-                domNode = domNode.nextSibling
+                domNode = nextDomNode
             }
         }
 
@@ -254,6 +255,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         key?:string,
         scope:Mapping<unknown> = {}
     ):ReactRenderItem {
+        // TODO should not be done a second time!
         // region render property
         if (isFunction)
             return (...parameters:Array<unknown>):ReactRenderBaseItem =>
@@ -439,6 +441,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             evaluatedProperties[Tools.stringDelimitedToCamelCase(name)] = value
         }
 
+        console.log('R', domNode.tagName.toLowerCase(), {...evaluatedProperties})
         return createElement(
             (domNode as HTMLElement).tagName.toLowerCase(), evaluatedProperties
         )
