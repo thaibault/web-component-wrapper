@@ -86,40 +86,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     isWrapped:boolean = false
     // region live-cycle
     /**
-     * Triggered when ever a given attribute has changed and triggers to update
-     * configured dom content.
-     *
-     * @param name - Attribute name which was updates.
-     * @param oldValue - Old attribute value.
-     * @param newValue - New updated value.
-     *
-     * @returns Nothing.
-     */
-    attributeChangedCallback(
-        name:string, oldValue:string, newValue:string
-    ):void {
-        if ('TODO not in render prop')
-            super.attributeChangedCallback(name, oldValue, newValue)
-        else {
-            name = Tools.stringDelimitedToCamelCase(
-                name.startsWith('data-') ?
-                    name.substring('data-'.length) :
-                    name
-            )
-
-            if (typeof newValue === 'string')
-                /*
-                    NOTE: We simply save value to be evaluated by parent root
-                    component (and their context).
-                */
-                this.setInternalPropertyValue(name, newValue)
-            else if (Object.prototype.hasOwnProperty.call(
-                this.internalProperties, name
-            ))
-                delete this.internalProperties[name]
-        }
-    }
-    /**
      * Triggered when this component is mounted into the document. Event
      * handlers will be attached and final render proceed.
      *
@@ -295,7 +261,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 value ? value : null
         }
         // endregion
+        if (!(domNode as HTMLElement).tagName)
+            return null
         // region known component
+        /*
+            TODO
+            Problem they already have converted react elements in
+            their "slots"! Who has the final render responsibility? Parent
+            or component?
+        */
         const type:typeof ReactWeb =
             (domNode as ReactWeb).constructor as typeof ReactWeb
         if (
@@ -309,10 +283,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             /*
                 NOTE: Nested components are already instantiated so use their
                 properties.
-
-                TODO Problem they already have converted react elements in
-                their "slots"! Who has the final render responsibility? Parent
-                or component?
             */
             const properties:Mapping =
                 (domNode as ReactWeb).internalProperties ?? {
@@ -351,8 +321,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             return createElement(type.content, properties)
         }
         // endregion
-        if (!(domNode as HTMLElement).tagName)
-            return null
         // region html element
         const evaluatedProperties:Mapping<unknown> = {key}
 

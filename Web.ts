@@ -325,34 +325,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.attachEventHandler()
 
-        if (this.self.determineRootBinding) {
-            /*
-                If this component is the root component trigger event handler
-                by its own in global context.
-            */
-            let currentElement:Node|null = this.parentNode
-            while (currentElement) {
-                if (
-                    currentElement instanceof Web ||
-                    currentElement.nodeName?.includes('-') ||
-                    /*
-                        NOTE: Assume none root if determined a wrapped closed
-                        shadow root.
-                    */
-                    currentElement.parentNode === null &&
-                    currentElement.toString() === '[object ShadowRoot]'
-                ) {
-                    if (this.rootInstance === this) {
-                        this.parent = currentElement
-                        this.rootInstance = currentElement
-
-                        this.setPropertyValue('isRoot', false)
-                    } else
-                        this.rootInstance = currentElement
-                }
-                currentElement = currentElement.parentNode
-            }
-        }
+        if (this.self.determineRootBinding)
+            this.determineRootBinding()
 
         if (this.self.applyRootBinding && this.isRoot)
             this.applyBinding(
@@ -907,6 +881,35 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         return result
     }
     // // endregion
+    determineRootBinding():void {
+        /*
+            If this component is the root component trigger event handler by
+            its own in global context.
+        */
+        let currentElement:Node|null = this.parentNode
+        while (currentElement) {
+            if (
+                currentElement instanceof Web ||
+                currentElement.nodeName?.includes('-') ||
+                /*
+                    NOTE: Assume none root if determined a wrapped closed
+                    shadow root.
+                */
+                currentElement.parentNode === null &&
+                currentElement.toString() === '[object ShadowRoot]'
+            ) {
+                if (this.rootInstance === this) {
+                    this.parent = currentElement
+                    this.rootInstance = currentElement
+
+                    this.setPropertyValue('isRoot', false)
+                } else
+                    this.rootInstance = currentElement
+            }
+
+            currentElement = currentElement.parentNode
+        }
+    }
     /**
      * Checks if given content hast code (to compile and render).
      * @param content - Potential string with code inside.
