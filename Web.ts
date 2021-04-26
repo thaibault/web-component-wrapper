@@ -235,25 +235,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.generateAliasIndex()
 
-        this.root = this.self.shadowDOM ?
-            (
-                (!('attachShadow' in this) && 'ShadyDOM' in window) ?
-                    (
-                        window as unknown as
-                            {ShadyDOM:{wrap:(domNode:HTMLElement) =>
-                                HTMLElement
-                            }}
-                    ).ShadyDOM.wrap(this) :
-                    this
-            ).attachShadow(
-                (
-                    this.self.shadowDOM !== null &&
-                    typeof this.self.shadowDOM === 'object'
-                ) ?
-                    this.self.shadowDOM :
-                    {mode: 'open'}
-            ) :
-            this
+        // NOTE: Shadow root will be applied when rendering the first time.
+        this.root = this
 
         /*
             NOTE: We define getter and setter at the end to avoid shadowing
@@ -549,6 +532,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applyBinding(domNode:Node, scope:Mapping<any>):void {
+        // TODO not working for custom elements!
         if (!(node as unknown as HTMLElement).tagName)
             return
 
@@ -1687,6 +1671,31 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         }
     }
     /**
+     * Creates shadow root if not created yet and assigns to current root
+     * property.
+     * @returns Nothing.
+     */
+    applyShadowRootIfNotExisting():void {
+        if (this.self.shadowDOM && this.root === this)
+            this.root = (
+                (!('attachShadow' in this) && 'ShadyDOM' in window) ?
+                    (
+                        window as unknown as
+                            {ShadyDOM:{wrap:(domNode:HTMLElement) =>
+                                HTMLElement
+                            }}
+                    ).ShadyDOM.wrap(this) :
+                    this
+            ).attachShadow(
+                (
+                    this.self.shadowDOM !== null &&
+                    typeof this.self.shadowDOM === 'object'
+                ) ?
+                    this.self.shadowDOM :
+                    {mode: 'open'}
+            )
+    }
+    /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      *
@@ -1709,6 +1718,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             console.warn(`Faild to process template: ${evaluated.error}`)
             return
         }
+
+        this.applyShadowRootIfNotExisting()
 
         /*
             NOTE: We first render into an intermediate render target and apply

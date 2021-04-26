@@ -128,15 +128,22 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     render():void {
         this.prepareInternalProperties()
+
         /*
             NOTE: We prevent a nested component from further rendering since
             they will be rendered by their parent.
         */
-        if (this.hasParentWithPreparedSlots())
+        if (this.rootInstance !== this)
             return
 
-        // Remove template nodes to be replaced by reacts render result.
+        this.applyShadowRootIfNotExisting()
+
         if (this.root !== this) {
+            /*
+                Remove template nodes since they will be replaced by reacts
+                render result (only necessary when having a dedicated rendering
+                target like shadow root).
+            */
             let domNode:HTMLElement = this.firstChild
             while (domNode) {
                 const nextDomNode:HTMLElement = domNode.nextSibling
@@ -263,11 +270,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     domNode, false, key, {...scope, parameters}
                 ) as ReactRenderBaseItem
         // endregion
-        // region text node
+        // region t ext node
         if (domNode.nodeType === Node.TEXT_NODE) {
-            const value:string = typeof (domNode as Node).nodeValue === 'string' ?
-                ((domNode as Node).nodeValue as string).trim() :
-                ''
+            const value:string =
+                typeof (domNode as Node).nodeValue === 'string' ?
+                    ((domNode as Node).nodeValue as string).trim() :
+                    ''
 
             return (key && value) ?
                 createElement(Fragment, {children: value, key}) :
@@ -435,13 +443,24 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             } else
                 name = attributeName
 
-            if (name === 'class')
-                name = 'className'
+            if (name === 'inner-html') {
+                evaluatedProperties.dangerouslySetInnerHTML = {
+                    __html: ():string => value
+                }
+                continue
+            }
+
+            const mapping:Mapping = {
+                class: 'className',
+                for: 'htmlFor',
+                'text-content': 'children'
+            }
+            if (Object.prototype.hasOwnProperty.call(mapping, name))
+                name = mapping[name]
 
             evaluatedProperties[Tools.stringDelimitedToCamelCase(name)] = value
         }
 
-        console.log('R', domNode.tagName.toLowerCase(), {...evaluatedProperties})
         return createElement(
             (domNode as HTMLElement).tagName.toLowerCase(), evaluatedProperties
         )
@@ -558,22 +577,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         )
         this.instance = createRef() as {current?:WebComponentAdapter}
         this.internalProperties.ref = this.instance
-    }
-    /**
-     * Determines whether their exist a parent which should trigger this
-     * component to render.
-     * @returns A boolean indicating whether their is such parent.
-     */
-    hasParentWithPreparedSlots():boolean {
-        let parent:Element|null = this.parentElement
-        while (parent) {
-            if ((parent as ReactWeb).preparedSlots)
-                return true
-
-            parent = parent.parentElement
-        }
-
-        return false
     }
     /**
      * Updates current component instance and reflects newly determined
