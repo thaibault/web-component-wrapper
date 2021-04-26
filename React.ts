@@ -102,6 +102,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         */
         super.connectedCallback()
 
+        // TODO this is not done by nested components yet!
         this.prepareSlots()
 
         /*
@@ -227,14 +228,16 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         nodes:Array<Node>, isFunction:boolean = false
     ):ReactRenderItems {
         if (nodes.length === 1)
-            return this.convertDomNodeIntoReactElement(nodes[0], isFunction)
+            return this.convertDomNodeIntoReactElement(
+                nodes[0], this.scope, isFunction
+            )
 
         let index:number = 1
         const result:Array<ReactRenderItem> = []
         for (const node of nodes) {
             const element:ReactRenderItem =
                 this.convertDomNodeIntoReactElement(
-                    node, isFunction, index.toString()
+                    node, this.scope, isFunction, index.toString()
                 )
 
             if (element) {
@@ -249,28 +252,27 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * Converts given html dom node into a react element.
      *
      * @param domNode - Node to convert.
+     * @param scope - Additional scope to render sub components against.
      * @param isFunction - Indicates whether given nodes should be provided as
      * function (render property).
      * @param key - Optional key to add to component properties.
-     * @param scope - Additional scope to render sub components against.
      *
      * @returns Transformed react element.
      */
     convertDomNodeIntoReactElement(
         domNode:Node,
+        scope:Mapping<unknown> = {},
         isFunction:boolean = false,
         key?:string,
-        scope:Mapping<unknown> = {}
     ):ReactRenderItem {
-        // TODO should not be done a second time!
         // region render property
         if (isFunction)
             return (...parameters:Array<unknown>):ReactRenderBaseItem =>
                 this.convertDomNodeIntoReactElement(
-                    domNode, false, key, {...scope, parameters}
+                    domNode, {...scope, parameters}, false, key
                 ) as ReactRenderBaseItem
         // endregion
-        // region t ext node
+        // region text node
         if (domNode.nodeType === Node.TEXT_NODE) {
             const value:string =
                 typeof (domNode as Node).nodeValue === 'string' ?
@@ -282,10 +284,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 value ? value : null
         }
         // endregion
-        if (!(domNode as HTMLElement).tagName)
+        if (!(domNode as HTMLElement).getAttributeNames)
             return null
-
-        scope = this.determineRenderScope({key, ...scope})
         // region known component
         /*
             TODO
@@ -313,7 +313,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             const evaluatedProperties:Mapping<unknown> = {}
             for (const [name, value] of Object.entries(properties)) {
                 const evaluationResult:EvaluationResult = Tools.stringEvaluate(
-                    value, {parent: this, ...scope}, false, domNode
+                    value, scope, false, domNode
                 )
 
                 if (evaluationResult.error)
@@ -418,11 +418,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                         templateFunction(
                             /*
                                 NOTE: We want to be ensure to have same
-                                ordering as we have for the scope names
-                                and to call internal registered getter
-                                by retrieving values. So simple using
-                                "...Object.values(scope)" is not
-                                appreciate here.
+                                ordering as we have for the scope names and to
+                                call internal registered getter by retrieving
+                                values. So simple using
+                                "...Object.values(scope)" is not appreciate
+                                here.
                             */
                             ...compilation.originalScopeNames.map(
                                 (name:string):unknown => scope[name]
@@ -490,6 +490,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     prepareSlots():void {
         this.preparedSlots = {}
 
+        this.determineRenderScope({parent: this})
+
         for (const name in this.slots)
             if (Object.prototype.hasOwnProperty.call(this.slots, name))
                 if (name === 'default') {
@@ -505,6 +507,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     this.preparedSlots[name] =
                         this.convertDomNodeIntoReactElement(
                             this.slots[name],
+                            this.scope,
                             ([func, 'function'] as
                                 Array<ValueOf<typeof PropertyTypes>|string>
                             ).includes(

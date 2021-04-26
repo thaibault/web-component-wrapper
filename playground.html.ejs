@@ -159,12 +159,11 @@
 
             <p>Lorem ipsum...</p>
 
-            <!--TODO target not set!.-->
             <input
-                data-bind-property-disabled="true"
+                data-bind-property-disabled="false"
                 data-bind-attribute-class="'class-' + exampleNumber"
                 bind-property-placeholder="'Binded number: ' + exampleNumber"
-                bind-on-input="console.log('TODO') || event.target.title = baseWeb.self._name + ': ' + event.target.value"
+                bind-on-input="event.target.title = baseWeb.self._name + ': ' + event.target.value"
             />
 
             <my-web
@@ -186,9 +185,13 @@
             id="web-react-1"
             example-boolean
             example-function="console.log(2)"
-            example-json='{"key": false, "key2": null, "key3": {"key": 2}, "key4": "value"}'
+            example-json='{
+                "key": false, "key2": null, "key3": {"key": 2}, "key4": "value"
+            }'
             example-number="4"
-            example-object="{key: false, key2: null, key3: {key: 2}, key4: 'value'}"
+            example-object="{
+                key: false, key2: null, key3: {key: 2}, key4: 'value'
+            }"
             example-string="value"
         >
             <h1>Slotted Content</h1>
@@ -198,22 +201,24 @@
         <hr/>
 
         <my-react-web id="web-react-2">
-            <h1 id="simple-id" bind-attribute-class="'class-' + parent.id">
+            <h1 id="simple-id" bind-attribute-class="'class-' + parent.self._name">
                 Slotted Content
             </h1>
 
-            <p bind-attribute-id="parent.id">Lorem ipsum...</p>
+            <p bind-attribute-id="id">Lorem ipsum...</p>
 
-            <my-react-web bind-property-number="2" id="web-react-2-sub">
+            <my-react-web bind-property-number="12" id="web-react-2-sub">
                 <h2
-                    bind-attribute-class="'class-' + parent.number"
-                    bind-property-text-content="'test-' + parent.parent.id"
+                    bind-attribute-class="'class-' + number"
+                    bind-property-text-content="'test-' + id"
                 ></h2>
 
                 <input
-                    bind-on-change="console.log('test', event)"
+                    bind-on-change="console.log(self); scope.value = event.target.value"
                     default-value="test"
                 />
+
+                <div></div>
             </my-react-web>
         </my-react-web>
 

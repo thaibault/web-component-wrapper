@@ -119,6 +119,8 @@ import {
  *
  * @property parent - Parent component instance.
  * @property rootInstance - Root component instance.
+ * @property scope - Render scope.
+ *
  * @property domNodeEventBindings - Holds a mapping from nodes with registered
  * event handlers mapped to their de-registration function.
  * @property domNodeTemplateCache - Caches template compilation results.
@@ -190,6 +192,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
     parent:null|Web = null
     rootInstance:null|Web = null
+    scope:Mapping<unknown> = {Tools}
+
     domNodeEventBindings:Map<Node, Map<string, Function>> = new Map()
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
@@ -311,17 +315,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (this.self.determineRootBinding)
             this.determineRootBinding()
 
-        if (this.self.applyRootBinding && this.isRoot)
-            this.applyBinding(
-                this,
-                {
-                    self: this,
-                    [Tools.stringLowerCase(this.self._name) || 'instance']:
-                        this,
-                    Tools,
-                    ...this.internalProperties
-                }
-            )
+        if (this.self.applyRootBinding && this.isRoot) {
+            this.determineRenderScope()
+            this.applyBinding(this, this.scope)
+        }
 
         this.batchedAttributeUpdateRunning = false
         this.batchedPropertyUpdateRunning = false
@@ -532,8 +529,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applyBinding(domNode:Node, scope:Mapping<any>):void {
-        // TODO not working for custom elements!
-        if (!(node as unknown as HTMLElement).tagName)
+        if (!(domNode as HTMLElement).getAttributeNames)
             return
 
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
@@ -545,7 +541,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 name = attributeName.substring('bind-'.length)
 
             if (name) {
-                const value:null|string = (domNode as unknown as HTMLElement)
+                const value:null|string = (domNode as HTMLElement)
                     .getAttribute(attributeName)
 
                 if (value === null)
@@ -582,7 +578,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             name.substring('property-'.length)
                         ) as 'textContent'] = evaluated.result
                 } else if (name.startsWith('on-')) {
-                    if (this.domNodeEventBindings.has(domNode))
+                    if (!this.domNodeEventBindings.has(domNode))
                         this.domNodeEventBindings.set(
                             domNode, new Map<string, Function>()
                         )
@@ -723,7 +719,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             return options.map as CompiledDomNodeTemplate<NodeType>
 
         if (options.unsafe) {
-            let template:string = (domNode as unknown as HTMLElement).innerHTML
+            let template:string = (domNode as HTMLElement).innerHTML
             if (
                 !template && (domNode as NodeType & {template:string}).template
             )
@@ -1660,15 +1656,18 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param scope - To apply to generated scope.
      * @returns Generated scope.
      */
-    determineRenderScope(scope:Mapping<unknown> = {}):Mapping<unknown> {
-        return {
+    determineRenderScope(scope:Mapping<unknown> = {}):void {
+        this.scope = {
+            ...this.parent.scope,
+            ...this.scope,
+            ...this.internalProperties,
             parent: this.parent,
             root: this.rootInstance,
             self: this,
             [Tools.stringLowerCase(this.self._name) || 'instance']: this,
-            Tools,
             ...scope
         }
+        this.scope.scope = this.scope
     }
     /**
      * Creates shadow root if not created yet and assigns to current root
@@ -1704,16 +1703,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     render(reason:string = 'unknown'):void {
-        const scope:Mapping<any> =
-            this.determineRenderScope(this.internalProperties)
+        this.determineRenderScope()
 
         if (!this.dispatchEvent(new CustomEvent(
-            'render', {detail: {reason, scope}}
+            'render', {detail: {reason, scope: this.scope}}
         )))
             return
 
         const evaluated:EvaluationResult =
-            Tools.stringEvaluate(`\`${this.self.content}\``, scope)
+            Tools.stringEvaluate(`\`${this.self.content}\``, this.scope)
         if (evaluated.error) {
             console.warn(`Faild to process template: ${evaluated.error}`)
             return
@@ -1730,11 +1728,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const renderTargetDomNode:HTMLDivElement =
             document.createElement('div')
         renderTargetDomNode.innerHTML = evaluated.result
-        this.applySlots(renderTargetDomNode, {...scope, parent: this})
+        this.applySlots(renderTargetDomNode, {...this.scope, parent: this})
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
 
-        this.applyBindings(this.root.firstChild, scope, this.self.renderSlots)
+        this.applyBindings(
+            this.root.firstChild, this.scope, this.self.renderSlots
+        )
     }
     // / endregion
     // endregion
