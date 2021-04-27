@@ -33,15 +33,24 @@ export type CompiledDomNodeTemplateItem = {
 }
 export type CompiledDomNodeTemplate<NodeType = Node> =
     Map<NodeType, CompiledDomNodeTemplateItem>
+
 export type EventMapping = [Mapping<any>, Mapping<any>]|Mapping<any>
 export type EventToPropertyMapping =
     Mapping<true|((...parameter:Array<any>) => EventMapping)>
+
 export type AttributesReflectionConfiguration =
     Array<string>|Map<string, string|ValueOf<typeof PropertyTypes>>|string|Mapping<ValueOf<typeof PropertyTypes>|string>
+
+export type PreCompiledBaseItem = (scope:Mapping<unknown>) =>
+    ReactRenderBaseItem
+export type PreCompiledItem = (scope:Mapping<unknown>) => ReactRenderItem
+export type PreCompiledItems = Array<PreCompiledItem>|PreCompiledItem
+
 export type ReactRenderBaseItem = ReactElement|string|null
 export type ReactRenderItem =
     ((...parameters:Array<unknown>) => ReactRenderBaseItem)|ReactRenderBaseItem
 export type ReactRenderItems = Array<ReactRenderItem>|ReactRenderItem
+
 export interface WebComponentConfiguration {
     attachWebComponentAdapterIfNotExists?:boolean
     controllableProperties?:Array<string>

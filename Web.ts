@@ -218,13 +218,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // endregion
     // region live cycle hooks
     /**
-     * Initializes host dom content by attaching a shadow dom to it.
+     * Initializes host dom content and properties.
      * @returns Nothing.
      */
     constructor() {
         super()
         /*
-            NOTE: We cannot not use someting like "this.." e.g. "this.self".
+            NOTE: We cannot not use something like "this.." e.g. "this.self".
             to determine class properties since instance properties like "self"
             may not set properly yet because this method is called during
             constructing this instance itself.
@@ -1728,6 +1728,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const renderTargetDomNode:HTMLDivElement =
             document.createElement('div')
         renderTargetDomNode.innerHTML = evaluated.result
+
         this.applySlots(renderTargetDomNode, {...this.scope, parent: this})
 
         this.root.innerHTML = renderTargetDomNode.innerHTML

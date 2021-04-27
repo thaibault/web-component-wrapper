@@ -42,9 +42,15 @@ import {render, unmountComponentAtNode} from 'react-dom'
 import Web from './Web'
 import {
     ComponentType,
+
+    PreCompiledBaseItem,
+    PreCompiledItem,
+    PreCompiledItems,
+
     ReactRenderBaseItem,
     ReactRenderItem,
     ReactRenderItems,
+
     WebComponentAdapter,
     WebComponentAPI
 } from './type'
@@ -67,8 +73,9 @@ import {
  * @property static:content - React component to wrap.
  * @property static:react - React namespace.
  *
- * @property preparedSlots - Cache of yet converted slot elements to their
- * react pendants.
+ * @property compiledSlots - Cache of yet pre-compiled slot elements.
+ * @property preparedSlots - Cache of yet evaluated slot react elements.
+ *
  * @property self - Back-reference to this class.
  * @property wrapMemorizingWrapper - Determines whether to wrap component with
  * reacts memorizing wrapper to cache component render results.
@@ -80,6 +87,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     static react:typeof React = React
     static _name:string = 'ReactWebComponent'
 
+    comiledSlots:Mapping<PreCompiledItems> & {children?:PreCompiledItems} = {}
     preparedSlots:Mapping<ReactRenderItems> & {children?:ReactRenderItems} = {}
 
     readonly self:typeof ReactWeb = ReactWeb
@@ -88,29 +96,29 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     isWrapped:boolean = false
     // region live-cycle
     /**
+     * Initializes host dom content, properties and prepares wrapped react
+     * component.
+     * @returns Nothing.
+     */
+    constructor() {
+        super()
+        this.applyComponentWrapper()
+    }
+    /**
      * Triggered when this component is mounted into the document. Event
      * handlers will be attached and final render proceed.
      *
      * @returns Nothing.
      */
     connectedCallback():void {
-        this.applyComponentWrapper()
-
         /*
             Attaches event handler, grabs given slots, reflects external
             properties and enqueues first rendering.
         */
         super.connectedCallback()
 
-        // TODO this is not done by nested components yet!
-        this.prepareSlots()
-
-        /*
-            We apply properties initially to allow wrapping components access
-            them during there slot preparations. It will be done on each render
-            also.
-        */
-        this.applySlotsToInternalProperties()
+        this.determineRenderScope()
+        this.preCompileSlots()
     }
     /**
      * Triggered when this component is unmounted into the document. Event
@@ -125,17 +133,27 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      *
+     * @param reason - Description why rendering is necessary.
+     *
      * @returns Nothing.
      */
-    render():void {
-        this.prepareInternalProperties()
+    render(reason:string = 'unknown'):void {
+        this.determineRenderScope()
 
         /*
             NOTE: We prevent a nested component from further rendering since
             they will be rendered by their parent.
         */
-        if (this.rootInstance !== this)
+        if (
+            this.rootInstance !== this ||
+            !this.dispatchEvent(new CustomEvent(
+                'render', {detail: {reason, scope: this.scope}}
+            ))
+        )
             return
+
+        this.evaluateSlots()
+        this.prepareInternalProperties()
 
         this.applyShadowRootIfNotExisting()
 
@@ -219,26 +237,26 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * element list.
      *
      * @param domNodes - Nodes to convert.
+     * @param scope - Additional scope to render sub components against.
      * @param isFunction - Indicates whether given nodes should be provided as
      * function (render property).
      *
      * @returns Transformed react elements.
      */
-    convertDomNodesIntoReactElements(
-        nodes:Array<Node>, isFunction:boolean = false
-    ):ReactRenderItems {
-        if (nodes.length === 1)
-            return this.convertDomNodeIntoReactElement(
-                nodes[0], this.scope, isFunction
-            )
+    preCompileDomNodes(
+        domNodes:Array<Node>,
+        scope:Mapping<unknown> = {},
+        isFunction:boolean = false
+    ):PreCompiledItems {
+        if (domNodes.length === 1)
+            return this.preCompileDomNode(domNodes[0], scope, isFunction)
 
         let index:number = 1
         const result:Array<ReactRenderItem> = []
-        for (const node of nodes) {
-            const element:ReactRenderItem =
-                this.convertDomNodeIntoReactElement(
-                    node, this.scope, isFunction, index.toString()
-                )
+        for (const node of domNodes) {
+            const element:ReactRenderItem = this.preCompileDomNode(
+                node, scope, isFunction, index.toString()
+            )
 
             if (element) {
                 result.push(element)
@@ -259,18 +277,22 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      *
      * @returns Transformed react element.
      */
-    convertDomNodeIntoReactElement(
+    preCompileDomNode(
         domNode:Node,
         scope:Mapping<unknown> = {},
         isFunction:boolean = false,
         key?:string,
-    ):ReactRenderItem {
+    ):PreCompiledItem {
         // region render property
-        if (isFunction)
-            return (...parameters:Array<unknown>):ReactRenderBaseItem =>
-                this.convertDomNodeIntoReactElement(
-                    domNode, {...scope, parameters}, false, key
-                ) as ReactRenderBaseItem
+        if (isFunction) {
+            const node:PreCompiledBaseItem = this.preCompileDomNode(
+                domNode, {...scope, parameters: undefined}, false, key
+            ) as PreCompiledBaseItem
+
+            return (scope:Mapping<unknown>):ReactRenderItem =>
+                (...parameters:Array<unknown>):ReactRenderBaseItem =>
+                    node({...scope, parameters}) as ReactRenderBaseItem
+        }
         // endregion
         // region text node
         if (domNode.nodeType === Node.TEXT_NODE) {
@@ -279,13 +301,16 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     ((domNode as Node).nodeValue as string).trim() :
                     ''
 
-            return (key && value) ?
+            const result:ReactRenderItem = (key && value) ?
                 createElement(Fragment, {children: value, key}) :
                 value ? value : null
+
+            return ():ReactRenderItem => result
         }
         // endregion
         if (!(domNode as HTMLElement).getAttributeNames)
-            return null
+            return ():ReactRenderItem => null
+        // TODO
         // region known component
         /*
             TODO
@@ -342,12 +367,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         }
         // endregion
         // region html element
-        const evaluatedProperties:Mapping<unknown> = {key}
+        const properties:Mapping<unknown> = {key}
 
         const childNodes:Array<Node> = Array.from(domNode.childNodes)
         if (childNodes.length)
-            evaluatedProperties.children =
-                this.convertDomNodesIntoReactElements(childNodes)
+            properties.children = this.preCompileDomNodes(childNodes, scope)
 
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
         )) {
@@ -372,8 +396,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
                 if (evaluated.error) {
                     console.warn(
-                        'Error occurred during processing given ' +
-                        `attribute binding "${attributeName}" on node:`,
+                        'Error occurred during processing given attribute ' +
+                        `binding "${attributeName}" on node:`,
                         domNode,
                         evaluated.error
                     )
@@ -444,7 +468,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 name = attributeName
 
             if (name === 'inner-html') {
-                evaluatedProperties.dangerouslySetInnerHTML = {
+                properties.dangerouslySetInnerHTML = {
                     __html: ():string => value
                 }
                 continue
@@ -458,13 +482,38 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             if (Object.prototype.hasOwnProperty.call(mapping, name))
                 name = mapping[name]
 
-            evaluatedProperties[Tools.stringDelimitedToCamelCase(name)] = value
+            properties[Tools.stringDelimitedToCamelCase(name)] = value
         }
 
         return createElement(
-            (domNode as HTMLElement).tagName.toLowerCase(), evaluatedProperties
+            (domNode as HTMLElement).tagName.toLowerCase(), properties
         )
         // endregion
+    }
+    /**
+     * Evaluates given pre-compiled nodes into a single react element or a
+     * react element list.
+     *
+     * @param nodes - Pre-compiled nodes.
+     * @param scope - Additional scope to render sub components against.
+     *
+     * @returns Transformed react elements.
+     */
+    evaluatePreCompiledDomNodes(
+        nodes:Array<PreCompiledItem>, scope:Mapping<unknown> = {}
+    ):ReactRenderItems {
+        if (nodes.length === 1)
+            return nodes[0](scope)
+
+        const result:Array<ReactRenderItem> = []
+        for (const node of nodes) {
+            const element:ReactRenderItem = node(scope)
+
+            if (element)
+                result.push(element)
+        }
+
+        return result
     }
     /**
       * Forward named slots as properties to component.
@@ -483,38 +532,53 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 this.internalProperties[name] = this.preparedSlots[name]
     }
     /**
-     * Converts yet determined slots into react components and caches the
-     * result.
+     * Pre compiles and caches determined slots.
      * @returns Nothing.
      */
-    prepareSlots():void {
-        this.preparedSlots = {}
-
-        this.determineRenderScope({parent: this})
+    preCompileSlots():void {
+        this.compiledSlots = {}
 
         for (const name in this.slots)
             if (Object.prototype.hasOwnProperty.call(this.slots, name))
                 if (name === 'default') {
                     if (this.slots.default && this.slots.default.length > 0)
-                        this.preparedSlots.children =
-                            this.convertDomNodesIntoReactElements(
-                                this.slots.default,
-                                ([func, 'function'] as
-                                    Array<ValueOf<typeof PropertyTypes>|string>
-                                ).includes(this.self.propertyTypes?.children)
-                            )
-                } else
-                    this.preparedSlots[name] =
-                        this.convertDomNodeIntoReactElement(
-                            this.slots[name],
-                            this.scope,
+                        this.compiledSlots.children = this.preCompileDomNodes(
+                            this.slots.default,
+                            {...this.scope, parent: this},
                             ([func, 'function'] as
                                 Array<ValueOf<typeof PropertyTypes>|string>
-                            ).includes(
-                                this.self.propertyTypes &&
-                                this.self.propertyTypes[name]
-                            )
+                            ).includes(this.self.propertyTypes?.children)
                         )
+                } else
+                    this.compiledSlots[name] = this.preCompileDomNode(
+                        this.slots[name],
+                        {...this.scope, parent: this},
+                        ([func, 'function'] as
+                            Array<ValueOf<typeof PropertyTypes>|string>
+                        ).includes(
+                            this.self.propertyTypes &&
+                            this.self.propertyTypes[name]
+                        )
+                    )
+    }
+    /**
+     * Evaluates pre compiled slots.
+     * @returns Nothing.
+     */
+    evaluateSlots():void {
+        this.preparedSlots = {}
+
+        for (const name in this.compiledSlots)
+            if (Object.prototype.hasOwnProperty.call(this.compiledSlots, name))
+                if (name === 'children') {
+                    this.preparedSlots.children = evaluatePreCompiledNodes(
+                        this.compiledSlots[name],
+                        {...this.scope, parent: this}
+                    )
+                } else
+                    this.preparedSlots[name] = this.compiledSlots[name](
+                        {...this.scope, parent: this}
+                    )
     }
     // endregion
     // region helper
