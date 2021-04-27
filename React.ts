@@ -386,7 +386,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
                 value = {
                     originalScopeNames,
-                    templateFunction: templateFunction.bind(domNode)
+                    templateFunction: templateFunction.bind(this)
                 }
             } else if (name.startsWith('on-')) {
                 name = Tools.stringDelimitedToCamelCase(name)
@@ -411,14 +411,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 }
 
                 const eventHandler:TemplateFunction =
-                    templateFunction.bind(domNode)
+                    templateFunction.bind(this)
 
                 value = (...parameters:Array<unknown>):void => {
                     scope.event = parameters[0]
                     scope.parameters = parameters
 
                     try {
-                        templateFunction(
+                        eventHandler(
                             /*
                                 NOTE: We want to be ensure to have same
                                 ordering as we have for the scope names and to
@@ -452,13 +452,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             name = Tools.stringDelimitedToCamelCase(name)
 
-            if (typeof value === 'string')
-                staticProperties[name] = value
-            else
+            if (value?.originalScopeNames)
                 compiledProperties[name] = value as {
                     originalScopeNames:Array<string>
                     templateFunction:TemplateFunction
                 }
+            else
+                staticProperties[name] = value
         }
         // / endregion
         // / region pre-compiled nested nodes
@@ -481,19 +481,25 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             if (properties.children)
                 properties.children = this.evaluatePreCompiledDomNodes(
-                    properties.children as Array<PreCompiledItem>, scope
+                    properties.children as PreCompiledItems, scope
                 )
 
-            if (properties.innerHtml) {
+            if (
+                Object.prototype.hasOwnProperty.call(properties, 'innerHtml')
+            ) {
                 properties.dangerouslySetInnerHTML = {
                     __html: ():string => properties.innerHtml as string
                 }
 
                 delete properties.children
                 delete properties.innerHtml
-            } else if (properties.textContent) {
+            }
+            if (
+                Object.prototype.hasOwnProperty.call(properties, 'textContent')
+            ) {
                 properties.children = properties.textContent
 
+                delete properties.children
                 delete properties.textContent
             }
 
@@ -512,8 +518,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Transformed react elements.
      */
     evaluatePreCompiledDomNodes(
-        nodes:Array<PreCompiledItem>, scope:Mapping<unknown> = {}
+        nodes:PreCompiledItems, scope:Mapping<unknown> = {}
     ):ReactRenderItems {
+        if (!Array.isArray(nodes))
+            return nodes(scope)
+
         if (nodes.length === 1)
             return nodes[0](scope)
 

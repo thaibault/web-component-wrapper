@@ -209,16 +209,17 @@
 
             <my-react-web bind-property-number="12" id="web-react-2-sub">
                 <h2
-                    bind-attribute-class="'class-' + number"
+                    bind-attribute-class="'class-' + scope.number"
                     bind-property-text-content="'test-' + id"
                 ></h2>
 
                 <input
-                    bind-on-change="console.log(self); scope.value = event.target.value"
+                    bind-on-change="scope.value = event.target.value; self.render()"
                     default-value="test"
                 />
 
-                <div></div>
+                <div bind-property-text-content="scope.value || 'placeholder'">
+                </div>
             </my-react-web>
         </my-react-web>
 
