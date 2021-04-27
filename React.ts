@@ -310,14 +310,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         // endregion
         if (!(domNode as HTMLElement).getAttributeNames)
             return ():null => null
-        // TODO
-        // region known component
-        /*
-            TODO
-            Problem they already have converted react elements in
-            their "slots"! Who has the final render responsibility? Parent
-            or component?
-        */
+        // region native elements and wrapped react components
+        // / region prepare type and static properties
+        let staticProperties:Mapping<unknown>
+        let target:Component|string
+
         const type:typeof ReactWeb =
             (domNode as ReactWeb).constructor as typeof ReactWeb
         if (
@@ -329,51 +326,27 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             )
         ) {
             /*
-                NOTE: Nested components are already instantiated so use their
-                properties.
+                NOTE: Nested components are already instantiated and connected
+                so use their initialized properties.
             */
-            const properties:Mapping = (domNode as ReactWeb).internalProperties
+            const staticProperties:Mapping<unknown> =
+                (domNode as ReactWeb).internalProperties
 
-            /*
-            const evaluatedProperties:Mapping<unknown> = {}
-            for (const [name, value] of Object.entries(properties)) {
-                const evaluationResult:EvaluationResult = Tools.stringEvaluate(
-                    value, scope, false, domNode
-                )
-
-                if (evaluationResult.error)
-                    console.warn(
-                        `Failed to evaluate property "${name}" for "` +
-                        `${(domNode as ReactWeb).constructor._name}":`,
-                        evaluationResult.error
-                    )
-                else
-                    evaluatedProperties[name] = evaluationResult.result
-            }
-
-            if (!Object.prototype.hasOwnProperty.call(
-                evaluatedProperties, 'key'
-            ))
-                evaluatedProperties.key = key
-            */
             if (
-                key && !Object.prototype.hasOwnProperty.call(properties, 'key')
+                key &&
+                !Object.prototype.hasOwnProperty.call(staticProperties, 'key')
             )
-                properties.key = key
+                staticProperties.key = key
 
-            this.self.removeKnownUnwantedPropertyKeys(type, properties)
+            this.self.removeKnownUnwantedPropertyKeys(type, staticProperties)
 
-            return (scope:Mapping<unknown>):ReactElement =>
-                createElement(type.content, properties)
+            target = type.content
+        } else {
+            staticProperties:Mapping<unknown> = {key}
+            target = (domNode as HTMLElement).tagName.toLowerCase()
         }
-        // endregion
-        // region html element
-        const properties:Mapping<unknown> = {key}
-
-        const childNodes:Array<Node> = Array.from(domNode.childNodes)
-        if (childNodes.length)
-            properties.children = this.preCompileDomNodes(childNodes, scope)
-
+        // / endregion
+        // / region pre-compile dynamic properties
         const compiledProperties:Mapping<{
             originalScopeNames:Array<string>
             templateFunction:TemplateFunction
@@ -474,30 +447,28 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             } else
                 name = attributeName
 
-            if (name === 'inner-html') {
-                properties.dangerouslySetInnerHTML = {
-                    __html: ():string => value
-                }
-                continue
-            }
-
-            const mapping:Mapping = {
-                class: 'className',
-                for: 'htmlFor',
-                'text-content': 'children'
-            }
+            const mapping:Mapping = {class: 'className', for: 'htmlFor'}
             if (Object.prototype.hasOwnProperty.call(mapping, name))
                 name = mapping[name]
 
             name = Tools.stringDelimitedToCamelCase(name)
 
             if (typeof value === 'string')
-                properties[name] = value
+                staticProperties[name] = value
             else
                 compiledProperties[name] = value
         }
-
+        // / endregion
+        // / region pre-compiled nested nodes
+        const childNodes:Array<Node> = Array.from(domNode.childNodes)
+        if (childNodes.length)
+            staticProperties.children =
+                this.preCompileDomNodes(childNodes, scope)
+        // / endregion
+        // / region create evaluable render function
         return (scope:Mapping<unknown>):ReactElement => {
+            const properties:Mapping<unknown> = {...staticProperties}
+
             for (const [
                 name, {originalScopeNames, templateFunction}
             ] of Object.entries(compiledProperties))
@@ -506,10 +477,27 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                         scope[name]
                     ))
 
-            return createElement(
-                (domNode as HTMLElement).tagName.toLowerCase(), properties
-            )
+            if (properties.children)
+                properties.children = this.evaluatePreCompiledDomNodes(
+                    properties.children, scope
+                )
+
+            if (properties.innerHtml) {
+                properties.dangerouslySetInnerHTML = {
+                    __html: ():string => properties.innerHtml
+                }
+
+                delete properties.children
+                delete properties.innerHtml
+            } else if (properties.textContent) {
+                properties.children = properties.textContent
+
+                delete properties.textContent
+            }
+
+            return createElement(target, properties)
         }
+        // / endregion
         // endregion
     }
     /**
