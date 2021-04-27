@@ -87,7 +87,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     static react:typeof React = React
     static _name:string = 'ReactWebComponent'
 
-    comiledSlots:Mapping<PreCompiledItems> & {children?:PreCompiledItems} = {}
+    compiledSlots:Mapping<PreCompiledItems> & {children?:PreCompiledItems} = {}
     preparedSlots:Mapping<ReactRenderItems> & {children?:ReactRenderItems} = {}
 
     readonly self:typeof ReactWeb = ReactWeb
@@ -163,9 +163,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 render result (only necessary when having a dedicated rendering
                 target like shadow root).
             */
-            let domNode:HTMLElement = this.firstChild
+            let domNode:ChildNode|null = this.firstChild
             while (domNode) {
-                const nextDomNode:HTMLElement = domNode.nextSibling
+                const nextDomNode:ChildNode|null = domNode.nextSibling
                 this.removeChild(domNode)
                 domNode = nextDomNode
             }
@@ -252,9 +252,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             return this.preCompileDomNode(domNodes[0], scope, isFunction)
 
         let index:number = 1
-        const result:Array<ReactRenderItem> = []
+        const result:Array<PreCompiledItem> = []
         for (const node of domNodes) {
-            const element:ReactRenderItem = this.preCompileDomNode(
+            const element:PreCompiledItem = this.preCompileDomNode(
                 node, scope, isFunction, index.toString()
             )
 
@@ -313,7 +313,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         // region native elements and wrapped react components
         // / region prepare type and static properties
         let staticProperties:Mapping<unknown>
-        let target:Component|string
+        let target:ComponentType|string
 
         const type:typeof ReactWeb =
             (domNode as ReactWeb).constructor as typeof ReactWeb
@@ -329,8 +329,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 NOTE: Nested components are already instantiated and connected
                 so use their initialized properties.
             */
-            const staticProperties:Mapping<unknown> =
-                (domNode as ReactWeb).internalProperties
+            staticProperties = (domNode as ReactWeb).internalProperties
 
             if (
                 key &&
@@ -342,7 +341,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             target = type.content
         } else {
-            staticProperties:Mapping<unknown> = {key}
+            staticProperties = {key}
             target = (domNode as HTMLElement).tagName.toLowerCase()
         }
         // / endregion
@@ -350,7 +349,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         const compiledProperties:Mapping<{
             originalScopeNames:Array<string>
             templateFunction:TemplateFunction
-        > = {}
+        }> = {}
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
         )) {
             let value:unknown =
@@ -411,7 +410,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     continue
                 }
 
-                const templateFunction:TemplateFunction =
+                const eventHandler:TemplateFunction =
                     templateFunction.bind(domNode)
 
                 value = (...parameters:Array<unknown>):void => {
@@ -456,7 +455,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             if (typeof value === 'string')
                 staticProperties[name] = value
             else
-                compiledProperties[name] = value
+                compiledProperties[name] = value as {
+                    originalScopeNames:Array<string>
+                    templateFunction:TemplateFunction
+                }
         }
         // / endregion
         // / region pre-compiled nested nodes
@@ -479,12 +481,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             if (properties.children)
                 properties.children = this.evaluatePreCompiledDomNodes(
-                    properties.children, scope
+                    properties.children as Array<PreCompiledItem>, scope
                 )
 
             if (properties.innerHtml) {
                 properties.dangerouslySetInnerHTML = {
-                    __html: ():string => properties.innerHtml
+                    __html: ():string => properties.innerHtml as string
                 }
 
                 delete properties.children
@@ -581,14 +583,16 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         for (const name in this.compiledSlots)
             if (Object.prototype.hasOwnProperty.call(this.compiledSlots, name))
                 if (name === 'children') {
-                    this.preparedSlots.children = evaluatePreCompiledNodes(
-                        this.compiledSlots[name],
-                        {...this.scope, parent: this}
-                    )
+                    this.preparedSlots.children =
+                        this.evaluatePreCompiledDomNodes(
+                            this.compiledSlots[name] as Array<PreCompiledItem>,
+                            {...this.scope, parent: this}
+                        )
                 } else
-                    this.preparedSlots[name] = this.compiledSlots[name](
-                        {...this.scope, parent: this}
-                    )
+                    this.preparedSlots[name] =
+                        (this.compiledSlots[name] as PreCompiledItem)(
+                            {...this.scope, parent: this}
+                        )
     }
     // endregion
     // region helper

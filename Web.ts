@@ -719,7 +719,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             return options.map as CompiledDomNodeTemplate<NodeType>
 
         if (options.unsafe) {
-            let template:string = (domNode as HTMLElement).innerHTML
+            let template:string = (domNode as unknown as HTMLElement).innerHTML
             if (
                 !template && (domNode as NodeType & {template:string}).template
             )
@@ -1658,7 +1658,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     determineRenderScope(scope:Mapping<unknown> = {}):void {
         this.scope = {
-            ...this.parent.scope,
+            ...(this.parent?.scope || {}),
             ...this.scope,
             ...this.internalProperties,
             parent: this.parent,
