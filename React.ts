@@ -22,7 +22,7 @@ import {
     func, NullSymbol, PropertyTypes, UndefinedSymbol
 } from 'clientnode/property-types'
 import {
-    CompilationResult, EvaluationResult, Mapping, TemplateFunction, ValueOf
+    CompilationResult, Mapping, TemplateFunction, ValueOf
 } from 'clientnode/type'
 import React, {
     Attributes,
@@ -309,7 +309,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         }
         // endregion
         if (!(domNode as HTMLElement).getAttributeNames)
-            return ():ReactRenderItem => null
+            return ():null => null
         // TODO
         // region known component
         /*
@@ -363,7 +363,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             this.self.removeKnownUnwantedPropertyKeys(type, properties)
 
-            return createElement(type.content, properties)
+            return (scope:Mapping<unknown>):ReactElement =>
+                createElement(type.content, properties)
         }
         // endregion
         // region html element
@@ -373,6 +374,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (childNodes.length)
             properties.children = this.preCompileDomNodes(childNodes, scope)
 
+        const compiledProperties:Mapping<{
+            originalScopeNames:Array<string>
+            templateFunction:TemplateFunction
+        > = {}
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
         )) {
             let value:unknown =
@@ -390,16 +395,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             if (
                 name.startsWith('attribute-') || name.startsWith('property-')
             ) {
-                const evaluated:EvaluationResult = Tools.stringEvaluate(
-                    value as string, scope, false, domNode
-                )
+                const {error, originalScopeNames, templateFunction} =
+                    Tools.stringCompile(value as string, scope)
 
-                if (evaluated.error) {
+                if (error) {
                     console.warn(
-                        'Error occurred during processing given attribute ' +
+                        'Error occurred during compiling given attribute ' +
                         `binding "${attributeName}" on node:`,
                         domNode,
-                        evaluated.error
+                        error
                     )
                     continue
                 }
@@ -408,7 +412,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     name.substring('attribute-'.length) :
                     name.substring('property-'.length)
 
-                value = evaluated.result
+                value = {
+                    originalScopeNames,
+                    templateFunction: templateFunction.bind(domNode)
+                }
             } else if (name.startsWith('on-')) {
                 name = Tools.stringDelimitedToCamelCase(name)
 
@@ -417,22 +424,22 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     NOTE: We pre-compile event listener since they should
                     usually be called more than it would be re-rendered.
                 */
-                const compilation:CompilationResult = Tools.stringCompile(
-                    value as string, {event, ...scope}, true
-                )
+                const {
+                    error, originalScopeNames, scopeNames, templateFunction
+                } = Tools.stringCompile(value as string, scope, true)
 
-                if (compilation.error) {
+                if (error) {
                     console.warn(
                         'Error occurred during compiling given event ' +
                         `binding "${attributeName}" on node:`,
                         domNode,
-                        compilation.error
+                        error
                     )
                     continue
                 }
 
                 const templateFunction:TemplateFunction =
-                    compilation.templateFunction.bind(domNode)
+                    templateFunction.bind(domNode)
 
                 value = (...parameters:Array<unknown>):void => {
                     scope.event = parameters[0]
@@ -448,7 +455,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                                 "...Object.values(scope)" is not appreciate
                                 here.
                             */
-                            ...compilation.originalScopeNames.map(
+                            ...originalScopeNames.map(
                                 (name:string):unknown => scope[name]
                             )
                         )
@@ -459,7 +466,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                             domNode,
                             `Given expression "${value}" could not be ` +
                             'evaluated with given scope names "' +
-                            `${compilation.scopeNames.join('", "')}": ` +
+                            `${scopeNames.join('", "')}": ` +
                             Tools.represent(error)
                         )
                     }
@@ -482,12 +489,27 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             if (Object.prototype.hasOwnProperty.call(mapping, name))
                 name = mapping[name]
 
-            properties[Tools.stringDelimitedToCamelCase(name)] = value
+            name = Tools.stringDelimitedToCamelCase(name)
+
+            if (typeof value === 'string')
+                properties[name] = value
+            else
+                compiledProperties[name] = value
         }
 
-        return createElement(
-            (domNode as HTMLElement).tagName.toLowerCase(), properties
-        )
+        return (scope:Mapping<unknown>):ReactElement => {
+            for (const [
+                name, {originalScopeNames, templateFunction}
+            ] of Object.entries(compiledProperties))
+                properties[name] = templateFunction(
+                    ...originalScopeNames.map((name:string):unknown =>
+                        scope[name]
+                    ))
+
+            return createElement(
+                (domNode as HTMLElement).tagName.toLowerCase(), properties
+            )
+        }
         // endregion
     }
     /**
