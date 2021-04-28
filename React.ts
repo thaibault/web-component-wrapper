@@ -371,7 +371,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 name = attributeName.substring('bind-'.length)
 
             if (
-                name.startsWith('attribute-') || name.startsWith('property-')
+                name.startsWith('attribute-') ||
+                name.startsWith('attributes-') ||
+                name.startsWith('property-') ||
+                name.startsWith('properties-')
             ) {
                 const {error, originalScopeNames, templateFunction} =
                     Tools.stringCompile(value as string, knownScopeNames)
@@ -386,9 +389,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     continue
                 }
 
-                name = name.startsWith('attribute-') ?
-                    name.substring('attribute-'.length) :
-                    name.substring('property-'.length)
+                if (
+                    name.startsWith('attributes-') ||
+                    name.startsWith('properties-')
+                ) else
+                    name = name.startsWith('attribute-') ?
+                        name.substring('attribute-'.length) :
+                        name.substring('property-'.length)
 
                 value = {
                     originalScopeNames,
