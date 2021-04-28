@@ -64,6 +64,7 @@
                     exampleNumber: 'number',
                     exampleObject: 'object',
                     exampleString: 'string',
+                    exampleRenderPropFunction: 'function',
                     id: 'string'
                 }
                 for (let name in propertyTypes)
@@ -122,6 +123,7 @@
                         props.children
                     )
                 }
+                ReactWeb.eventToPropertyMapping = null
                 ReactWeb.propertiesToReflectAsAttributes =
                     Web.propertiesToReflectAsAttributes
                 ReactWeb.propertyTypes = Web.propertyTypes
@@ -201,24 +203,39 @@
         <hr/>
 
         <my-react-web id="web-react-2">
-            <h1 id="simple-id" bind-attribute-class="'class-' + parent.self._name">
+            <h1
+                bind-attribute-class="'class-' + parent.self._name"
+                id="simple-id"
+            >
                 Slotted Content
             </h1>
 
             <p bind-attribute-id="id">Lorem ipsum...</p>
 
-            <my-react-web bind-property-number="12" id="web-react-2-sub">
-                <h2
-                    bind-attribute-class="'class-' + scope.number"
-                    bind-property-text-content="'test-' + id"
-                ></h2>
+            <my-react-web
+                bind-property-example-number="12" id="web-react-2-sub"
+            >
+                <div slot="exampleRenderPropFunction">
+                    Render property output
+                </div>
 
-                <input
-                    bind-on-change="scope.value = event.target.value; self.render()"
-                    default-value="test"
-                />
+                <div slot="default">
+                    <h2
+                        bind-attribute-class="'class-' + String(scope.exampleNumber)"
+                        bind-property-text-content="'test-' + id"
+                    ></h2>
 
-                <div bind-property-text-content="scope.value || 'placeholder'">
+                    <input
+                        bind-on-change="parent.scope.value = event.target.value; root.render()"
+                        default-value="test"
+                    />
+
+                    <div>
+                        Input: "<span bind-property-text-content="parent.scope.value || 'placeholder'"></span>"
+                    </div>
+
+                    <div bind-property-inner-html="console.log('TODO', parent.exampleRenderPropFunction) || 'TODO'">
+                    </div>
                 </div>
             </my-react-web>
         </my-react-web>

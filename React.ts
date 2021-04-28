@@ -96,29 +96,18 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     isWrapped:boolean = false
     // region live-cycle
     /**
-     * Initializes host dom content, properties and prepares wrapped react
-     * component.
-     * @returns Nothing.
-     */
-    constructor() {
-        super()
-        this.applyComponentWrapper()
-    }
-    /**
      * Triggered when this component is mounted into the document. Event
      * handlers will be attached and final render proceed.
      *
      * @returns Nothing.
      */
     connectedCallback():void {
+        this.applyComponentWrapper()
         /*
             Attaches event handler, grabs given slots, reflects external
             properties and enqueues first rendering.
         */
         super.connectedCallback()
-
-        this.determineRenderScope()
-        this.preCompileSlots()
     }
     /**
      * Triggered when this component is unmounted into the document. Event
@@ -138,8 +127,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     render(reason:string = 'unknown'):void {
-        this.determineRenderScope()
-
         /*
             NOTE: We prevent a nested component from further rendering since
             they will be rendered by their parent.
@@ -152,8 +139,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         )
             return
 
-        this.evaluateSlots()
-        this.prepareInternalProperties()
+        this.determineRenderScope()
+
+        if (Object.keys(this.compiledSlots).length === 0)
+            this.preCompileSlots()
+
+        this.evaluateSlots({...this.scope, parent: this})
+        this.prepareProperties(this.internalProperties)
 
         this.applyShadowRootIfNotExisting()
 
@@ -317,14 +309,19 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
         const type:typeof ReactWeb =
             (domNode as ReactWeb).constructor as typeof ReactWeb
-        if (
+        const isComponent:boolean =
             typeof type.content === 'object' &&
             (
                 type.attachWebComponentAdapterIfNotExists === false ||
                 (type.content as ComponentType).webComponentAdapterWrapped ===
                     'react'
             )
-        ) {
+        if (isComponent) {
+            domNode.determineRenderScope()
+
+            if (Object.keys(this.compiledSlots).length === 0)
+                domNode.preCompileSlots()
+
             /*
                 NOTE: Nested components are already instantiated and connected
                 so use their initialized properties.
@@ -337,8 +334,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             )
                 staticProperties.key = key
 
-            this.self.removeKnownUnwantedPropertyKeys(type, staticProperties)
-
             target = type.content
         } else {
             staticProperties = {key}
@@ -346,6 +341,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         }
         // / endregion
         // / region pre-compile dynamic properties
+        let knownScopeNames:Array<string> = Object.keys(scope)
         const compiledProperties:Mapping<{
             originalScopeNames:Array<string>
             templateFunction:TemplateFunction
@@ -368,7 +364,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 name.startsWith('attribute-') || name.startsWith('property-')
             ) {
                 const {error, originalScopeNames, templateFunction} =
-                    Tools.stringCompile(value as string, scope)
+                    Tools.stringCompile(value as string, knownScopeNames)
 
                 if (error) {
                     console.warn(
@@ -391,14 +387,17 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             } else if (name.startsWith('on-')) {
                 name = Tools.stringDelimitedToCamelCase(name)
 
-                scope = {event: undefined, parameters: undefined, ...scope}
+                if (!Object.prototype.hasOwnProperty.call(scope, 'event'))
+                    knownScopeNames = [...knownScopeNames, 'event']
+                if (!Object.prototype.hasOwnProperty.call(scope, 'parameters'))
+                    knownScopeNames = [...knownScopeNames, 'parameters']
                 /*
                     NOTE: We pre-compile event listener since they should
                     usually be called more than it would be re-rendered.
                 */
                 const {
                     error, originalScopeNames, scopeNames, templateFunction
-                } = Tools.stringCompile(value as string, scope, true)
+                } = Tools.stringCompile(value as string, knownScopeNames, true)
 
                 if (error) {
                     console.warn(
@@ -462,13 +461,18 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         }
         // / endregion
         // / region pre-compiled nested nodes
-        const childNodes:Array<Node> = Array.from(domNode.childNodes)
-        if (childNodes.length)
-            staticProperties.children =
-                this.preCompileDomNodes(childNodes, scope)
+        if (!isComponent) {
+            const childNodes:Array<Node> = Array.from(domNode.childNodes)
+            if (childNodes.length)
+                staticProperties.children =
+                    this.preCompileDomNodes(childNodes, scope)
+        }
         // / endregion
         // / region create evaluable render function
-        return (scope:Mapping<unknown>):ReactElement => {
+        return (runtimeScope:Mapping<unknown>):ReactElement => {
+            runtimeScope = {...scope, ...runtimeScope}
+            runtimeScope.scope = runtimeScope
+
             const properties:Mapping<unknown> = {...staticProperties}
 
             for (const [
@@ -476,32 +480,39 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             ] of Object.entries(compiledProperties))
                 properties[name] = templateFunction(
                     ...originalScopeNames.map((name:string):unknown =>
-                        scope[name]
-                    ))
-
-            if (properties.children)
-                properties.children = this.evaluatePreCompiledDomNodes(
-                    properties.children as PreCompiledItems, scope
+                        runtimeScope[name]
+                    )
                 )
 
             if (
-                Object.prototype.hasOwnProperty.call(properties, 'innerHtml')
+                Object.prototype.hasOwnProperty.call(properties, 'innerHTML')
             ) {
                 properties.dangerouslySetInnerHTML = {
-                    __html: ():string => properties.innerHtml as string
+                    __html: properties.innerHTML as string
                 }
 
                 delete properties.children
-                delete properties.innerHtml
+                delete properties.innerHTML
             }
             if (
                 Object.prototype.hasOwnProperty.call(properties, 'textContent')
             ) {
                 properties.children = properties.textContent
 
-                delete properties.children
                 delete properties.textContent
-            }
+            } else if (isComponent) {
+                domNode.evaluateSlots({
+                    ...properties, ...runtimeScope, parent: domNode
+                })
+                domNode.prepareProperties(properties)
+                // NOTE: Components introduces a new inherited scope.
+                runtimeScope = {
+                    ...properties, ...runtimeScope, parent: domNode
+                }
+            } else if (properties.children)
+                properties.children = this.evaluatePreCompiledDomNodes(
+                    properties.children as PreCompiledItems, runtimeScope
+                )
 
             return createElement(target, properties)
         }
@@ -537,28 +548,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         return result
     }
     /**
-      * Forward named slots as properties to component.
-      * @returns Nothing.
-      */
-    applySlotsToInternalProperties():void {
-        for (const name in this.preparedSlots)
-            if (
-                Object.prototype.hasOwnProperty.call(
-                    this.preparedSlots, name
-                ) &&
-                !Object.prototype.hasOwnProperty.call(
-                    this.internalProperties, name
-                )
-            )
-                this.internalProperties[name] = this.preparedSlots[name]
-    }
-    /**
      * Pre compiles and caches determined slots.
      * @returns Nothing.
      */
     preCompileSlots():void {
-        this.compiledSlots = {}
-
         for (const name in this.slots)
             if (Object.prototype.hasOwnProperty.call(this.slots, name))
                 if (name === 'default') {
@@ -584,9 +577,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     }
     /**
      * Evaluates pre compiled slots.
+     * @param scope - To render again.
      * @returns Nothing.
      */
-    evaluateSlots():void {
+    evaluateSlots(scope:Mapping<unknown>):void {
         this.preparedSlots = {}
 
         for (const name in this.compiledSlots)
@@ -595,13 +589,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     this.preparedSlots.children =
                         this.evaluatePreCompiledDomNodes(
                             this.compiledSlots[name] as Array<PreCompiledItem>,
-                            {...this.scope, parent: this}
+                            scope
                         )
                 } else
                     this.preparedSlots[name] =
-                        (this.compiledSlots[name] as PreCompiledItem)(
-                            {...this.scope, parent: this}
-                        )
+                        (this.compiledSlots[name] as PreCompiledItem)(scope)
     }
     // endregion
     // region helper
@@ -655,18 +647,19 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         }
     }
     /**
-     * Prepares the properties object to render against current component.
+     * Prepares given properties object to render against current component.
      * Creates a reference for being recognized of reacts internal state
      * updates.
+     * @param properties - Properties to prepare.
      * @returns Nothing.
      */
-    prepareInternalProperties():void {
-        this.applySlotsToInternalProperties()
-        this.self.removeKnownUnwantedPropertyKeys(
-            this.self, this.internalProperties
-        )
+    prepareProperties(properties:Mapping<unknown>):void {
+        Tools.extend(properties, this.preparedSlots)
+
+        this.self.removeKnownUnwantedPropertyKeys(this.self, properties)
+
         this.instance = createRef() as {current?:WebComponentAdapter}
-        this.internalProperties.ref = this.instance
+        properties.ref = this.instance
     }
     /**
      * Updates current component instance and reflects newly determined

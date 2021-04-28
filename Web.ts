@@ -74,6 +74,9 @@ import {
  *
  * @property static:controllableProperties - A list of controllable property
  * names.
+ * @property static:eventToPropertyMapping - Explicitly defined output events
+ * (a mapping of event names to a potential parameter to properties
+ * transformer).
  * @property static:propertyAliases - A mapping of property names to be treated
  * as equal.
  * @property static:propertyTypes - Configuration defining how to convert
@@ -131,8 +134,6 @@ import {
  * @property internalProperties - Holds currently evaluated properties which
  * are owned by this instance and should always be delegated.
  *
- * @property eventToPropertyMapping - Explicitly defined output events (a
- * mapping of event names to a potential parameter to properties transformer).
  * @property outputEventNames - Set of determined output event names.
  *
  * @property instance - Wrapped component instance.
@@ -166,6 +167,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static observedAttributes:Array<string> = []
 
     static controllableProperties:Array<string> = []
+    static eventToPropertyMapping:EventToPropertyMapping|null = {}
     static propertyAliases:Mapping = {}
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
@@ -197,11 +199,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     domNodeEventBindings:Map<Node, Map<string, Function>> = new Map()
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
-    externalProperties:Mapping<any> = {}
+    externalProperties:Mapping<unknown> = {}
     ignoreAttributeUpdateObservations:boolean = false
-    internalProperties:Mapping<any> = {}
+    internalProperties:Mapping<unknown> = {}
 
-    eventToPropertyMapping:EventToPropertyMapping = {}
     outputEventNames:Set<string> = new Set<string>()
 
     instance:null|{current?:WebComponentAdapter} = null
@@ -978,13 +979,17 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     attachEventHandler():void {
+        if (this.self.eventToPropertyMapping === null)
+            return
+
         /*
             NOTE: We only reflect properties by implicit determined events if
             their where no explicitly defined.
         */
-        this.attachImplicitDefinedOutputEventHandler(
-            !this.attachExplicitDefinedOutputEventHandler()
-        )
+        const somethingDefined:boolean =
+            this.attachExplicitDefinedOutputEventHandler()
+
+        this.attachImplicitDefinedOutputEventHandler(!somethingDefined)
     }
     /**
      * Attach explicitly defined event handler to synchronize internal and
@@ -994,7 +999,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     attachExplicitDefinedOutputEventHandler():boolean {
         // Grab all existing output to property specifications
         let result:boolean = false
-        for (const name of Object.keys(this.eventToPropertyMapping))
+        for (const name of Object.keys(this.self.eventToPropertyMapping!))
             if (!Object.prototype.hasOwnProperty.call(
                 this.internalProperties, name
             )) {
@@ -1005,6 +1010,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     (...parameters:Array<any>):void => {
                         const result:Mapping<any>|null =
                             this.reflectEventToProperties(name, parameters)
+
                         if (result)
                             parameters[0] = result
                         this.forwardEvent(name, parameters)
@@ -1039,6 +1045,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     (...parameters:Array<any>):void => {
                         if (reflectProperties)
                             this.reflectEventToProperties(name, parameters)
+
                         this.forwardEvent(name, parameters)
                     }
                 )
@@ -1163,7 +1170,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     grabGivenSlots():void {
         this.slots = {}
 
-        for (let slot of Array.from(this.querySelectorAll('[slot]')))
+        for (let slot of Array.from(this.querySelectorAll('[slot]'))) {
+            // NOTE: This is how we avoid to grab slots from nested components.
+            let currentElement:Node|null = slot.parentNode
+            let skip:boolean = true
+            while (currentElement) {
+                if (currentElement.nodeName.includes('-')) {
+                    if (currentElement === this)
+                        skip = false
+                    break
+                }
+                currentElement = currentElement.parentNode
+            }
+            if (skip)
+                continue
+
             this.slots[
                 (
                     slot.getAttribute &&
@@ -1173,7 +1194,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     slot.getAttribute('slot')!.trim() :
                     slot.nodeName.toLowerCase()
             ] = this.grabSlotContent(slot) as HTMLElement
-
+        }
         if (this.slots.default)
             this.slots.default = [this.slots.default as unknown as Node]
         else if (this.childNodes.length > 0)
@@ -1413,12 +1434,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         if (
             Object.prototype.hasOwnProperty.call(
-                this.eventToPropertyMapping, name
+                this.self.eventToPropertyMapping, name
             ) &&
-            Tools.isFunction(this.eventToPropertyMapping[name])
+            Tools.isFunction(this.self.eventToPropertyMapping[name])
         ) {
             const mapping:EventMapping = (
-                this.eventToPropertyMapping[name] as Function
+                this.self.eventToPropertyMapping[name] as Function
             )(...parameters, this)
             if (Array.isArray(mapping)) {
                 result = mapping[0]
