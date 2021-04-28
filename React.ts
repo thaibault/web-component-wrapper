@@ -372,9 +372,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             if (
                 name.startsWith('attribute-') ||
-                name.startsWith('attributes-') ||
+                name === 'attributes' ||
                 name.startsWith('property-') ||
-                name.startsWith('properties-')
+                name === 'properties'
             ) {
                 const {error, originalScopeNames, templateFunction} =
                     Tools.stringCompile(value as string, knownScopeNames)
@@ -389,10 +389,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     continue
                 }
 
-                if (
-                    name.startsWith('attributes-') ||
-                    name.startsWith('properties-')
-                ) else
+                if (name === 'attributes' || name === 'properties')
+                    name === null
+                else
                     name = name.startsWith('attribute-') ?
                         name.substring('attribute-'.length) :
                         name.substring('property-'.length)
@@ -469,7 +468,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             name = Tools.stringDelimitedToCamelCase(name)
 
             if ((value as PreCompiledItem)?.originalScopeNames)
-                compiledProperties[name] = value as PreCompiledItem
+                // NOTE: "''" marks a property set like in JSX "{...props}".
+                compiledProperties[name || ''] = value as PreCompiledItem
             else
                 staticProperties[name] = value
         }
@@ -488,16 +488,22 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             runtimeScope = {...scope, ...runtimeScope}
             runtimeScope.scope = runtimeScope
             // endregion
-            const properties:Mapping<unknown> = {...staticProperties}
+            let properties:Mapping<unknown> = {...staticProperties}
             // region evaluate dynamic properties
             for (const [
                 name, {originalScopeNames, templateFunction}
-            ] of Object.entries(compiledProperties))
-                properties[name] = templateFunction(
+            ] of Object.entries(compiledProperties)) {
+                const value:unknown = templateFunction(
                     ...originalScopeNames.map((name:string):unknown =>
                         runtimeScope[name]
                     )
                 )
+
+                if (name === '')
+                    properties = {...properties, ...value as Mapping<unknown>}
+                else
+                    properties[name] = value
+            }
             // endregion
             // region prepare react specific element property handling
             if (
