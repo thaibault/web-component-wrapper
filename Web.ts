@@ -524,16 +524,30 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / region utility
     // // region dom nodes
     /**
+     * Determines a list of attribute names of given dom node.
+     * @param domNode - To determine attribute names from.
+     * @returns List of names.
+     */
+    static getAttributeNames(domNode:HTMLElement):Array<string> {
+        const result:Array<string> = new Array(domNode.attributes.length)
+
+        for (let index = 0; index < domNode.attributes.length; index += 1)
+            result[index] = domNode.attributes[index].name
+
+        return result
+    }
+    /**
      * Binds properties and event handler to given dom node.
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
      * @returns Nothing.
      */
     applyBinding(domNode:Node, scope:Mapping<any>):void {
-        if (!(domNode as HTMLElement).getAttributeNames)
+        if (!(domNode as HTMLElement).attributes)
             return
 
-        for (const attributeName of (domNode as HTMLElement).getAttributeNames(
+        for (const attributeName of this.self.getAttributeNames(
+            domNode as HTMLElement
         )) {
             let name:string = ''
             if (attributeName.startsWith('data-bind-'))
