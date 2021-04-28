@@ -43,9 +43,11 @@ import Web from './Web'
 import {
     ComponentType,
 
-    PreCompiledBaseItem,
     PreCompiledItem,
-    PreCompiledItems,
+
+    ReactRenderBaseItemFactory,
+    ReactRenderItemFactory,
+    ReactRenderItemsFactory,
 
     ReactRenderBaseItem,
     ReactRenderItem,
@@ -87,7 +89,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     static react:typeof React = React
     static _name:string = 'ReactWebComponent'
 
-    compiledSlots:Mapping<PreCompiledItems> & {children?:PreCompiledItems} = {}
+    compiledSlots:Mapping<ReactRenderItemsFactory> & {
+        children?:ReactRenderItemsFactory
+    } = {}
     preparedSlots:Mapping<ReactRenderItems> & {children?:ReactRenderItems} = {}
 
     readonly self:typeof ReactWeb = ReactWeb
@@ -244,14 +248,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         domNodes:Array<Node>,
         scope:Mapping<unknown> = {},
         isFunction:boolean = false
-    ):PreCompiledItems {
+    ):ReactRenderItemsFactory {
         if (domNodes.length === 1)
             return this.preCompileDomNode(domNodes[0], scope, isFunction)
 
         let index:number = 1
-        const result:Array<PreCompiledItem> = []
+        const result:Array<ReactRenderItemFactory> = []
         for (const node of domNodes) {
-            const element:PreCompiledItem = this.preCompileDomNode(
+            const element:ReactRenderItemFactory = this.preCompileDomNode(
                 node, scope, isFunction, index.toString()
             )
 
@@ -279,12 +283,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         scope:Mapping<unknown> = {},
         isFunction:boolean = false,
         key?:string,
-    ):PreCompiledItem {
+    ):ReactRenderItemFactory {
         // region render property
         if (isFunction) {
-            const node:PreCompiledBaseItem = this.preCompileDomNode(
+            const node:ReactRenderBaseItemFactory = this.preCompileDomNode(
                 domNode, {...scope, parameters: undefined}, false, key
-            ) as PreCompiledBaseItem
+            ) as ReactRenderBaseItemFactory
 
             return (scope:Mapping<unknown>):ReactRenderItem =>
                 (...parameters:Array<unknown>):ReactRenderBaseItem =>
@@ -323,10 +327,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             )
         if (isComponent) {
             // region pre-compile nested render context
-            domNode.determineRenderScope()
+            ;(domNode as ReactWeb).determineRenderScope()
 
             if (Object.keys(this.compiledSlots).length === 0)
-                domNode.preCompileSlots()
+                (domNode as ReactWeb).preCompileSlots()
             // endregion
             /*
                 NOTE: Nested components are already instantiated and connected
@@ -457,11 +461,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             name = Tools.stringDelimitedToCamelCase(name)
 
-            if (value?.originalScopeNames)
-                compiledProperties[name] = value as {
-                    originalScopeNames:Array<string>
-                    templateFunction:TemplateFunction
-                }
+            if ((value as PreCompiledItem)?.originalScopeNames)
+                compiledProperties[name] = value as PreCompiledItem
             else
                 staticProperties[name] = value
         }
@@ -510,10 +511,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 delete properties.textContent
             } else if (isComponent) {
                 // region evaluate nested render contexts
-                domNode.evaluateSlots({
+                ;(domNode as ReactWeb).evaluateSlots({
                     ...properties, ...runtimeScope, parent: domNode
                 })
-                domNode.prepareProperties(properties)
+                ;(domNode as ReactWeb).prepareProperties(properties)
                 // NOTE: Components introduces a new inherited scope.
                 runtimeScope = {
                     ...properties, ...runtimeScope, parent: domNode
@@ -521,7 +522,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 // endregion
             } else if (properties.children)
                 properties.children = this.evaluatePreCompiledDomNodes(
-                    properties.children as PreCompiledItems, runtimeScope
+                    properties.children as ReactRenderItemsFactory,
+                    runtimeScope
                 )
             // endregion
             return createElement(target, properties)
@@ -539,7 +541,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Transformed react elements.
      */
     evaluatePreCompiledDomNodes(
-        nodes:PreCompiledItems, scope:Mapping<unknown> = {}
+        nodes:ReactRenderItemsFactory, scope:Mapping<unknown> = {}
     ):ReactRenderItems {
         if (!Array.isArray(nodes))
             return nodes(scope)
@@ -602,12 +604,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 if (name === 'children') {
                     this.preparedSlots.children =
                         this.evaluatePreCompiledDomNodes(
-                            this.compiledSlots[name] as Array<PreCompiledItem>,
+                            this.compiledSlots[name] as
+                                Array<ReactRenderItemFactory>,
                             scope
                         )
                 } else
-                    this.preparedSlots[name] =
-                        (this.compiledSlots[name] as PreCompiledItem)(scope)
+                    this.preparedSlots[name] = (
+                        this.compiledSlots[name] as ReactRenderItemFactory
+                    )(scope)
     }
     // endregion
     // region helper

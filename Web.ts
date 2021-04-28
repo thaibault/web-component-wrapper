@@ -1380,8 +1380,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     */
                     this.setInternalPropertyValue(name, undefined)
 
-        if (this.internalProperties.model?.state) {
-            delete this.internalProperties.model.state
+        if ((this.internalProperties.model as {state:unknown})?.state) {
+            delete (this.internalProperties.model as {state:unknown})?.state
 
             this.setInternalPropertyValue(
                 'model', this.internalProperties.model
@@ -1433,6 +1433,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         let result:Mapping<any>|null = null
 
         if (
+            this.self.eventToPropertyMapping &&
             Object.prototype.hasOwnProperty.call(
                 this.self.eventToPropertyMapping, name
             ) &&

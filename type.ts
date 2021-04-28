@@ -41,10 +41,16 @@ export type EventToPropertyMapping =
 export type AttributesReflectionConfiguration =
     Array<string>|Map<string, string|ValueOf<typeof PropertyTypes>>|string|Mapping<ValueOf<typeof PropertyTypes>|string>
 
-export type PreCompiledBaseItem = (scope:Mapping<unknown>) =>
+export type PreCompiledItem = {
+    originalScopeNames:Array<string>
+    templateFunction:TemplateFunction
+}
+export type ReactRenderBaseItemFactory = (scope:Mapping<unknown>) =>
     ReactRenderBaseItem
-export type PreCompiledItem = (scope:Mapping<unknown>) => ReactRenderItem
-export type PreCompiledItems = Array<PreCompiledItem>|PreCompiledItem
+export type ReactRenderItemFactory = (scope:Mapping<unknown>) =>
+    ReactRenderItem
+export type ReactRenderItemsFactory =
+    Array<ReactRenderItemFactory>|ReactRenderItemFactory
 
 export type ReactRenderBaseItem = ReactElement|string|null
 export type ReactRenderItem =
