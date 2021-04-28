@@ -117,12 +117,16 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
             component.controllableProperties ||
             configuration.controllableProperties ||
             []
-        static eventToPropertyMapping:EventToPropertyMapping =
-            configuration.eventToPropertyMapping ?
-                {...configuration.eventToPropertyMapping} :
-                component.eventToPropertyMapping ?
-                    {...component.eventToPropertyMapping} :
-                    {}
+        static eventToPropertyMapping:EventToPropertyMapping|null =
+            configuration.eventToPropertyMapping === null ?
+                configuration.eventToPropertyMapping :
+                configuration.eventToPropertyMapping ?
+                    {...configuration.eventToPropertyMapping} :
+                    component.eventToPropertyMapping === null ?
+                        component.eventToPropertyMapping :
+                        component.eventToPropertyMapping ?
+                            {...component.eventToPropertyMapping} :
+                            {}
         static propertyAliases:Mapping = {
             ...ReactWeb.propertyAliases, ...propertyAliases
         }
