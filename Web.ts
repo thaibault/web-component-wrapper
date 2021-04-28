@@ -74,6 +74,9 @@ import {
  *
  * @property static:controllableProperties - A list of controllable property
  * names.
+ * @property static:eventToPropertyMapping - Explicitly defined output events
+ * (a mapping of event names to a potential parameter to properties
+ * transformer).
  * @property static:propertyAliases - A mapping of property names to be treated
  * as equal.
  * @property static:propertyTypes - Configuration defining how to convert
@@ -117,6 +120,10 @@ import {
  * @property batchedUpdateRunning - Indicates whether a batched render update
  * is currently running.
  *
+ * @property parent - Parent component instance.
+ * @property rootInstance - Root component instance.
+ * @property scope - Render scope.
+ *
  * @property domNodeEventBindings - Holds a mapping from nodes with registered
  * event handlers mapped to their de-registration function.
  * @property domNodeTemplateCache - Caches template compilation results.
@@ -127,8 +134,6 @@ import {
  * @property internalProperties - Holds currently evaluated properties which
  * are owned by this instance and should always be delegated.
  *
- * @property eventToPropertyMapping - Explicitly defined output events (a
- * mapping of event names to a potential parameter to properties transformer).
  * @property outputEventNames - Set of determined output event names.
  *
  * @property instance - Wrapped component instance.
@@ -162,6 +167,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static observedAttributes:Array<string> = []
 
     static controllableProperties:Array<string> = []
+    static eventToPropertyMapping:EventToPropertyMapping|null = {}
     static propertyAliases:Mapping = {}
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
@@ -186,14 +192,17 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     batchedPropertyUpdateRunning:boolean = true
     batchedUpdateRunning:boolean = true
 
+    parent:null|Web = null
+    rootInstance:null|Web = null
+    scope:Mapping<unknown> = {Tools}
+
     domNodeEventBindings:Map<Node, Map<string, Function>> = new Map()
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
-    externalProperties:Mapping<any> = {}
+    externalProperties:Mapping<unknown> = {}
     ignoreAttributeUpdateObservations:boolean = false
-    internalProperties:Mapping<any> = {}
+    internalProperties:Mapping<unknown> = {}
 
-    eventToPropertyMapping:EventToPropertyMapping = {}
     outputEventNames:Set<string> = new Set<string>()
 
     instance:null|{current?:WebComponentAdapter} = null
@@ -210,13 +219,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // endregion
     // region live cycle hooks
     /**
-     * Initializes host dom content by attaching a shadow dom to it.
+     * Initializes host dom content and properties.
      * @returns Nothing.
      */
     constructor() {
         super()
         /*
-            NOTE: We cannot not use someting like "this.." e.g. "this.self".
+            NOTE: We cannot not use something like "this.." e.g. "this.self".
             to determine class properties since instance properties like "self"
             may not set properly yet because this method is called during
             constructing this instance itself.
@@ -231,25 +240,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.generateAliasIndex()
 
-        this.root = this.self.shadowDOM ?
-            (
-                (!('attachShadow' in this) && 'ShadyDOM' in window) ?
-                    (
-                        window as unknown as
-                            {ShadyDOM:{wrap:(domNode:HTMLElement) =>
-                                HTMLElement
-                            }}
-                    ).ShadyDOM.wrap(this) :
-                    this
-            ).attachShadow(
-                (
-                    this.self.shadowDOM !== null &&
-                    typeof this.self.shadowDOM === 'object'
-                ) ?
-                    this.self.shadowDOM :
-                    {mode: 'open'}
-            ) :
-            this
+        // NOTE: Shadow root will be applied when rendering the first time.
+        this.root = this
 
         /*
             NOTE: We define getter and setter at the end to avoid shadowing
@@ -304,8 +296,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.render('attributeChanged')
     }
     /**
-     * Triggered when this component is mounted into the document. Event
-     * handlers will be attached and final render proceed.
+     * Triggered when this component is mounted into the document.
+     * Attaches event handler, grabs given slots, reflects external properties
+     * and enqueues first rendering.
+     *
      * @returns Nothing.
      */
     connectedCallback():void {
@@ -314,7 +308,18 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             ;(this as {isConnected:boolean}).isConnected = true
         } catch (error) {}
 
+        this.parent = this
+        this.rootInstance = this
+
         this.attachEventHandler()
+
+        if (this.self.determineRootBinding)
+            this.determineRootBinding()
+
+        if (this.self.applyRootBinding && this.isRoot) {
+            this.determineRenderScope()
+            this.applyBinding(this, this.scope)
+        }
 
         this.batchedAttributeUpdateRunning = false
         this.batchedPropertyUpdateRunning = false
@@ -326,9 +331,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render('connected') :
-            Tools.timeout(():void => {
-                this.render('connected')
-            })
+            Tools.timeout(():void => this.render('connected'))
     }
     /**
      * Frees some memory.
@@ -527,78 +530,136 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applyBinding(domNode:Node, scope:Mapping<any>):void {
-        if ((domNode as HTMLElement).attributes?.length)
-            for (
-                let index = 0;
-                index < (domNode as HTMLElement).attributes.length;
-                index++
-            ) {
-                const attribute:Attr =
-                    (domNode as HTMLElement).attributes[index]
-                let name:string = ''
-                if (attribute.name.startsWith('data-bind-'))
-                    name = attribute.name.substring('data-bind-'.length)
-                else if (attribute.name.startsWith('bind-'))
-                    name = attribute.name.substring('bind-'.length)
-                if (name)
-                    if (name.startsWith('property-')) {
-                        const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(attribute.value, scope)
-                        if (evaluated.error) {
-                            console.warn(
-                                'Error occurred during processing given ' +
-                                `attribute binding "${attribute.name}" on ` +
-                                'node:',
-                                domNode,
-                                evaluated.error
-                            )
-                            continue
-                        }
+        if (!(domNode as HTMLElement).getAttributeNames)
+            return
+
+        for (const attributeName of (domNode as HTMLElement).getAttributeNames(
+        )) {
+            let name:string = ''
+            if (attributeName.startsWith('data-bind-'))
+                name = attributeName.substring('data-bind-'.length)
+            else if (attributeName.startsWith('bind-'))
+                name = attributeName.substring('bind-'.length)
+
+            if (name) {
+                const value:null|string = (domNode as HTMLElement)
+                    .getAttribute(attributeName)
+
+                if (value === null)
+                    continue
+
+                if (
+                    name.startsWith('attribute-') ||
+                    name.startsWith('property-')
+                ) {
+                    const evaluated:EvaluationResult =
+                        Tools.stringEvaluate(value, scope, false, domNode)
+
+                    if (evaluated.error) {
+                        console.warn(
+                            'Error occurred during processing given ' +
+                            `attribute binding "${attributeName}" on node:`,
+                            domNode,
+                            evaluated.error
+                        )
+                        continue
+                    }
+
+                    if (name.startsWith('attribute-'))
+                        (domNode as HTMLElement).setAttribute(
+                            name.substring('attribute-'.length),
+                            evaluated.result
+                        )
+                    else
                         /*
                             NOTE: Cast to "textContent" to have a writable
                             property here.
                         */
                         domNode[Tools.stringDelimitedToCamelCase(
-                            name.replace(/property-(.+)$/, '$1')
+                            name.substring('property-'.length)
                         ) as 'textContent'] = evaluated.result
-                    } else if (name.startsWith('on-')) {
-                        const eventMap:Map<string, Function> =
-                            this.domNodeEventBindings.has(domNode) ?
-                                this.domNodeEventBindings.get(domNode)! :
-                                new Map()
-                        name = Tools.stringLowerCase(
-                            Tools.stringDelimitedToCamelCase(
-                                name.replace(/on-(.+)$/, '$1')
-                            )
+                } else if (name.startsWith('on-')) {
+                    if (!this.domNodeEventBindings.has(domNode))
+                        this.domNodeEventBindings.set(
+                            domNode, new Map<string, Function>()
                         )
-                        if (eventMap.has(name))
-                            eventMap.get(name)!()
 
-                        const handler:EventListener = (event:Event):void => {
-                            scope.event = event
-                            const evaluated:EvaluationResult =
-                                Tools.stringEvaluate(
-                                    attribute.value, scope, true, domNode
+                    const eventMap:Map<string, Function> =
+                        this.domNodeEventBindings.get(domNode)!
+
+                    name = Tools.stringDelimitedToCamelCase(
+                        name.substring('on-'.length)
+                    )
+
+                    if (eventMap.has(name))
+                        eventMap.get(name)!()
+
+                    scope = {event: undefined, parameters: undefined, ...scope}
+                    /*
+                        NOTE: We pre-compile event listener since they should
+                        usually be called more than it would be re-rendered.
+                    */
+                    const compilation:CompilationResult =
+                        Tools.stringCompile(value, scope, true)
+
+                    if (compilation.error)
+                        console.warn(
+                            'Error occurred during compiling given event ' +
+                            `binding "${attributeName}" on node:`,
+                            domNode,
+                            compilation.error
+                        )
+                    else {
+                        const templateFunction:TemplateFunction =
+                            compilation.templateFunction.bind(domNode)
+
+                        const handler:EventListener = (
+                            ...parameters:Array<unknown>
+                        ):void => {
+                            scope.event = parameters[0]
+                            scope.parameters = parameters
+
+                            try {
+                                templateFunction(
+                                    /*
+                                        NOTE: We want to be ensure to have same
+                                        ordering as we have for the scope names
+                                        and to call internal registered getter
+                                        by retrieving values. So simple using
+                                        "...Object.values(scope)" is not
+                                        appreciate here.
+                                    */
+                                    ...compilation.originalScopeNames.map(
+                                        (name:string):unknown => scope[name]
+                                    )
                                 )
-                            if (evaluated.error)
+                            } catch (error) {
                                 console.warn(
-                                    'Error occurred during processing ' +
-                                    'given event binding "' +
-                                    `${attribute.name}" on node:`,
+                                    'Error occurred during processing given ' +
+                                    `event binding "${attributeName}" on ` +
+                                    'node:',
                                     domNode,
-                                    evaluated.error
+                                    `Given expression "${value}" could not ` +
+                                    'be evaluated with given scope names "' +
+                                    `${compilation.scopeNames.join('", "')}"` +
+                                    `: ${Tools.represent(error)}`
                                 )
+                            }
                         }
+
                         domNode.addEventListener(name, handler)
                         eventMap.set(name, ():void => {
                             domNode.removeEventListener(name, handler)
 
                             eventMap.delete(name)
+
                             if (eventMap.size === 0)
                                 this.domNodeEventBindings.delete(domNode)
                         })
                     }
+                }
             }
+        }
     }
     /**
      * Binds properties and event handler to given, sibling and nested nodes.
@@ -623,6 +684,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             */
             if (!domNode.nodeName.toLowerCase().includes('-'))
                 this.applyBindings(domNode.firstChild, scope)
+
             domNode = domNode.nextSibling
         }
     }
@@ -667,6 +729,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             if (this.self.hasCode(template)) {
                 const result:CompilationResult =
                     Tools.stringCompile(`\`${template}\``, scope)
+
                 options.map!.set(
                     domNode,
                     {
@@ -744,8 +807,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             unsafe: this.self.renderUnsafe,
             ...options
         }
+
         if (!options.map!.has(domNode))
             this.compileDomNodeTemplate<NodeType>(domNode, scope, options)
+
         if (options.map!.has(domNode)) {
             const {error, scopeNames, templateFunction} =
                 options.map!.get(domNode) as CompiledDomNodeTemplateItem
@@ -776,6 +841,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         domNode.textContent = output
             }
         }
+
         if (!options.unsafe) {
             // Render content of each nested node.
             let currentDomNode:NodeType|null = domNode.firstChild as
@@ -794,8 +860,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     unknown as NodeType
             }
         }
+
         if (options.applyBindings)
             this.applyBindings(domNode, scope)
+
         return options.map as CompiledDomNodeTemplate<NodeType>
     }
     /**
@@ -832,10 +900,41 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             result.push(domNode.firstChild)
             parent.insertBefore(domNode.firstChild, domNode)
         }
+
         parent.removeChild(domNode)
+
         return result
     }
     // // endregion
+    determineRootBinding():void {
+        /*
+            If this component is the root component trigger event handler by
+            its own in global context.
+        */
+        let currentElement:Node|null = this.parentNode
+        while (currentElement) {
+            if (
+                currentElement instanceof Web ||
+                currentElement.nodeName?.includes('-') ||
+                /*
+                    NOTE: Assume none root if determined a wrapped closed
+                    shadow root.
+                */
+                currentElement.parentNode === null &&
+                currentElement.toString() === '[object ShadowRoot]'
+            ) {
+                if (this.rootInstance === this) {
+                    this.parent = currentElement as Web
+                    this.rootInstance = currentElement as Web
+
+                    this.setPropertyValue('isRoot', false)
+                } else
+                    this.rootInstance = currentElement as Web
+            }
+
+            currentElement = currentElement.parentNode
+        }
+    }
     /**
      * Checks if given content hast code (to compile and render).
      * @param content - Potential string with code inside.
@@ -860,6 +959,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     ):Map<string, string|ValueOf<typeof PropertyTypes>> {
         if (typeof value === 'string')
             value = [value]
+
         if (Array.isArray(value)) {
             const givenValue:Array<string> = value
             value = new Map<string, string|ValueOf<typeof PropertyTypes>>()
@@ -868,6 +968,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     value.set(name, Web.propertyTypes[name])
         } else
             value = Tools.convertPlainObjectToMap(value)
+
         return value as Map<string, string|ValueOf<typeof PropertyTypes>>
     }
     // / endregion
@@ -878,49 +979,17 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     attachEventHandler():void {
+        if (this.self.eventToPropertyMapping === null)
+            return
+
         /*
             NOTE: We only reflect properties by implicit determined events if
             their where no explicitly defined.
         */
-        this.attachImplicitDefinedOutputEventHandler(
-            !this.attachExplicitDefinedOutputEventHandler()
-        )
+        const somethingDefined:boolean =
+            this.attachExplicitDefinedOutputEventHandler()
 
-        if (this.self.determineRootBinding) {
-            /*
-                If this component is the root component trigger event handler
-                by its own in global context.
-            */
-            let currentElement:Node|null = this.parentNode
-            while (currentElement) {
-                if (
-                    currentElement instanceof Web ||
-                    currentElement.nodeName?.includes('-') ||
-                    /*
-                        NOTE: Assume none root if determined a wrapped closed
-                        shadow root.
-                    */
-                    currentElement.parentNode === null &&
-                    currentElement.toString() === '[object ShadowRoot]'
-                ) {
-                    this.setPropertyValue('isRoot', false)
-                    break
-                }
-                currentElement = currentElement.parentNode
-            }
-
-            if (this.self.applyRootBinding && this.isRoot)
-                this.applyBinding(
-                    this,
-                    {
-                        self: this,
-                        [Tools.stringLowerCase(this.self._name) || 'instance']:
-                            this,
-                        Tools,
-                        ...this.internalProperties
-                    }
-                )
-        }
+        this.attachImplicitDefinedOutputEventHandler(!somethingDefined)
     }
     /**
      * Attach explicitly defined event handler to synchronize internal and
@@ -930,7 +999,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     attachExplicitDefinedOutputEventHandler():boolean {
         // Grab all existing output to property specifications
         let result:boolean = false
-        for (const name of Object.keys(this.eventToPropertyMapping))
+        for (const name of Object.keys(this.self.eventToPropertyMapping!))
             if (!Object.prototype.hasOwnProperty.call(
                 this.internalProperties, name
             )) {
@@ -938,12 +1007,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
                     name,
-                    (...parameter:Array<any>):void => {
+                    (...parameters:Array<any>):void => {
                         const result:Mapping<any>|null =
-                            this.reflectEventToProperties(name, parameter)
+                            this.reflectEventToProperties(name, parameters)
+
                         if (result)
-                            parameter[0] = result
-                        this.forwardEvent(name, parameter)
+                            parameters[0] = result
+                        this.forwardEvent(name, parameters)
                     }
                 )
             }
@@ -972,10 +1042,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
                     name,
-                    (...parameter:Array<any>):void => {
+                    (...parameters:Array<any>):void => {
                         if (reflectProperties)
-                            this.reflectEventToProperties(name, parameter)
-                        this.forwardEvent(name, parameter)
+                            this.reflectEventToProperties(name, parameters)
+
+                        this.forwardEvent(name, parameters)
                     }
                 )
             }
@@ -992,15 +1063,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Forwards given event as native web event.
      * @param name - Event name.
-     * @param parameter - Event parameter.
+     * @param parameters - Event parameters.
      * @returns Nothing.
      */
-    forwardEvent(name:string, parameter:Array<any>):boolean {
+    forwardEvent(name:string, parameters:Array<any>):boolean {
         if (name.length > 'onX'.length && name.startsWith('on'))
             name = Tools.stringLowerCase(name.substring(2))
 
         return this.dispatchEvent(
-            new CustomEvent(name, {detail: {parameter}})
+            new CustomEvent(name, {detail: {parameters}})
         )
     }
     // / endregion
@@ -1099,7 +1170,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     grabGivenSlots():void {
         this.slots = {}
 
-        for (let slot of Array.from(this.querySelectorAll('[slot]')))
+        for (let slot of Array.from(this.querySelectorAll('[slot]'))) {
+            // NOTE: This is how we avoid to grab slots from nested components.
+            let currentElement:Node|null = slot.parentNode
+            let skip:boolean = true
+            while (currentElement) {
+                if (currentElement.nodeName.includes('-')) {
+                    if (currentElement === this)
+                        skip = false
+                    break
+                }
+                currentElement = currentElement.parentNode
+            }
+            if (skip)
+                continue
+
             this.slots[
                 (
                     slot.getAttribute &&
@@ -1109,7 +1194,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     slot.getAttribute('slot')!.trim() :
                     slot.nodeName.toLowerCase()
             ] = this.grabSlotContent(slot) as HTMLElement
-
+        }
         if (this.slots.default)
             this.slots.default = [this.slots.default as unknown as Node]
         else if (this.childNodes.length > 0)
@@ -1295,8 +1380,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     */
                     this.setInternalPropertyValue(name, undefined)
 
-        if (this.internalProperties.model?.state) {
-            delete this.internalProperties.model.state
+        if ((this.internalProperties.model as {state:unknown})?.state) {
+            delete (this.internalProperties.model as {state:unknown})?.state
 
             this.setInternalPropertyValue(
                 'model', this.internalProperties.model
@@ -1328,11 +1413,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Reflect given event handler call with given parameter back to current
      * properties state.
      * @param name - Event name.
-     * @param parameter - List of parameter to given event handler call.
+     * @param parameters - List of parameter to given event handler call.
      * @returns Mapped properties or null if nothing could be mapped.
      */
     reflectEventToProperties(
-        name:string, parameter:Array<any>
+        name:string, parameters:Array<any>
     ):Mapping<any>|null {
         /*
             NOTE: We enforce to update components state immediately after an
@@ -1348,14 +1433,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         let result:Mapping<any>|null = null
 
         if (
+            this.self.eventToPropertyMapping &&
             Object.prototype.hasOwnProperty.call(
-                this.eventToPropertyMapping, name
+                this.self.eventToPropertyMapping, name
             ) &&
-            Tools.isFunction(this.eventToPropertyMapping[name])
+            Tools.isFunction(this.self.eventToPropertyMapping[name])
         ) {
             const mapping:EventMapping = (
-                this.eventToPropertyMapping[name] as Function
-            )(...parameter, this)
+                this.self.eventToPropertyMapping[name] as Function
+            )(...parameters, this)
             if (Array.isArray(mapping)) {
                 result = mapping[0]
                 this.reflectProperties(result)
@@ -1365,19 +1451,19 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.reflectProperties(mapping)
             }
         } else if (
-            parameter.length > 0 &&
-            parameter[0] !== null &&
-            typeof parameter[0] === 'object'
+            parameters.length > 0 &&
+            parameters[0] !== null &&
+            typeof parameters[0] === 'object'
         ) {
             /*
                 Identified as some how throw data back event (no synthetic
                 event; derived from a user triggered one) when following
                 condition does not hold.
             */
-            let newProperties:Mapping<any> = parameter[0]
+            let newProperties:Mapping<any> = parameters[0]
             if (
-                'persist' in parameter[0] &&
-                Tools.isFunction(parameter[0].persist)
+                'persist' in parameters[0] &&
+                Tools.isFunction(parameters[0].persist)
             ) {
                 newProperties = {}
                 for (const propertyName of Object.keys(this.self.propertyTypes))
@@ -1386,16 +1472,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     )) {
                         const currentValue:any =
                             (
-                                parameter[0].currentTarget &&
+                                parameters[0].currentTarget &&
                                 Object.prototype.hasOwnProperty.call(
-                                    parameter[0].currentTarget, name
+                                    parameters[0].currentTarget, name
                                 )
                             ) ?
                                 /*
                                     Update all known properties from event
                                     target instance.
                                 */
-                                parameter[0].currentTarget[name] :
+                                parameters[0].currentTarget[name] :
                                 /*
                                     Update all known properties from adapter
                                     instance.
@@ -1456,33 +1542,34 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     let templateFunction:TemplateFunction
                     if (value) {
                         const result:CompilationResult =
-                            Tools.stringCompile(value, 'parameter')
+                            Tools.stringCompile(value, 'parameters')
                         error = result.error
                         templateFunction = result.templateFunction
                         if (error)
                             console.warn(
-                                `'Failed to process event handler "${name}":` +
+                                `Failed to process event handler "${name}":` +
                                 ` ${error}.`
                             )
                     }
                     this.setInternalPropertyValue(
                         name,
-                        (...parameter:Array<any>):void => {
+                        (...parameters:Array<any>):void => {
                             if (this.outputEventNames.has(name))
-                                this.reflectEventToProperties(name, parameter)
+                                this.reflectEventToProperties(name, parameters)
                             if (!error)
                                 try {
-                                    templateFunction.call(this, parameter)
+                                    templateFunction.call(this, parameters)
                                 } catch (error) {
                                     console.warn(
-                                        `'Failed to evaluate event handler "` +
+                                        'Failed to evaluate event handler "' +
                                         `${name}" with expression "${value}"` +
-                                        ` and scope variable "parameter" set` +
-                                        ` to "${Tools.represent(parameter)}"` +
-                                        `: "${error}".`
+                                        ' and scope variable "parameters" ' +
+                                        'set to "' +
+                                        `${Tools.represent(parameters)}": "` +
+                                        `${error}".`
                                     )
                                 }
-                            this.forwardEvent(name, parameter)
+                            this.forwardEvent(name, parameters)
                         }
                     )
                     if (!error)
@@ -1586,30 +1673,73 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / endregion
     // / region render
     /**
+     * Determines new scope object with useful default set of environment
+     * values.
+     * @param scope - To apply to generated scope.
+     * @returns Generated scope.
+     */
+    determineRenderScope(scope:Mapping<unknown> = {}):void {
+        this.scope = {
+            ...(this.parent?.scope || {}),
+            ...this.scope,
+            ...this.internalProperties,
+            parent: this.parent,
+            root: this.rootInstance,
+            self: this,
+            [Tools.stringLowerCase(this.self._name) || 'instance']: this,
+            ...scope
+        }
+        this.scope.scope = this.scope
+    }
+    /**
+     * Creates shadow root if not created yet and assigns to current root
+     * property.
+     * @returns Nothing.
+     */
+    applyShadowRootIfNotExisting():void {
+        if (this.self.shadowDOM && this.root === this)
+            this.root = (
+                (!('attachShadow' in this) && 'ShadyDOM' in window) ?
+                    (
+                        window as unknown as
+                            {ShadyDOM:{wrap:(domNode:HTMLElement) =>
+                                HTMLElement
+                            }}
+                    ).ShadyDOM.wrap(this) :
+                    this
+            ).attachShadow(
+                (
+                    this.self.shadowDOM !== null &&
+                    typeof this.self.shadowDOM === 'object'
+                ) ?
+                    this.self.shadowDOM :
+                    {mode: 'open'}
+            )
+    }
+    /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
+     *
      * @param reason - Description why rendering is necessary.
+     *
      * @returns Nothing.
      */
     render(reason:string = 'unknown'):void {
-        const scope:Mapping<any> = {
-            self: this,
-            [Tools.stringLowerCase(this.self._name) || 'instance']: this,
-            Tools,
-            ...this.internalProperties
-        }
+        this.determineRenderScope()
 
         if (!this.dispatchEvent(new CustomEvent(
-            'render', {detail: {reason, scope}}
+            'render', {detail: {reason, scope: this.scope}}
         )))
             return
 
         const evaluated:EvaluationResult =
-            Tools.stringEvaluate(`\`${this.self.content}\``, scope)
+            Tools.stringEvaluate(`\`${this.self.content}\``, this.scope)
         if (evaluated.error) {
             console.warn(`Faild to process template: ${evaluated.error}`)
             return
         }
+
+        this.applyShadowRootIfNotExisting()
 
         /*
             NOTE: We first render into an intermediate render target and apply
@@ -1620,11 +1750,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const renderTargetDomNode:HTMLDivElement =
             document.createElement('div')
         renderTargetDomNode.innerHTML = evaluated.result
-        this.applySlots(renderTargetDomNode, scope)
+
+        this.applySlots(renderTargetDomNode, {...this.scope, parent: this})
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
 
-        this.applyBindings(this.root.firstChild, scope, this.self.renderSlots)
+        this.applyBindings(
+            this.root.firstChild, this.scope, this.self.renderSlots
+        )
     }
     // / endregion
     // endregion

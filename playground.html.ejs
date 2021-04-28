@@ -57,12 +57,14 @@
                 Web.propertiesToReflectAsAttributes.push('exampleBoolean')
 
                 const propertyTypes = {
+                    children: 'object',
                     exampleBoolean: 'boolean',
                     exampleFunction: 'function',
                     exampleJson: 'json',
                     exampleNumber: 'number',
                     exampleObject: 'object',
                     exampleString: 'string',
+                    exampleRenderPropFunction: 'function',
                     id: 'string'
                 }
                 for (let name in propertyTypes)
@@ -110,17 +112,24 @@
                                     return createElement(
                                         'li',
                                         {key: index},
-                                        (
-                                            name +
-                                            ': ' +
-                                            Tools.represent(props[name])
-                                        )
+                                        [
+                                            createElement(
+                                                'span', {key: 0}, name + ': '
+                                            ),
+                                            props.exampleRenderPropFunction ?
+                                                props.exampleRenderPropFunction(
+                                                    Tools.represent(props[name]),
+                                                    1
+                                                ) :
+                                                Tools.represent(props[name])
+                                        ]
                                     )
                                 })
                         ),
                         props.children
                     )
                 }
+                ReactWeb.eventToPropertyMapping = null
                 ReactWeb.propertiesToReflectAsAttributes =
                     Web.propertiesToReflectAsAttributes
                 ReactWeb.propertyTypes = Web.propertyTypes
@@ -155,8 +164,12 @@
             bind-on-render="console.log('Render:', this)"
         >
             <h1>Slotted Content</h1>
+
             <p>Lorem ipsum...</p>
+
             <input
+                data-bind-property-disabled="false"
+                data-bind-attribute-class="'class-' + exampleNumber"
                 bind-property-placeholder="'Binded number: ' + exampleNumber"
                 bind-on-input="event.target.title = baseWeb.self._name + ': ' + event.target.value"
             />
@@ -180,9 +193,13 @@
             id="web-react-1"
             example-boolean
             example-function="console.log(2)"
-            example-json='{"key": false, "key2": null, "key3": {"key": 2}, "key4": "value"}'
+            example-json='{
+                "key": false, "key2": null, "key3": {"key": 2}, "key4": "value"
+            }'
             example-number="4"
-            example-object="{key: false, key2: null, key3: {key: 2}, key4: 'value'}"
+            example-object="{
+                key: false, key2: null, key3: {key: 2}, key4: 'value'
+            }"
             example-string="value"
         >
             <h1>Slotted Content</h1>
@@ -192,8 +209,42 @@
         <hr/>
 
         <my-react-web id="web-react-2">
-            <h1 class="'test'">Slotted Content</h1>
-            <p id="parent.id">Lorem ipsum...</p>
+            <h1
+                bind-attribute-class="'class-' + parent.self._name"
+                id="simple-id"
+            >
+                Slotted Content
+            </h1>
+
+            <p bind-attribute-id="id">Lorem ipsum...</p>
+
+            <my-react-web
+                bind-property-example-number="12" id="web-react-2-sub"
+            >
+                <span
+                    bind-property-text-content="parameters[0]"
+                    data-bind-property-key="parameters[1]"
+                    slot="exampleRenderPropFunction"
+                    bind-property-style="{border: '1px solid red'}"
+                    title="wrapped"
+                ></span>
+
+                <div slot="default">
+                    <h2
+                        bind-attribute-class="'class-' + String(scope.exampleNumber)"
+                        bind-property-text-content="'test-' + id"
+                    ></h2>
+
+                    <input
+                        bind-on-change="parent.scope.value = event.target.value; root.render()"
+                        default-value="test"
+                    />
+
+                    <div>
+                        Input: "<span bind-property-text-content="parent.scope.value || 'placeholder'"></span>"
+                    </div>
+                </div>
+            </my-react-web>
         </my-react-web>
 
     </body>

@@ -21,7 +21,9 @@ import Tools from 'clientnode'
 import {
     func, NullSymbol, PropertyTypes, UndefinedSymbol
 } from 'clientnode/property-types'
-import {EvaluationResult, Mapping, ValueOf} from 'clientnode/type'
+import {
+    CompilationResult, Mapping, TemplateFunction, ValueOf
+} from 'clientnode/type'
 import React, {
     Attributes,
     createElement,
@@ -40,9 +42,17 @@ import {render, unmountComponentAtNode} from 'react-dom'
 import Web from './Web'
 import {
     ComponentType,
+
+    PreCompiledItem,
+
+    ReactRenderBaseItemFactory,
+    ReactRenderItemFactory,
+    ReactRenderItemsFactory,
+
     ReactRenderBaseItem,
     ReactRenderItem,
     ReactRenderItems,
+
     WebComponentAdapter,
     WebComponentAPI
 } from './type'
@@ -65,8 +75,9 @@ import {
  * @property static:content - React component to wrap.
  * @property static:react - React namespace.
  *
- * @property preparedSlots - Cache of yet converted slot elements to their
- * react pendants.
+ * @property compiledSlots - Cache of yet pre-compiled slot elements.
+ * @property preparedSlots - Cache of yet evaluated slot react elements.
+ *
  * @property self - Back-reference to this class.
  * @property wrapMemorizingWrapper - Determines whether to wrap component with
  * reacts memorizing wrapper to cache component render results.
@@ -78,6 +89,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     static react:typeof React = React
     static _name:string = 'ReactWebComponent'
 
+    compiledSlots:Mapping<ReactRenderItemsFactory> & {
+        children?:ReactRenderItemsFactory
+    } = {}
     preparedSlots:Mapping<ReactRenderItems> & {children?:ReactRenderItems} = {}
 
     readonly self:typeof ReactWeb = ReactWeb
@@ -86,44 +100,18 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     isWrapped:boolean = false
     // region live-cycle
     /**
-     * Triggered when ever a given attribute has changed and triggers to update
-     * configured dom content.
-     *
-     * @param name - Attribute name which was updates.
-     * @param oldValue - Old attribute value.
-     * @param newValue - New updated value.
-     *
-     * @returns Nothing.
-     */
-    attributeChangedCallback(
-        name:string, oldValue:string, newValue:string
-    ):void {
-        if (this.isRoot)
-            super.attributeChangedCallback(name, oldValue, newValue)
-        else
-            /*
-                NOTE: We simply save value to be evaluated by root component
-                (and their context).
-            */
-            this.setInternalPropertyValue(name, newValue)
-    }
-    /**
      * Triggered when this component is mounted into the document. Event
      * handlers will be attached and final render proceed.
+     *
      * @returns Nothing.
      */
     connectedCallback():void {
         this.applyComponentWrapper()
-
-        super.connectedCallback()
-
-        this.prepareSlots()
-
         /*
-            We apply properties initially to allow wrapping components access
-            them during there slot preparations.
+            Attaches event handler, grabs given slots, reflects external
+            properties and enqueues first rendering.
         */
-        this.applySlotsToInternalProperties()
+        super.connectedCallback()
     }
     /**
      * Triggered when this component is unmounted into the document. Event
@@ -132,22 +120,53 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     disconnectedCallback():void {
         unmountComponentAtNode(this.root)
+
         super.disconnectedCallback()
     }
     /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      *
+     * @param reason - Description why rendering is necessary.
+     *
      * @returns Nothing.
      */
-    render():void {
-        this.prepareInternalProperties()
+    render(reason:string = 'unknown'):void {
         /*
             NOTE: We prevent a nested component from further rendering since
             they will be rendered by their parent.
         */
-        if (this.hasParentWithPreparedSlots())
+        if (
+            this.rootInstance !== this ||
+            !this.dispatchEvent(new CustomEvent(
+                'render', {detail: {reason, scope: this.scope}}
+            ))
+        )
             return
+
+        this.determineRenderScope()
+
+        if (Object.keys(this.compiledSlots).length === 0)
+            this.preCompileSlots()
+
+        this.evaluateSlots({...this.scope, parent: this})
+        this.prepareProperties(this.internalProperties)
+
+        this.applyShadowRootIfNotExisting()
+
+        if (this.root !== this) {
+            /*
+                Remove template nodes since they will be replaced by reacts
+                render result (only necessary when having a dedicated rendering
+                target like shadow root).
+            */
+            let domNode:ChildNode|null = this.firstChild
+            while (domNode) {
+                const nextDomNode:ChildNode|null = domNode.nextSibling
+                this.removeChild(domNode)
+                domNode = nextDomNode
+            }
+        }
 
         render(
             createElement(this.self.content, this.internalProperties),
@@ -178,12 +197,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * 1. Property overwrites state.
      * 2. State changes but is shadowed by recent changes in property.
      *
-     * Ensure:
+     * So the following will be ensured:
      *
      * 1. Property overwrites state.
      * 2. Property is overwritten to "undefined" to lose control over state.
-     * 3. State can change post property adaption didn't take effect anymore:
-     *    Communicate change back by triggering output events.
+     * 3. Now a state change can be represented back after property adaptions.
+     *    (Converts reacts declarative nature into an imperative web-component
+     *    style).
+     * 4. Further state changes should be communicated back via output events.
      *
      * @param name - Property name to write.
      * @param value - New value to write.
@@ -211,28 +232,32 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     // endregion
     // region handle slots
     /**
-     * Converts given html dom nodes into a single react element or a react
-     * element list.
+     * Converts given html dom nodes into a compiled function to generate a
+     * react element or a react element list.
      *
      * @param domNodes - Nodes to convert.
-     * @param isFunction - Indicates whether given nodes should be provided as
-     * function (render property).
+     * @param scope - Additional scope to render sub components against.
+     * Necessary to bound needed environment variables into compiled context.
+     * @param isFunction - Indicates whether given render result should be
+     * provided as function (render property) with bound parameters environment
+     * variable name.
      *
      * @returns Transformed react elements.
      */
-    convertDomNodesIntoReactElements(
-        nodes:Array<Node>, isFunction:boolean = false
-    ):ReactRenderItems {
-        if (nodes.length === 1)
-            return this.convertDomNodeIntoReactElement(nodes[0], isFunction)
+    preCompileDomNodes(
+        domNodes:Array<Node>,
+        scope:Mapping<unknown> = {},
+        isFunction:boolean = false
+    ):ReactRenderItemsFactory {
+        if (domNodes.length === 1)
+            return this.preCompileDomNode(domNodes[0], scope, isFunction)
 
         let index:number = 1
-        const result:Array<ReactRenderItem> = []
-        for (const node of nodes) {
-            const element:ReactRenderItem =
-                this.convertDomNodeIntoReactElement(
-                    node, isFunction, index.toString()
-                )
+        const result:Array<ReactRenderItemFactory> = []
+        for (const node of domNodes) {
+            const element:ReactRenderItemFactory = this.preCompileDomNode(
+                node, scope, isFunction, index.toString()
+            )
 
             if (element) {
                 result.push(element)
@@ -245,167 +270,348 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Converts given html dom node into a react element.
      *
-     * @param node - Node to convert.
+     * @param domNode - Node to convert.
+     * @param scope - Additional scope to render sub components against.
      * @param isFunction - Indicates whether given nodes should be provided as
      * function (render property).
      * @param key - Optional key to add to component properties.
-     * @param scope - Additional scope to render sub components against.
      *
      * @returns Transformed react element.
      */
-    convertDomNodeIntoReactElement(
-        node:Node,
+    preCompileDomNode(
+        domNode:Node,
+        scope:Mapping<unknown> = {},
         isFunction:boolean = false,
         key?:string,
-        scope:Mapping<unknown> = {}
-    ):ReactRenderItem {
-        // region render prop
-        if (isFunction)
-            return (...parameters:Array<unknown>):ReactRenderBaseItem =>
-                this.convertDomNodeIntoReactElement(
-                    node, false, key, {...scope, parameters}
-                ) as ReactRenderBaseItem
-        // endregion
-        // region text node
-        if (node.nodeType === Node.TEXT_NODE) {
-            const value:string = typeof (node as Node).nodeValue === 'string' ?
-                ((node as Node).nodeValue as string).trim() :
-                ''
+    ):ReactRenderItemFactory {
+        // region render property
+        if (isFunction) {
+            const node:ReactRenderBaseItemFactory = this.preCompileDomNode(
+                domNode, {...scope, parameters: undefined}, false, key
+            ) as ReactRenderBaseItemFactory
 
-            return (key && value) ?
-                createElement(Fragment, {children: value, key}) :
-                value ? value : null
+            return (scope:Mapping<unknown>):ReactRenderItem =>
+                (...parameters:Array<unknown>):ReactRenderBaseItem =>
+                    node({...scope, parameters}) as ReactRenderBaseItem
         }
         // endregion
-        // region known component
+        // region text node
+        if (domNode.nodeType === Node.TEXT_NODE) {
+            const value:string =
+                typeof (domNode as Node).nodeValue === 'string' ?
+                    ((domNode as Node).nodeValue as string).trim() :
+                    ''
+
+            const result:ReactRenderItem = (key && value) ?
+                createElement(Fragment, {children: value, key}) :
+                value ? value : null
+
+            return ():ReactRenderItem => result
+        }
+        // endregion
+        if (!(domNode as HTMLElement).getAttributeNames)
+            return ():null => null
+        // region native elements and wrapped react components
+        // / region prepare type and static properties
+        let staticProperties:Mapping<unknown>
+        let target:ComponentType|string
+
         const type:typeof ReactWeb =
-            (node as ReactWeb).constructor as typeof ReactWeb
-        if (
+            (domNode as ReactWeb).constructor as typeof ReactWeb
+        const isComponent:boolean =
             typeof type.content === 'object' &&
             (
                 type.attachWebComponentAdapterIfNotExists === false ||
                 (type.content as ComponentType).webComponentAdapterWrapped ===
                     'react'
             )
-        ) {
+        if (isComponent) {
+            // region pre-compile nested render context
+            ;(domNode as ReactWeb).determineRenderScope()
+
+            if (Object.keys(this.compiledSlots).length === 0)
+                (domNode as ReactWeb).preCompileSlots()
+            // endregion
             /*
-                NOTE: Nested components are already instantiated so use their
-                properties.
+                NOTE: Nested components are already instantiated and connected
+                so use their initialized properties.
             */
-            const properties:Mapping =
-                (node as ReactWeb).internalProperties ?? {}
+            staticProperties = (domNode as ReactWeb).internalProperties
 
-            const evaluatedProperties:Mapping<unknown> = {}
-            for (const [name, value] of Object.entries(properties)) {
-                const evaluationResult:EvaluationResult = Tools.stringEvaluate(
-                    value, {parent: this, ...scope}, false, node
-                )
-
-                if (evaluationResult.error)
-                    console.warn(
-                        `Failed to evaluate property "${name}": `,
-                        evaluationResult.error
-                    )
-                else
-                    evaluatedProperties[name] = evaluationResult.result
-            }
-
-            if (!Object.prototype.hasOwnProperty.call(
-                evaluatedProperties, 'key'
-            ))
-                evaluatedProperties.key = key
-
-            this.self.removeKnownUnwantedPropertyKeys(
-                type, evaluatedProperties
-            )
-
-            return createElement(type.content, evaluatedProperties)
-        }
-        // endregion
-        // region html element
-        if ((node as HTMLElement).tagName) {
-            const evaluatedProperties:Mapping<unknown> = {
-                children: this.convertDomNodesIntoReactElements(
-                    Array.from(node.childNodes)
-                ),
-                key
-            }
-
-            for (const name of (node as HTMLElement).getAttributeNames()) {
-                const value:null|string =
-                    (node as HTMLElement).getAttribute(name)
-                if (typeof value === 'string') {
-                    const evaluationResult:EvaluationResult =
-                        Tools.stringEvaluate(
-                            value, {parent: this, ...scope}, false, node
-                        )
-
-                    if (evaluationResult.error)
-                        console.warn(
-                            `Failed to evaluate property "${name}": `,
-                            evaluationResult.error
-                        )
-                    else
-                        evaluatedProperties[
-                            name === 'class' ? 'className' : name
-                        ] = evaluationResult.result
-                }
-            }
-
-            return createElement(
-                (node as HTMLElement).tagName.toLowerCase(),
-                evaluatedProperties
-            )
-        }
-        // endregion
-        return null
-    }
-    /**
-      * Forward named slots as properties to component.
-      * @returns Nothing.
-      */
-    applySlotsToInternalProperties():void {
-        for (const name in this.preparedSlots)
             if (
-                Object.prototype.hasOwnProperty.call(
-                    this.preparedSlots, name
-                ) &&
-                !Object.prototype.hasOwnProperty.call(
-                    this.internalProperties, name
-                )
+                key &&
+                !Object.prototype.hasOwnProperty.call(staticProperties, 'key')
             )
-                this.internalProperties[name] = this.preparedSlots[name]
+                staticProperties.key = key
+
+            target = type.content
+        } else {
+            staticProperties = {key}
+            target = (domNode as HTMLElement).tagName.toLowerCase()
+        }
+        // / endregion
+        // / region pre-compile dynamic properties
+        let knownScopeNames:Array<string> = Object.keys(scope)
+        const compiledProperties:Mapping<{
+            originalScopeNames:Array<string>
+            templateFunction:TemplateFunction
+        }> = {}
+        for (const attributeName of (domNode as HTMLElement).getAttributeNames(
+        )) {
+            let value:unknown =
+                (domNode as HTMLElement).getAttribute(attributeName)
+
+            if (value === null)
+                continue
+
+            let name:string = ''
+            if (attributeName.startsWith('data-bind-'))
+                name = attributeName.substring('data-bind-'.length)
+            else if (attributeName.startsWith('bind-'))
+                name = attributeName.substring('bind-'.length)
+
+            if (
+                name.startsWith('attribute-') || name.startsWith('property-')
+            ) {
+                const {error, originalScopeNames, templateFunction} =
+                    Tools.stringCompile(value as string, knownScopeNames)
+
+                if (error) {
+                    console.warn(
+                        'Error occurred during compiling given attribute ' +
+                        `binding "${attributeName}" on node:`,
+                        domNode,
+                        error
+                    )
+                    continue
+                }
+
+                name = name.startsWith('attribute-') ?
+                    name.substring('attribute-'.length) :
+                    name.substring('property-'.length)
+
+                value = {
+                    originalScopeNames,
+                    templateFunction: templateFunction.bind(this)
+                }
+            } else if (name.startsWith('on-')) {
+                name = Tools.stringDelimitedToCamelCase(name)
+
+                if (!Object.prototype.hasOwnProperty.call(scope, 'event'))
+                    knownScopeNames = [...knownScopeNames, 'event']
+                if (!Object.prototype.hasOwnProperty.call(scope, 'parameters'))
+                    knownScopeNames = [...knownScopeNames, 'parameters']
+                /*
+                    NOTE: We pre-compile event listener since they should
+                    usually be called more than it would be re-rendered.
+                */
+                const {
+                    error, originalScopeNames, scopeNames, templateFunction
+                } = Tools.stringCompile(value as string, knownScopeNames, true)
+
+                if (error) {
+                    console.warn(
+                        'Error occurred during compiling given event ' +
+                        `binding "${attributeName}" on node:`,
+                        domNode,
+                        error
+                    )
+                    continue
+                }
+
+                const eventHandler:TemplateFunction =
+                    templateFunction.bind(this)
+
+                value = (...parameters:Array<unknown>):void => {
+                    scope.event = parameters[0]
+                    scope.parameters = parameters
+
+                    try {
+                        eventHandler(
+                            /*
+                                NOTE: We want to be ensure to have same
+                                ordering as we have for the scope names and to
+                                call internal registered getter by retrieving
+                                values. So simple using
+                                "...Object.values(scope)" is not appreciate
+                                here.
+                            */
+                            ...originalScopeNames.map(
+                                (name:string):unknown => scope[name]
+                            )
+                        )
+                    } catch (error) {
+                        console.warn(
+                            'Error occurred during processing given ' +
+                            `event binding "${attributeName}" on node: `,
+                            domNode,
+                            `Given expression "${value}" could not be ` +
+                            'evaluated with given scope names "' +
+                            `${scopeNames.join('", "')}": ` +
+                            Tools.represent(error)
+                        )
+                    }
+                }
+            } else
+                name = attributeName
+
+            const mapping:Mapping = {class: 'className', for: 'htmlFor'}
+            if (Object.prototype.hasOwnProperty.call(mapping, name))
+                name = mapping[name]
+
+            name = Tools.stringDelimitedToCamelCase(name)
+
+            if ((value as PreCompiledItem)?.originalScopeNames)
+                compiledProperties[name] = value as PreCompiledItem
+            else
+                staticProperties[name] = value
+        }
+        // / endregion
+        // / region pre-compiled nested nodes of native elements
+        if (!isComponent) {
+            const childNodes:Array<Node> = Array.from(domNode.childNodes)
+            if (childNodes.length)
+                staticProperties.children =
+                    this.preCompileDomNodes(childNodes, scope)
+        }
+        // / endregion
+        // / region create evaluable render function
+        return (runtimeScope:Mapping<unknown>):ReactElement => {
+            // region prepare scope
+            runtimeScope = {...scope, ...runtimeScope}
+            runtimeScope.scope = runtimeScope
+            // endregion
+            const properties:Mapping<unknown> = {...staticProperties}
+            // region evaluate dynamic properties
+            for (const [
+                name, {originalScopeNames, templateFunction}
+            ] of Object.entries(compiledProperties))
+                properties[name] = templateFunction(
+                    ...originalScopeNames.map((name:string):unknown =>
+                        runtimeScope[name]
+                    )
+                )
+            // endregion
+            // region prepare react specific element property handling
+            if (
+                Object.prototype.hasOwnProperty.call(properties, 'innerHTML')
+            ) {
+                properties.dangerouslySetInnerHTML = {
+                    __html: properties.innerHTML as string
+                }
+
+                delete properties.children
+                delete properties.innerHTML
+            }
+            if (
+                Object.prototype.hasOwnProperty.call(properties, 'textContent')
+            ) {
+                properties.children = properties.textContent
+
+                delete properties.textContent
+            } else if (isComponent) {
+                // region evaluate nested render contexts
+                ;(domNode as ReactWeb).evaluateSlots({
+                    ...properties, ...runtimeScope, parent: domNode
+                })
+                ;(domNode as ReactWeb).prepareProperties(properties)
+                // NOTE: Components introduces a new inherited scope.
+                runtimeScope = {
+                    ...properties, ...runtimeScope, parent: domNode
+                }
+                // endregion
+            } else if (properties.children)
+                properties.children = this.evaluatePreCompiledDomNodes(
+                    properties.children as ReactRenderItemsFactory,
+                    runtimeScope
+                )
+            // endregion
+            return createElement(target, properties)
+        }
+        // / endregion
+        // endregion
     }
     /**
-     * Converts yet determined slots into react components and caches the
-     * result.
+     * Evaluates given pre-compiled nodes into a single react element or a
+     * react element list.
+     *
+     * @param nodes - Pre-compiled nodes.
+     * @param scope - Additional scope to render sub components against.
+     *
+     * @returns Transformed react elements.
+     */
+    evaluatePreCompiledDomNodes(
+        nodes:ReactRenderItemsFactory, scope:Mapping<unknown> = {}
+    ):ReactRenderItems {
+        if (!Array.isArray(nodes))
+            return nodes(scope)
+
+        if (nodes.length === 1)
+            return nodes[0](scope)
+
+        const result:Array<ReactRenderItem> = []
+        for (const node of nodes) {
+            const element:ReactRenderItem = node(scope)
+
+            if (element)
+                result.push(element)
+        }
+
+        return result
+    }
+    /**
+     * Pre compiles and caches determined slots.
      * @returns Nothing.
      */
-    prepareSlots():void {
+    preCompileSlots():void {
+        for (const name in this.slots)
+            if (
+                Object.prototype.hasOwnProperty.call(this.slots, name) &&
+                name !== 'default'
+            )
+                this.compiledSlots[name] = this.preCompileDomNode(
+                    this.slots[name],
+                    {...this.scope, parent: this},
+                    (
+                        [func, 'function'] as
+                            Array<ValueOf<typeof PropertyTypes>|string>
+                    ).includes(
+                        this.self.propertyTypes &&
+                        this.self.propertyTypes[name]
+                    )
+                )
+
+        if (this.slots.default && this.slots.default.length > 0)
+            this.compiledSlots.children = this.preCompileDomNodes(
+                this.slots.default,
+                {...this.scope, parent: this},
+                (
+                    [func, 'function'] as
+                        Array<ValueOf<typeof PropertyTypes>|string>
+                ).includes(this.self.propertyTypes?.children)
+            )
+    }
+    /**
+     * Evaluates pre compiled slots.
+     * @param scope - To render again.
+     * @returns Nothing.
+     */
+    evaluateSlots(scope:Mapping<unknown>):void {
         this.preparedSlots = {}
 
-        for (const name in this.slots)
-            if (Object.prototype.hasOwnProperty.call(this.slots, name))
-                if (name === 'default') {
-                    if (this.slots.default && this.slots.default.length > 0)
-                        this.preparedSlots.children =
-                            this.convertDomNodesIntoReactElements(
-                                this.slots.default,
-                                ([func, 'function'] as
-                                    Array<ValueOf<typeof PropertyTypes>|string>
-                                ).includes(this.self.propertyTypes?.children)
-                            )
-                } else
-                    this.preparedSlots[name] =
-                        this.convertDomNodeIntoReactElement(
-                            this.slots[name],
-                            ([func, 'function'] as
-                                Array<ValueOf<typeof PropertyTypes>|string>
-                            ).includes(
-                                this.self.propertyTypes &&
-                                this.self.propertyTypes[name]
-                            )
+        for (const name in this.compiledSlots)
+            if (Object.prototype.hasOwnProperty.call(this.compiledSlots, name))
+                if (name === 'children') {
+                    this.preparedSlots.children =
+                        this.evaluatePreCompiledDomNodes(
+                            this.compiledSlots[name] as
+                                Array<ReactRenderItemFactory>,
+                            scope
                         )
+                } else
+                    this.preparedSlots[name] = (
+                        this.compiledSlots[name] as ReactRenderItemFactory
+                    )(scope)
     }
     // endregion
     // region helper
@@ -459,34 +665,19 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         }
     }
     /**
-     * Prepares the properties object to render against current component.
+     * Prepares given properties object to render against current component.
      * Creates a reference for being recognized of reacts internal state
      * updates.
+     * @param properties - Properties to prepare.
      * @returns Nothing.
      */
-    prepareInternalProperties():void {
-        this.applySlotsToInternalProperties()
-        this.self.removeKnownUnwantedPropertyKeys(
-            this.self, this.internalProperties
-        )
+    prepareProperties(properties:Mapping<unknown>):void {
+        Tools.extend(properties, this.preparedSlots)
+
+        this.self.removeKnownUnwantedPropertyKeys(this.self, properties)
+
         this.instance = createRef() as {current?:WebComponentAdapter}
-        this.internalProperties.ref = this.instance
-    }
-    /**
-     * Determines whether their exist a parent which should trigger this
-     * component to render.
-     * @returns A boolean indicating whether their is such parent.
-     */
-    hasParentWithPreparedSlots():boolean {
-        let parent:Element|null = this.parentElement
-        while (parent) {
-            if ((parent as ReactWeb).preparedSlots)
-                return true
-
-            parent = parent.parentElement
-        }
-
-        return false
+        properties.ref = this.instance
     }
     /**
      * Updates current component instance and reflects newly determined
