@@ -116,6 +116,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     disconnectedCallback():void {
         unmountComponentAtNode(this.root)
+
         super.disconnectedCallback()
     }
     /**
@@ -192,12 +193,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * 1. Property overwrites state.
      * 2. State changes but is shadowed by recent changes in property.
      *
-     * Ensure:
+     * So the following will be ensured:
      *
      * 1. Property overwrites state.
      * 2. Property is overwritten to "undefined" to lose control over state.
-     * 3. State can change post property adaption didn't take effect anymore:
-     *    Communicate change back by triggering output events.
+     * 3. Now a state change can be represented back after property adaptions.
+     *    (Converts reacts declarative nature into an imperative web-component
+     *    style).
+     * 4. Further state changes should be communicated back via output events.
      *
      * @param name - Property name to write.
      * @param value - New value to write.
@@ -225,13 +228,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     // endregion
     // region handle slots
     /**
-     * Converts given html dom nodes into a single react element or a react
-     * element list.
+     * Converts given html dom nodes into a compiled function to generate a
+     * react element or a react element list.
      *
      * @param domNodes - Nodes to convert.
      * @param scope - Additional scope to render sub components against.
-     * @param isFunction - Indicates whether given nodes should be provided as
-     * function (render property).
+     * Necessary to bound needed environment variables into compiled context.
+     * @param isFunction - Indicates whether given render result should be
+     * provided as function (render property) with bound parameters environment
+     * variable name.
      *
      * @returns Transformed react elements.
      */
@@ -317,11 +322,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     'react'
             )
         if (isComponent) {
+            // region pre-compile nested render context
             domNode.determineRenderScope()
 
             if (Object.keys(this.compiledSlots).length === 0)
                 domNode.preCompileSlots()
-
+            // endregion
             /*
                 NOTE: Nested components are already instantiated and connected
                 so use their initialized properties.
@@ -460,7 +466,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 staticProperties[name] = value
         }
         // / endregion
-        // / region pre-compiled nested nodes
+        // / region pre-compiled nested nodes of native elements
         if (!isComponent) {
             const childNodes:Array<Node> = Array.from(domNode.childNodes)
             if (childNodes.length)
@@ -470,11 +476,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         // / endregion
         // / region create evaluable render function
         return (runtimeScope:Mapping<unknown>):ReactElement => {
+            // region prepare scope
             runtimeScope = {...scope, ...runtimeScope}
             runtimeScope.scope = runtimeScope
-
+            // endregion
             const properties:Mapping<unknown> = {...staticProperties}
-
+            // region evaluate dynamic properties
             for (const [
                 name, {originalScopeNames, templateFunction}
             ] of Object.entries(compiledProperties))
@@ -483,7 +490,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                         runtimeScope[name]
                     )
                 )
-
+            // endregion
+            // region prepare react specific element property handling
             if (
                 Object.prototype.hasOwnProperty.call(properties, 'innerHTML')
             ) {
@@ -501,6 +509,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
                 delete properties.textContent
             } else if (isComponent) {
+                // region evaluate nested render contexts
                 domNode.evaluateSlots({
                     ...properties, ...runtimeScope, parent: domNode
                 })
@@ -509,11 +518,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 runtimeScope = {
                     ...properties, ...runtimeScope, parent: domNode
                 }
+                // endregion
             } else if (properties.children)
                 properties.children = this.evaluatePreCompiledDomNodes(
                     properties.children as PreCompiledItems, runtimeScope
                 )
-
+            // endregion
             return createElement(target, properties)
         }
         // / endregion
@@ -553,27 +563,31 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     preCompileSlots():void {
         for (const name in this.slots)
-            if (Object.prototype.hasOwnProperty.call(this.slots, name))
-                if (name === 'default') {
-                    if (this.slots.default && this.slots.default.length > 0)
-                        this.compiledSlots.children = this.preCompileDomNodes(
-                            this.slots.default,
-                            {...this.scope, parent: this},
-                            ([func, 'function'] as
-                                Array<ValueOf<typeof PropertyTypes>|string>
-                            ).includes(this.self.propertyTypes?.children)
-                        )
-                } else
-                    this.compiledSlots[name] = this.preCompileDomNode(
-                        this.slots[name],
-                        {...this.scope, parent: this},
-                        ([func, 'function'] as
+            if (
+                Object.prototype.hasOwnProperty.call(this.slots, name) &&
+                name !== 'default'
+            )
+                this.compiledSlots[name] = this.preCompileDomNode(
+                    this.slots[name],
+                    {...this.scope, parent: this},
+                    (
+                        [func, 'function'] as
                             Array<ValueOf<typeof PropertyTypes>|string>
-                        ).includes(
-                            this.self.propertyTypes &&
-                            this.self.propertyTypes[name]
-                        )
+                    ).includes(
+                        this.self.propertyTypes &&
+                        this.self.propertyTypes[name]
                     )
+                )
+
+        if (this.slots.default && this.slots.default.length > 0)
+            this.compiledSlots.children = this.preCompileDomNodes(
+                this.slots.default,
+                {...this.scope, parent: this},
+                (
+                    [func, 'function'] as
+                        Array<ValueOf<typeof PropertyTypes>|string>
+                ).includes(this.self.propertyTypes?.children)
+            )
     }
     /**
      * Evaluates pre compiled slots.
