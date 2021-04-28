@@ -112,11 +112,17 @@
                                     return createElement(
                                         'li',
                                         {key: index},
-                                        (
-                                            name +
-                                            ': ' +
-                                            Tools.represent(props[name])
-                                        )
+                                        [
+                                            createElement(
+                                                'span', {key: 0}, name + ': '
+                                            ),
+                                            props.exampleRenderPropFunction ?
+                                                props.exampleRenderPropFunction(
+                                                    Tools.represent(props[name]),
+                                                    1
+                                                ) :
+                                                Tools.represent(props[name])
+                                        ]
                                     )
                                 })
                         ),
@@ -215,9 +221,13 @@
             <my-react-web
                 bind-property-example-number="12" id="web-react-2-sub"
             >
-                <div slot="exampleRenderPropFunction">
-                    Render property output
-                </div>
+                <span
+                    bind-property-text-content="parameters[0]"
+                    data-bind-property-key="parameters[1]"
+                    slot="exampleRenderPropFunction"
+                    bind-property-style="{border: '1px solid red'}"
+                    title="wrapped"
+                ></span>
 
                 <div slot="default">
                     <h2
@@ -232,9 +242,6 @@
 
                     <div>
                         Input: "<span bind-property-text-content="parent.scope.value || 'placeholder'"></span>"
-                    </div>
-
-                    <div bind-property-inner-html="console.log('TODO', parent.exampleRenderPropFunction) || 'TODO'">
                     </div>
                 </div>
             </my-react-web>
