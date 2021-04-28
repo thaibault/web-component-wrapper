@@ -309,7 +309,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             return ():ReactRenderItem => result
         }
         // endregion
-        if (!(domNode as HTMLElement).attributes)
+        if (!(domNode as HTMLElement).getAttributeNames)
             return ():null => null
         // region native elements and wrapped react components
         // / region prepare type and static properties
@@ -353,8 +353,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         // / region pre-compile dynamic properties
         let knownScopeNames:Array<string> = Object.keys(scope)
         const compiledProperties:Mapping<PreCompiledItem> = {}
-        for (const attributeName of this.self.getAttributeNames(
-            domNode as HTMLElement
+        for (const attributeName of (domNode as HTMLElement).getAttributeNames(
         )) {
             let value:unknown =
                 (domNode as HTMLElement).getAttribute(attributeName)
