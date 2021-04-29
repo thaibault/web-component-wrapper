@@ -83,6 +83,7 @@ import {
  * attributes into properties and reflect property changes back to attributes.
  * @property static:propertiesToReflectAsAttributes - An item, list or mapping
  * of properties to reflect as attributes.
+ * @property static:renderProperties - List of known render properties.
  *
  * @property static:cloneSlots - Indicates whether to clone slot nots before
  * transcluding them. If a slot should be used multiple times (e.g. when it
@@ -172,6 +173,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
         []
+    static renderProperties:Array<string> = ['children']
 
     static cloneSlots:boolean = false
     static evaluateSlots:boolean = false
@@ -1037,7 +1039,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 ) &&
                 [func, 'function'].includes(
                     this.self.propertyTypes![name] as string
-                )
+                ) &&
+                !this.self.renderProperties.includes(name)
             ) {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(

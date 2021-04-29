@@ -65,6 +65,7 @@ export interface WebComponentConfiguration {
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
+    renderProperties?:Array<string>
 }
 export interface StaticWebComponent extends WebComponentConfiguration {
     webComponentAdapterWrapped?:string
