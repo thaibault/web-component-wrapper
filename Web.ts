@@ -83,6 +83,7 @@ import {
  * attributes into properties and reflect property changes back to attributes.
  * @property static:propertiesToReflectAsAttributes - An item, list or mapping
  * of properties to reflect as attributes.
+ * @property static:renderProperties - List of known render properties.
  *
  * @property static:cloneSlots - Indicates whether to clone slot nots before
  * transcluding them. If a slot should be used multiple times (e.g. when it
@@ -172,6 +173,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
         []
+    static renderProperties:Array<string> = ['children']
 
     static cloneSlots:boolean = false
     static evaluateSlots:boolean = false
@@ -524,30 +526,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / region utility
     // // region dom nodes
     /**
-     * Determines a list of attribute names of given dom node.
-     * @param domNode - To determine attribute names from.
-     * @returns List of names.
-     */
-    static getAttributeNames(domNode:HTMLElement):Array<string> {
-        const result:Array<string> = new Array(domNode.attributes.length)
-
-        for (let index = 0; index < domNode.attributes.length; index += 1)
-            result[index] = domNode.attributes[index].name
-
-        return result
-    }
-    /**
      * Binds properties and event handler to given dom node.
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
      * @returns Nothing.
      */
     applyBinding(domNode:Node, scope:Mapping<any>):void {
-        if (!(domNode as HTMLElement).attributes)
+        if (!(domNode as HTMLElement).getAttributeNames)
             return
 
-        for (const attributeName of this.self.getAttributeNames(
-            domNode as HTMLElement
+        for (const attributeName of (domNode as HTMLElement).getAttributeNames(
         )) {
             let name:string = ''
             if (attributeName.startsWith('data-bind-'))
@@ -1051,7 +1039,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 ) &&
                 [func, 'function'].includes(
                     this.self.propertyTypes![name] as string
-                )
+                ) &&
+                !this.self.renderProperties.includes(name)
             ) {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(

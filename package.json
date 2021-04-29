@@ -119,7 +119,7 @@
       "optimizer": {
         "babelMinify": {
           "#": "To provide a logging output we need to exclude this feature.",
-          "__evaluate__": "self.debug ? {bundle: null, module: null} : {bundle: {transform: {removeConsole: false}}, module: {removeConsole: false}}"
+          "__evaluate__": "self.debug ? {bundle: null, module: null} : {bundle: {transform: {removeConsole: false}}, module: /*NOTE: Wrongly produces a void function around 'getAttributeNames': {removeConsole: false}*/null}"
         }
       }
     },

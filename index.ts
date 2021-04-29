@@ -113,6 +113,13 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
 
         static content:ComponentType = component
 
+        static readonly observedAttributes:Array<string> =
+            ReactWeb.observedAttributes.concat(
+                allPropertyNames.map((name:string):string =>
+                    Tools.stringCamelCaseToDelimited(name)
+                )
+            )
+
         static controllableProperties:Array<string> =
             component.controllableProperties ||
             configuration.controllableProperties ||
@@ -136,12 +143,10 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
             ...ReactWeb.propertyTypes,
             ...propertyTypes
         }
-        static readonly observedAttributes:Array<string> =
-            ReactWeb.observedAttributes.concat(
-                allPropertyNames.map((name:string):string =>
-                    Tools.stringCamelCaseToDelimited(name)
-                )
-            )
+        static renderProperties:Array<string> =
+            configuration.renderProperties ??
+            component.renderProperties ??
+            ReactWeb.renderProperties
 
         static _name:string = name
 
