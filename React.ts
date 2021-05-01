@@ -370,6 +370,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             if (value === null)
                 continue
 
+            let extend:boolean = false
             let name:string = ''
             if (attributeName.startsWith('data-bind-'))
                 name = attributeName.substring('data-bind-'.length)
@@ -396,7 +397,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 }
 
                 if (name === 'attributes' || name === 'properties')
-                    name = null
+                    extend = true
                 else
                     name = name.startsWith('attribute-') ?
                         name.substring('attribute-'.length) :
@@ -475,7 +476,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             if ((value as PreCompiledItem)?.originalScopeNames)
                 // NOTE: "''" marks a property set like in JSX "{...props}".
-                compiledProperties[name || ''] = value as PreCompiledItem
+                compiledProperties[extend ? '' : name] =
+                    value as PreCompiledItem
             else
                 staticProperties[name] = value
         }
