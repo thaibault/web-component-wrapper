@@ -287,12 +287,21 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         // region render property
         if (isFunction) {
             const node:ReactRenderBaseItemFactory = this.preCompileDomNode(
-                domNode, {...scope, parameters: undefined}, false, key
+                domNode,
+                {...scope, options: undefined, parameters: undefined},
+                false,
+                key
             ) as ReactRenderBaseItemFactory
 
             return (scope:Mapping<unknown>):ReactRenderItem =>
                 (...parameters:Array<unknown>):ReactRenderBaseItem =>
-                    node({...scope, parameters}) as ReactRenderBaseItem
+                    node({
+                        ...scope,
+                        options: parameters.length > 0 ?
+                            parameters[0] :
+                            null,
+                        parameters
+                    }) as ReactRenderBaseItem
         }
         // endregion
         // region text node
