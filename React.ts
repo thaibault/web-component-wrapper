@@ -396,7 +396,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 }
 
                 if (name === 'attributes' || name === 'properties')
-                    name === null
+                    name = null
                 else
                     name = name.startsWith('attribute-') ?
                         name.substring('attribute-'.length) :
@@ -504,7 +504,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                         runtimeScope[name]
                     )
                 )
-
                 if (name === '')
                     properties = {...properties, ...value as Mapping<unknown>}
                 else
