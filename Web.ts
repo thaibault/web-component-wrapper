@@ -1544,8 +1544,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     let error:null|string = null
                     let templateFunction:TemplateFunction
                     if (value) {
-                        const result:CompilationResult =
-                            Tools.stringCompile(value, 'parameters')
+                        const result:CompilationResult = Tools.stringCompile(
+                            value, ['event', 'options', 'parameters', 'Tools']
+                        )
                         error = result.error
                         templateFunction = result.templateFunction
                         if (error)
@@ -1556,23 +1557,36 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     }
                     this.setInternalPropertyValue(
                         name,
-                        (...parameters:Array<any>):void => {
+                        (...parameters:Array<unknown>):unknown => {
                             if (this.outputEventNames.has(name))
                                 this.reflectEventToProperties(name, parameters)
+
+                            let result:unknown = undefined
                             if (!error)
                                 try {
-                                    templateFunction.call(this, parameters)
+                                    result = templateFunction.call(
+                                        this,
+                                        parameters[0],
+                                        parameters[0],
+                                        parameters,
+                                        Tools
+                                    )
                                 } catch (error) {
                                     console.warn(
-                                        'Failed to evaluate event handler "' +
+                                        'Failed to evaluate function "' +
                                         `${name}" with expression "${value}"` +
-                                        ' and scope variable "parameters" ' +
+                                        ' and scope variable "event", "' +
+                                        'options", "parameters" and "Tools" ' +
                                         'set to "' +
                                         `${Tools.represent(parameters)}": "` +
                                         `${error}".`
                                     )
                                 }
-                            this.forwardEvent(name, parameters)
+
+                            if (!this.self.renderProperties.includes(name))
+                                this.forwardEvent(name, parameters)
+
+                            return result
                         }
                     )
                     if (!error)
