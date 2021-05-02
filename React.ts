@@ -265,6 +265,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             }
         }
 
+        if (isFunction)
+            return (scope:Mapping<unknown>):ReactRenderItem => 
+                (...parameters:Array<unknown>):ReactRenderItem => {
+                    const renderResult:Array<ReactRenderItem> = []
+                    for (const factory of result)
+                        renderResult.push(factory(scope)(...parameters))
+                    return createElement(Fragment, {children: renderResult})
+                }
+
         return result
     }
     /**
