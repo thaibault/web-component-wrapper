@@ -77,6 +77,7 @@ import {
  *
  * @property compiledSlots - Cache of yet pre-compiled slot elements.
  * @property preparedSlots - Cache of yet evaluated slot react elements.
+ * @property rootReactInstance - Saves determined root react instance.
  *
  * @property self - Back-reference to this class.
  * @property wrapMemorizingWrapper - Determines whether to wrap component with
@@ -93,6 +94,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         children?:ReactRenderItemsFactory
     } = {}
     preparedSlots:Mapping<ReactRenderItems> & {children?:ReactRenderItems} = {}
+    rootReactInstance:null|ReactWeb = null
 
     readonly self:typeof ReactWeb = ReactWeb
 
@@ -107,6 +109,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     connectedCallback():void {
         this.applyComponentWrapper()
+
+        // NOTE: Can be overwritten during option root determining.
+        this.rootReactInstance = this
+
         /*
             Attaches event handler, grabs given slots, reflects external
             properties and enqueues first rendering.
@@ -133,11 +139,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      */
     render(reason:string = 'unknown'):void {
         /*
-            NOTE: We prevent a nested component from further rendering since
-            they will be rendered by their parent.
+            NOTE: We prevent a nested react component from self rendering since
+            they will be rendered by highest react parent.
         */
         if (
-            this.rootInstance !== this ||
+            this.rootReactInstance !== this ||
             !this.dispatchEvent(new CustomEvent(
                 'render', {detail: {reason, scope: this.scope}}
             ))
@@ -337,15 +343,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         let staticProperties:Mapping<unknown>
         let target:ComponentType|string
 
-        const type:typeof ReactWeb =
-            (domNode as ReactWeb).constructor as typeof ReactWeb
-        const isComponent:boolean =
-            typeof type.content === 'object' &&
-            (
-                type.attachWebComponentAdapterIfNotExists === false ||
-                (type.content as ComponentType).webComponentAdapterWrapped ===
-                    'react'
-            )
+        const isComponent:boolean = this.self.isReactComponent(domNode)
         if (isComponent) {
             // region pre-compile nested render context
             ;(domNode as ReactWeb).determineRenderScope()
@@ -365,7 +363,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             )
                 staticProperties.key = key
 
-            target = type.content
+            target = (domNode.constructor as typeof ReactWeb).content
         } else {
             staticProperties = {key}
             target = (domNode as HTMLElement).tagName.toLowerCase()
@@ -647,6 +645,41 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     }
     // endregion
     // region helper
+    /**
+     * Determines if given element type is a react wrapped component.
+     * @param domNode - Node to determine from.
+     * @returns Boolean indicator.
+     */
+    static isReactComponent(domNode:Node):boolean {
+        const type:typeof ReactWeb = domNode.constructor as typeof ReactWeb
+
+        return (
+            typeof type.content === 'object' &&
+            (
+                type.attachWebComponentAdapterIfNotExists === false ||
+                (type.content as ComponentType).webComponentAdapterWrapped ===
+                    'react'
+            )
+        )
+    }
+    /**
+     * Determines initial root and react root who initializes their rendering
+     * digests.
+     * @returns Nothing.
+     */
+    determineRootBinding():void {
+        super.determineRootBinding()
+
+        let currentElement:Node|null = this.parentNode
+        while (currentElement) {
+            if (this.self.isReactComponent(currentElement)) {
+                this.rootReactInstance = currentElement as ReactWeb
+                break
+            }
+
+            currentElement = currentElement.parentNode
+        }
+    }
     /**
      * Applies missing forward ref and or memorizing wrapper to current react
      * component.

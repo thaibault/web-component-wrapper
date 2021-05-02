@@ -310,6 +310,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             ;(this as {isConnected:boolean}).isConnected = true
         } catch (error) {}
 
+        // NOTE: Can be overwritten during option root determining.
         this.parent = this
         this.rootInstance = this
 
@@ -908,6 +909,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         return result
     }
     // // endregion
+    /**
+     * Determines initial root wich initializes rendering digest.
+     * @returns Nothing.
+     */
     determineRootBinding():void {
         /*
             If this component is the root component trigger event handler by
