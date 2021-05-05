@@ -255,6 +255,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         scope:Mapping<unknown> = {},
         isFunction:boolean = false
     ):ReactRenderItemsFactory {
+        // NOTE: We ignore empty text nodes (like reacts jsx does).
+        domNodes = domNodes.filter((domNode:Node):boolean => (
+            domNode.nodeType !== Node.TEXT_NODE ||
+            typeof (domNode as Node).nodeValue === 'string' &&
+            ((domNode as Node).nodeValue as string).trim() !== ''
+        ))
+
         if (domNodes.length === 1)
             return this.preCompileDomNode(domNodes[0], scope, isFunction)
 
