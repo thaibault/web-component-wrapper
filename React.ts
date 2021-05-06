@@ -748,8 +748,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
         this.self.removeKnownUnwantedPropertyKeys(this.self, properties)
 
-        this.instance = createRef() as {current?:WebComponentAdapter}
-        properties.ref = this.instance
+        /*
+            NOTE: Provide instance if and only if not explicitly requested from
+            parent via properties.
+        */
+        if (!properties.ref) {
+            this.instance = createRef() as {current?:WebComponentAdapter}
+            properties.ref = this.instance
+        }
     }
     /**
      * Updates current component instance and reflects newly determined
