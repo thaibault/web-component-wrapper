@@ -41,6 +41,7 @@ import {render, unmountComponentAtNode} from 'react-dom'
 
 import Web from './Web'
 import {
+    ComponentAdapter,
     ComponentType,
 
     PreCompiledItem,
@@ -53,7 +54,6 @@ import {
     ReactRenderItem,
     ReactRenderItems,
 
-    WebComponentAdapter,
     WebComponentAPI
 } from './type'
 // endregion
@@ -714,10 +714,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                     this.self._name
 
             this.self.content = forwardRef((
-                properties:Attributes, reference:Ref<WebComponentAdapter>
+                properties:Attributes, reference:Ref<ComponentAdapter>
             ):ReactElement => {
                 useImperativeHandle(
-                    reference, ():WebComponentAdapter => ({properties})
+                    reference, ():ComponentAdapter => ({properties})
                 )
                 return createElement(wrapped, properties)
             }) as ComponentType
@@ -753,7 +753,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             parent via properties.
         */
         if (!properties.ref) {
-            this.instance = createRef() as {current?:WebComponentAdapter}
+            this.instance = createRef() as {current?:ComponentAdapter}
             properties.ref = this.instance
         }
     }
@@ -765,11 +765,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     reflectInstanceProperties = ():void => {
         if (this.instance?.current) {
             if (
-                (this.instance as {current:WebComponentAdapter}).current
+                (this.instance as {current:ComponentAdapter}).current
                     .properties
             )
                 this.reflectProperties(
-                    (this.instance as {current:WebComponentAdapter}).current
+                    (this.instance as {current:ComponentAdapter}).current
                         .properties as Mapping<any>
                 )
         }
