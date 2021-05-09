@@ -52,9 +52,9 @@ import {
     AttributesReflectionConfiguration,
     CompiledDomNodeTemplate,
     CompiledDomNodeTemplateItem,
+    ComponentAdapter,
     EventMapping,
     EventToPropertyMapping,
-    WebComponentAdapter,
     WebComponentAPI
 } from './type'
 // endregion
@@ -207,7 +207,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
     outputEventNames:Set<string> = new Set<string>()
 
-    instance:null|{current?:WebComponentAdapter} = null
+    instance:null|{current?:ComponentAdapter} = null
     @property({type: boolean, writeAttribute: true})
     isRoot:boolean = true
 
