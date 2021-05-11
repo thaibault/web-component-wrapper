@@ -363,6 +363,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             Object.keys(this.self.propertyTypes)
                 .concat(Object.keys(this.self._propertyAliasIndex!))
         )
+
         for (const propertyName of allPropertyNames) {
             // If there already exists a local value use them.
             if (Object.prototype.hasOwnProperty.call(this, propertyName))
@@ -375,10 +376,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 propertyName,
                 {
                     configurable: true,
-                    get: function():any {
+                    get: function():unknown {
                         return this.getPropertyValue(propertyName)
                     },
-                    set: function(value:any):void {
+                    set: function(value:unknown):void {
                         this.setPropertyValue(propertyName, value)
                         this.triggerPropertySpecificRendering(
                             propertyName, value
@@ -407,8 +408,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param name - Property name to retrieve.
      * @returns Retrieved property value.
      */
-    getPropertyValue(name:string):any {
-        const result:any = (
+    getPropertyValue(name:string):unknown {
+        const result:unknown = (
             this.instance?.current?.properties &&
             (
                 // NOTE: Base properties should not be shadowed.
@@ -433,7 +434,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param value - New value to write.
      * @returns Nothing.
      */
-    setExternalPropertyValue(name:string, value:any):void {
+    setExternalPropertyValue(name:string, value:unknown):void {
         this.externalProperties[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
@@ -446,7 +447,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param value - New value to write.
      * @returns Nothing.
      */
-    setInternalPropertyValue(name:string, value:any):void {
+    setInternalPropertyValue(name:string, value:unknown):void {
         this.internalProperties[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
@@ -462,7 +463,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      *
      * @returns Nothing.
      */
-    setPropertyValue(name:string, value:any):void {
+    setPropertyValue(name:string, value:unknown):void {
         this.reflectProperties({[name]: value})
         this.setInternalPropertyValue(name, value)
     }
@@ -474,7 +475,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param render - Indicates to trigger a new render cycle.
      * @returns Nothing.
      */
-    triggerPropertySpecificRendering(name:string, value:any):void {
+    triggerPropertySpecificRendering(name:string, value:unknown):void {
         if (this.batchPropertyUpdates) {
             if (!(
                 this.batchedPropertyUpdateRunning || this.batchedUpdateRunning
@@ -532,7 +533,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param scope - Scope to render property value again.
      * @returns Nothing.
      */
-    applyBinding(domNode:Node, scope:Mapping<any>):void {
+    applyBinding(domNode:Node, scope:Mapping<unknown>):void {
         if (!(domNode as HTMLElement).getAttributeNames)
             return
 
@@ -673,7 +674,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applyBindings(
-        domNode:Node|null, scope:Mapping<any>, renderSlots:boolean = true
+        domNode:Node|null, scope:Mapping<unknown>, renderSlots:boolean = true
     ):void {
         while (domNode) {
             if (
@@ -825,7 +826,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 let output:null|string = null
                 try {
                     output = templateFunction(
-                        ...scopeNames.map((name:string):any => scope[name])
+                        ...scopeNames.map((name:string):unknown => scope[name])
                     )
                 } catch (error) {
                     console.warn(
@@ -1014,8 +1015,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
                     name,
-                    (...parameters:Array<any>):void => {
-                        const result:Mapping<any>|null =
+                    (...parameters:Array<unknown>):void => {
+                        const result:Mapping<unknown>|null =
                             this.reflectEventToProperties(name, parameters)
 
                         if (result)
@@ -1050,7 +1051,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.outputEventNames.add(name)
                 this.setInternalPropertyValue(
                     name,
-                    (...parameters:Array<any>):void => {
+                    (...parameters:Array<unknown>):void => {
                         if (reflectProperties)
                             this.reflectEventToProperties(name, parameters)
 
@@ -1074,7 +1075,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param parameters - Event parameters.
      * @returns Nothing.
      */
-    forwardEvent(name:string, parameters:Array<any>):boolean {
+    forwardEvent(name:string, parameters:Array<unknown>):boolean {
         if (name.length > 'onX'.length && name.startsWith('on'))
             name = Tools.stringLowerCase(name.substring(2))
 
@@ -1092,7 +1093,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param scope - Environment to render slots again if specified.
      * @returns Nothing.
      */
-    applySlots(targetDomNode:HTMLElement, scope:Mapping<any>):void {
+    applySlots(targetDomNode:HTMLElement, scope:Mapping<unknown>):void {
         for (const domNode of Array.from(
             targetDomNode.querySelectorAll<HTMLElement>('slot')
         )) {
@@ -1254,7 +1255,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param properties - Properties to update in reflected attribute state.
      * @returns Nothing.
      */
-    reflectExternalProperties(properties:Mapping<any>):void {
+    reflectExternalProperties(properties:Mapping<unknown>):void {
         /*
             NOTE: We can avoid an additional attribute parsing for this
             reflections.
@@ -1315,7 +1316,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     case 'string':
                         if (value) {
                             if (this.getAttribute(attributeName) !== value)
-                                this.setAttribute(attributeName, value)
+                                this.setAttribute(
+                                    attributeName, value as string
+                                )
                         } else if (this.hasAttribute(attributeName))
                             this.removeAttribute(attributeName)
                         break
@@ -1360,7 +1363,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param properties - Properties to update in reflected property state.
      * @returns Nothing.
      */
-    reflectProperties(properties:Mapping<any>):void {
+    reflectProperties(properties:Mapping<unknown>):void {
         this.reflectExternalProperties(properties)
 
         /*
@@ -1425,8 +1428,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Mapped properties or null if nothing could be mapped.
      */
     reflectEventToProperties(
-        name:string, parameters:Array<any>
-    ):Mapping<any>|null {
+        name:string, parameters:Array<unknown>
+    ):Mapping<unknown>|null {
         /*
             NOTE: We enforce to update components state immediately after an
             event occurs since batching usually does not make sense here. An
@@ -1438,7 +1441,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const oldBatchUpdatesConfiguration:boolean = this.batchUpdates
         this.batchUpdates = false
 
-        let result:Mapping<any>|null = null
+        let result:Mapping<unknown>|null = null
 
         if (
             this.self.eventToPropertyMapping &&
@@ -1468,28 +1471,34 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 event; derived from a user triggered one) when following
                 condition does not hold.
             */
-            let newProperties:Mapping<any> = parameters[0]
+            let newProperties:Mapping<unknown> =
+                parameters[0] as Mapping<unknown>
             if (
-                'persist' in parameters[0] &&
-                Tools.isFunction(parameters[0].persist)
+                'persist' in parameters[0]! &&
+                Tools.isFunction((parameters[0] as {persist:Function}).persist)
             ) {
                 newProperties = {}
                 for (const propertyName of Object.keys(this.self.propertyTypes))
                     for (const name of [propertyName].concat(
                         this.getPropertyAlias(propertyName) ?? []
                     )) {
-                        const currentValue:any =
+                        const currentValue:unknown =
                             (
                                 parameters[0].currentTarget &&
                                 Object.prototype.hasOwnProperty.call(
-                                    parameters[0].currentTarget, name
+                                    (parameters[0] as
+                                        {currentTarget:Mapping<unknown>}
+                                    ).currentTarget,
+                                    name
                                 )
                             ) ?
                                 /*
                                     Update all known properties from event
                                     target instance.
                                 */
-                                parameters[0].currentTarget[name] :
+                                (parameters[0] as
+                                    {currentTarget:Mapping<unknown>}
+                                ).currentTarget[name] :
                                 /*
                                     Update all known properties from adapter
                                     instance.
@@ -1498,10 +1507,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         if (currentValue !== this.externalProperties[name])
                             newProperties[name] = currentValue
                     }
-            } else if (
-                ![null, undefined].includes(newProperties.detail?.value)
-            )
-                newProperties = {...newProperties.detail}
+            } else if (![null, undefined].includes(
+                (newProperties.detail as {value:null})?.value
+            ))
+                newProperties = {...newProperties.detail as Mapping<unknown>}
 
             result = newProperties
             this.reflectProperties(newProperties)
