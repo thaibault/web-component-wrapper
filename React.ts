@@ -130,6 +130,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         super.disconnectedCallback()
     }
     /**
+     * Reflects wrapped component state back to web-component's attributes.
+     * @param properties - Properties to update in reflected attribute state.
+     * @returns Nothing.
+     */
+    reflectExternalProperties(properties:Mapping<unknown>):void {
+        if (this.isRoot)
+            super.reflectExternalProperties(properties)
+    }
+    /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      *
