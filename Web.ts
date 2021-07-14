@@ -1557,6 +1557,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 case 'function':
                     let error:null|string = null
                     let templateFunction:TemplateFunction
+
                     if (value) {
                         const result:CompilationResult = Tools.stringCompile(
                             value, ['event', 'options', 'parameters', 'Tools']
@@ -1569,6 +1570,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                                 ` ${error}.`
                             )
                     }
+
                     this.setInternalPropertyValue(
                         name,
                         (...parameters:Array<unknown>):unknown => {
@@ -1603,8 +1605,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             return result
                         }
                     )
+
                     if (!error)
                         this.setExternalPropertyValue(name, templateFunction!)
+
                     break
                 case 'json':
                     if (value) {
