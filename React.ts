@@ -549,6 +549,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 delete properties.children
                 delete properties.innerHTML
             }
+
             if (
                 Object.prototype.hasOwnProperty.call(properties, 'textContent')
             ) {
