@@ -6,27 +6,52 @@
 -->
 <%_
     const features = [
-        // Is used by "Object.entries" polyfill.
-        'Array.prototype.flat',
-        // Usual array interaction.
-        'Array.prototype.@@iterator',
+        // Most polyfills are determined via "create-polyfill-service-url".
+        'Array.from',
+        'Array.isArray',
+        'Array.prototype.entries',
+        'Array.prototype.filter',
         // clientnode - Usage.
         'Array.prototype.includes',
+        'Array.prototype.keys',
+        'Array.prototype.map',
+        'Array.prototype.values',
+        // Usual array interaction.
+        'Array.prototype.@@iterator',
+        'ArrayBuffer',
+        'console',
+        'CustomEvent',
+        'DataView',
+        'document',
         // Usual dom interactions.
         'DOMTokenList.prototype.@@iterator',
+        'Function.prototype.bind',
+        'JSON',
+        'Map',
         // Usual dom interactions.
         'NodeList.prototype.@@iterator',
+        'Object.defineProperty',
         // Iterating over mapping objects everywhere.
         'Object.entries',
+        // Is used by "Object.entries" polyfill.
+        'Array.prototype.flat',
         // Applying a scope object during template function call.
+        'Object.keys',
         'Object.values',
+        'Promise',
+        'Set',
         // Many usages e.g. in clientnode.
         'String.prototype.endsWith',
         'String.prototype.includes',
         'String.prototype.startsWith',
+        'String.prototype.trim',
         // Used by react to identify its own entities.
         'Symbol',
-        'Symbol.for'
+        'Symbol.for',
+        'Symbol.iterator',
+        'Symbol.toStringTag',
+        'WeakMap',
+        'WeakSet'
     ].concat(
         typeof additionalFeatures === 'undefined' ? [] : additionalFeatures
     )
