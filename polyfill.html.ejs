@@ -5,7 +5,7 @@
     webcomponent polyfill.
 -->
 <%_
-    const features = [
+    const features = new Set([
         // Most polyfills are determined via "create-polyfill-service-url".
         'Array.from',
         'Array.isArray',
@@ -54,9 +54,9 @@
         'WeakSet'
     ].concat(
         typeof additionalFeatures === 'undefined' ? [] : additionalFeatures
-    )
+    ))
 _%>
-<script src="https://polyfill.io/v3/polyfill.js?features=<%- encodeURIComponent(features.join(',')) %>"></script>
+<script src="https://polyfill.io/v3/polyfill.js?features=<%- encodeURIComponent(Array.from(features).sort().join(',')) %>"></script>
 <script>
     /*
         Only provide the shadow dom polyfill and avoid to patch a lot
