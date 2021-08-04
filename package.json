@@ -60,6 +60,7 @@
     "watch": "weboptimizer build --watch"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "*",
     "@types/ejs": "*",
     "@types/html-minifier": "*",
     "@types/jest": "*",
@@ -72,7 +73,6 @@
     "@typescript-eslint/eslint-plugin": "*",
     "@typescript-eslint/parser": "*",
     "@webcomponents/webcomponentsjs": "*",
-    "babel-eslint": "*",
     "clientnode": "*",
     "documentation-website": "*",
     "eslint": "*",
