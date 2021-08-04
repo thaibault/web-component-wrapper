@@ -61,7 +61,6 @@
     "@types/jest": "*",
     "@types/jquery": "*",
     "@types/jsdom": "*",
-    "@types/loader-utils": "*",
     "@types/node": "*",
     "@types/react": "*",
     "@types/react-dom": "*",
