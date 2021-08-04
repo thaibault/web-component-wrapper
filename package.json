@@ -20,16 +20,17 @@
   ],
   "main": "index.js",
   "files": [
+    "decorator.d.ts",
     "decorator.js",
-    "decorator.ts",
-    "index.ts",
+    "index.d.ts",
     "polyfill.html.ejs",
+    "React.d.ts",
     "React.js",
-    "React.ts",
     "ReactNext.js",
+    "Web.d.ts",
     "Web.js",
-    "Web.ts",
     "WebNext.js",
+    "type.d.ts",
     "type.ts"
   ],
   "repository": {
@@ -37,9 +38,11 @@
     "url": "https://github.com/thaibault/web-component-wrapper"
   },
   "scripts": {
-    "build": "weboptimizer build && yarn build:next",
+    "build": "yarn build:types; yarn build:plain",
     "build:export": "weboptimizer build '{__reference__: \"target:export\"}'",
+    "build:plain": "weboptimizer build && yarn build:next",
     "build:next": "weboptimizer build '{__reference__: \"target:next\"}'",
+    "build:types": "weboptimizer build:types",
     "check": "yarn check:types; yarn lint",
     "check:types": "weboptimizer check:types",
     "clear": "weboptimizer clear",
@@ -51,6 +54,8 @@
     "start": "yarn serve",
     "test": "weboptimizer test",
     "test:browser": "weboptimizer test:browser",
+    "test:coverage": "weboptimizer test:coverage",
+    "test:coverage:report": "weboptimizer test:coverage:report",
     "update": "yarn version --patch && yarn publish",
     "update:documentation": "documentationWebsite --log-level info",
     "watch": "weboptimizer build --watch"
