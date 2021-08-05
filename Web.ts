@@ -1532,176 +1532,234 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     evaluateStringOrNullAndSetAsProperty(
         attributeName:string, value:null|string
     ):void {
-        let name:string = Tools.stringDelimitedToCamelCase(attributeName)
+        const preEvaluate:boolean = attributeName.startsWith('-')
+        const effectiveAttributeName:string = preEvaluate ?
+            attributeName.substring(1) :
+            attributeName
+
+        let name:string = Tools.stringDelimitedToCamelCase(
+            effectiveAttributeName)
         const alias:null|string = this.getPropertyAlias(name)
         if (
             alias &&
-            Object.prototype.hasOwnProperty.call(this.self.propertyTypes, alias)
+            Object.prototype.hasOwnProperty.call(
+                this.self.propertyTypes, alias
+            )
         )
             name = alias
+
         if (Object.prototype.hasOwnProperty.call(
             this.self.propertyTypes, name
         )) {
             const type:string|ValueOf<typeof PropertyTypes> =
                 this.self.propertyTypes[name]
 
-            switch (type) {
-                case boolean:
-                case 'boolean':
-                    const booleanValue:boolean =
-                        ![null, 'false'].includes(value)
-                    this.setInternalPropertyValue(name, booleanValue)
-                    this.setExternalPropertyValue(name, booleanValue)
-                    break
-                case func:
-                case 'function':
-                    let error:null|string = null
-                    let templateFunction:TemplateFunction
+            if (preEvaluate) {
+                if (value) {
+                    const result:EvaluationResult =
+                        Tools.stringEvaluate(value, {Tools}, false, this)
 
-                    if (value) {
-                        const result:CompilationResult = Tools.stringCompile(
-                            value, ['event', 'options', 'parameters', 'Tools']
+                    if (result.error) {
+                        console.warn(
+                            `Faild to process pre-evaluation attribute "` +
+                            `${attributeName}": ${result.error}. Will be set` +
+                            ' to "undefined".'
                         )
-                        error = result.error
-                        templateFunction = result.templateFunction
-                        if (error)
-                            console.warn(
-                                `Failed to process event handler "${name}":` +
-                                ` ${error}.`
-                            )
+
+                        this.setInternalPropertyValue(name, undefined)
+                    } else {
+                        this.setInternalPropertyValue(name, result.result)
+                        this.setExternalPropertyValue(name, result.result)
                     }
+                }
+            } else
+                switch (type) {
+                    case boolean:
+                    case 'boolean':
+                        const booleanValue:boolean =
+                            ![null, 'false'].includes(value)
+                        this.setInternalPropertyValue(name, booleanValue)
+                        this.setExternalPropertyValue(name, booleanValue)
 
-                    this.setInternalPropertyValue(
-                        name,
-                        (...parameters:Array<unknown>):unknown => {
-                            if (this.outputEventNames.has(name))
-                                this.reflectEventToProperties(name, parameters)
+                        break
+                    case func:
+                    case 'function':
+                        let error:null|string = null
+                        let templateFunction:TemplateFunction
 
-                            let result:unknown = undefined
-                            if (!error)
-                                try {
-                                    result = templateFunction.call(
-                                        this,
-                                        parameters[0],
-                                        parameters[0],
-                                        parameters,
-                                        Tools
-                                    )
-                                } catch (error) {
-                                    console.warn(
-                                        'Failed to evaluate function "' +
-                                        `${name}" with expression "${value}"` +
-                                        ' and scope variable "event", "' +
-                                        'options", "parameters" and "Tools" ' +
-                                        'set to "' +
-                                        `${Tools.represent(parameters)}": "` +
-                                        `${error}".`
-                                    )
-                                }
+                        const scopeNames:Array<string> = [
+                            'data',
+                            'event',
+                            'firstArgument',
+                            'firstParameter',
+                            'options',
+                            'scope',
+                            'parameters',
+                            'Tools'
+                        ]
 
-                            if (!this.self.renderProperties.includes(name))
-                                this.forwardEvent(name, parameters)
+                        if (value) {
+                            const result:CompilationResult =
+                                Tools.stringCompile(value, scopeNames)
+                            error = result.error
+                            templateFunction = result.templateFunction
 
-                            return result
+                            if (error)
+                                console.warn(
+                                    'Failed to compile given handler "' +
+                                    `${attributeName}": ${error}.`
+                                )
                         }
-                    )
 
-                    if (!error)
-                        this.setExternalPropertyValue(name, templateFunction!)
+                        this.setInternalPropertyValue(
+                            name,
+                            (...parameters:Array<unknown>):unknown => {
+                                if (this.outputEventNames.has(name))
+                                    this.reflectEventToProperties(
+                                        name, parameters
+                                    )
 
-                    break
-                case 'json':
-                    if (value) {
-                        let evaluated:PlainObject
-                        try {
-                            evaluated = JSON.parse(value)
-                        } catch (error) {
-                            console.warn(
-                                'Error occurred during parsing given json ' +
-                                `attribute "${name}": ` +
-                                Tools.represent(error)
+                                let result:unknown = undefined
+                                if (!error)
+                                    try {
+                                        result = templateFunction.call(
+                                            this,
+                                            parameters[0],
+                                            parameters[0],
+                                            parameters[0],
+                                            parameters[0],
+                                            parameters[0],
+                                            parameters[0],
+                                            parameters,
+                                            Tools
+                                        )
+                                    } catch (error) {
+                                        console.warn(
+                                            'Failed to evaluate function "' +
+                                            `${attributeName}" with ` +
+                                            `expression "${value}" and scope` +
+                                            'variables "' +
+                                            `${scopeNames.join('", "')}" set` +
+                                            `to "` +
+                                            `${Tools.represent(parameters)}"` +
+                                            `: ${error}. Set property to "` +
+                                            'undedefined".'
+                                        )
+                                    }
+
+                                if (!this.self.renderProperties.includes(name))
+                                    this.forwardEvent(name, parameters)
+
+                                return result
+                            }
+                        )
+
+                        if (!error)
+                            this.setExternalPropertyValue(
+                                name, templateFunction!
                             )
+
+                        break
+                    case 'json':
+                        if (value) {
+                            let evaluated:PlainObject
+                            try {
+                                evaluated = JSON.parse(value)
+                            } catch (error) {
+                                console.warn(
+                                    'Error occurred during parsing given ' +
+                                    `json attribute "${attributeName}": ` +
+                                    Tools.represent(error)
+                                )
+
+                                break
+                            }
+                            /*
+                                NOTE: We have to avoid that both values changes
+                                each other.
+                            */
+                            this.setInternalPropertyValue(name, evaluated)
+                            this.setExternalPropertyValue(
+                                name, Tools.copy(evaluated, 1)
+                            )
+                        } else {
+                            this.setInternalPropertyValue(name, null)
+                            this.setExternalPropertyValue(name, null)
+                        }
+
+                        break
+                    case number:
+                    case 'number':
+                        if (value === null) {
+                            this.setInternalPropertyValue(name, value)
+                            this.setExternalPropertyValue(name, value)
+
                             break
                         }
                         /*
-                            NOTE: We have to avoid that both values changes
-                            each other.
+                            NOTE: You should not name this variable "number"
+                            since babel gets confused caused by existing module
+                            wide property type variable "number".
                         */
-                        this.setInternalPropertyValue(name, evaluated)
-                        this.setExternalPropertyValue(
-                            name, Tools.copy(evaluated, 1)
-                        )
-                    } else {
-                        this.setInternalPropertyValue(name, null)
-                        this.setExternalPropertyValue(name, null)
-                    }
-                    break
-                case number:
-                case 'number':
-                    if (value === null) {
+                        let numberValue:number|undefined = parseFloat(value)
+                        if (isNaN(numberValue))
+                            numberValue = undefined
+                        this.setInternalPropertyValue(name, numberValue)
+                        this.setExternalPropertyValue(name, numberValue)
+
+                        break
+                    case string:
+                    case 'string':
                         this.setInternalPropertyValue(name, value)
                         this.setExternalPropertyValue(name, value)
+
                         break
-                    }
-                    /*
-                        NOTE: You should not name this variable "number" since
-                        babel gets confused caused by existing module wide
-                        property type variable "number".
-                    */
-                    let numberValue:number|undefined = parseFloat(value)
-                    if (isNaN(numberValue))
-                        numberValue = undefined
-                    this.setInternalPropertyValue(name, numberValue)
-                    this.setExternalPropertyValue(name, numberValue)
-                    break
-                case string:
-                case 'string':
-                    this.setInternalPropertyValue(name, value)
-                    this.setExternalPropertyValue(name, value)
-                    break
-                case any:
-                case array:
-                case arrayOf:
-                case element:
-                case elementType:
-                case instanceOf:
-                case node:
-                case object:
-                case 'object':
-                case objectOf:
-                case oneOf:
-                case oneOfType:
-                case shape:
-                case exact:
-                case symbol:
-                default:
-                    if (value) {
-                        const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(value, {}, false, this)
-                        if (evaluated.error) {
-                            console.warn(
-                                'Error occurred during processing given ' +
-                                `attribute configuration "${name}": ` +
-                                evaluated.error
+                    case any:
+                    case array:
+                    case arrayOf:
+                    case element:
+                    case elementType:
+                    case instanceOf:
+                    case node:
+                    case object:
+                    case 'object':
+                    case objectOf:
+                    case oneOf:
+                    case oneOfType:
+                    case shape:
+                    case exact:
+                    case symbol:
+                    default:
+                        if (value) {
+                            const evaluated:EvaluationResult =
+                                Tools.stringEvaluate(value, {}, false, this)
+                            if (evaluated.error) {
+                                console.warn(
+                                    'Error occurred during processing given ' +
+                                    'attribute configuration "' +
+                                    `${attributeName}": ${evaluated.error}`
+                                )
+                                break
+                            }
+                            /*
+                                NOTE: We have to avoid that both values changes
+                                each other.
+                            */
+                            this.setInternalPropertyValue(
+                                name, evaluated.result
                             )
-                            break
+                            this.setExternalPropertyValue(
+                                name, Tools.copy(evaluated.result, 1)
+                            )
+                        } else if (this.hasAttribute(attributeName)) {
+                            this.setInternalPropertyValue(name, true)
+                            this.setExternalPropertyValue(name, true)
+                        } else {
+                            this.setInternalPropertyValue(name, null)
+                            this.setExternalPropertyValue(name, null)
                         }
-                        /*
-                            NOTE: We have to avoid that both values changes
-                            each other.
-                        */
-                        this.setInternalPropertyValue(name, evaluated.result)
-                        this.setExternalPropertyValue(
-                            name, Tools.copy(evaluated.result, 1)
-                        )
-                    } else if (this.hasAttribute(attributeName)) {
-                        this.setInternalPropertyValue(name, true)
-                        this.setExternalPropertyValue(name, true)
-                    } else {
-                        this.setInternalPropertyValue(name, null)
-                        this.setExternalPropertyValue(name, null)
-                    }
-                    break
+
+                        break
             }
         }
     }
