@@ -291,11 +291,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             return (scope:Mapping<unknown>):ReactRenderItem =>
                 ((...parameters:Array<unknown>):ReactRenderItem => {
                     const renderResult:Array<ReactRenderItem> = []
+
                     for (const factory of result) {
                         const renderItem:ReactRenderItem = factory(scope)
                         if (typeof renderItem === 'function')
                             renderResult.push(renderItem(...parameters))
                     }
+
                     return createElement(Fragment, {children: renderResult})
                 }) as ReactRenderItem
 
@@ -322,20 +324,35 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (isFunction) {
             const node:ReactRenderBaseItemFactory = this.preCompileDomNode(
                 domNode,
-                {...scope, options: undefined, parameters: undefined},
+                {
+                    ...scope,
+                    data: undefined,
+                    firstArgument: undefined,
+                    firstParameter: undefined,
+                    options: undefined,
+                    scope: undefined,
+                    parameters: undefined
+                },
                 false,
                 key
             ) as ReactRenderBaseItemFactory
 
             return (scope:Mapping<unknown>):ReactRenderItem =>
-                (...parameters:Array<unknown>):ReactRenderBaseItem =>
-                    node({
+                (...parameters:Array<unknown>):ReactRenderBaseItem => {
+                    const firstArgument:null|unknown = parameters.length > 0 ?
+                        parameters[0] :
+                        null
+
+                    return node({
                         ...scope,
-                        options: parameters.length > 0 ?
-                            parameters[0] :
-                            null,
+                        data: firstArgument,
+                        firstArgument,
+                        firstParameter: firstArgument,
+                        options: firstArgument,
+                        scope: firstArgument,
                         parameters
                     }) as ReactRenderBaseItem
+                }
         }
         // endregion
         // region text node
