@@ -148,7 +148,7 @@
     },
     "injection": {
       "entry": {
-        "__evaluate__": "2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2].startsWith('test') ? './test.ts' : 2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2] === 'serve' ? {clientnode: 'clientnode', index: './index'} : {decorator: './decorator.ts', index: './index.ts', React: './React.ts', Web: './Web.ts'}"
+        "__evaluate__": "2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2].startsWith('test') ? './test.ts' : 2 < self.givenCommandLineArguments.length && self.givenCommandLineArguments[2] === 'serve' ? {clientnode: 'clientnode', index: './index'} : '__auto__'"
       }
     },
     "module": {
