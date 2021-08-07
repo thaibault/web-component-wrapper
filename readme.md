@@ -13,21 +13,21 @@ endregion -->
 Project status
 --------------
 
-[![npm](https://img.shields.io/npm/v/clientnode?color=%23d55e5d&label=npm%20package%20version&logoColor=%23d55e5d)](https://www.npmjs.com/package/clientnode)
-[![npm downloads](https://img.shields.io/npm/dy/clientnode.svg)](https://www.npmjs.com/package/clientnode)
+[![npm](https://img.shields.io/npm/v/web-component-wrapper?color=%23d55e5d&label=npm%20package%20version&logoColor=%23d55e5d)](https://www.npmjs.com/package/web-component-wrapper)
+[![npm downloads](https://img.shields.io/npm/dy/web-component-wrapper.svg)](https://www.npmjs.com/package/web-component-wrapper)
 
-[![<LABEL>](https://github.com/thaibault/clientnode/actions/workflows/build.yaml/badge.svg)](https://github.com/thaibault/clientnode/actions/workflows/build.yaml)
-[![<LABEL>](https://github.com/thaibault/clientnode/actions/workflows/test.yaml/badge.svg)](https://github.com/thaibault/clientnode/actions/workflows/test.yaml)
-[![<LABEL>](https://github.com/thaibault/clientnode/actions/workflows/test:coverage:report.yaml/badge.svg)](https://github.com/thaibault/clientnode/actions/workflows/test:coverage:report.yaml)
-[![<LABEL>](https://github.com/thaibault/clientnode/actions/workflows/check:types.yaml/badge.svg)](https://github.com/thaibault/clientnode/actions/workflows/check:types.yaml)
-[![<LABEL>](https://github.com/thaibault/clientnode/actions/workflows/lint.yaml/badge.svg)](https://github.com/thaibault/clientnode/actions/workflows/lint.yaml)
+[![<LABEL>](https://github.com/thaibault/web-component-wrapper/actions/workflows/build.yaml/badge.svg)](https://github.com/thaibault/web-component-wrapper/actions/workflows/build.yaml)
+[![<LABEL>](https://github.com/thaibault/web-component-wrapper/actions/workflows/test.yaml/badge.svg)](https://github.com/thaibault/web-component-wrapper/actions/workflows/test.yaml)
+[![<LABEL>](https://github.com/thaibault/web-component-wrapper/actions/workflows/test:coverage:report.yaml/badge.svg)](https://github.com/thaibault/web-component-wrapper/actions/workflows/test:coverage:report.yaml)
+[![<LABEL>](https://github.com/thaibault/web-component-wrapper/actions/workflows/check:types.yaml/badge.svg)](https://github.com/thaibault/web-component-wrapper/actions/workflows/check:types.yaml)
+[![<LABEL>](https://github.com/thaibault/web-component-wrapper/actions/workflows/lint.yaml/badge.svg)](https://github.com/thaibault/web-component-wrapper/actions/workflows/lint.yaml)
 
-[![code coverage](https://coveralls.io/repos/github/thaibault/clientnode/badge.svg)](https://coveralls.io/github/thaibault/clientnode)
+[![code coverage](https://coveralls.io/repos/github/thaibault/web-component-wrapper/badge.svg)](https://coveralls.io/github/thaibault/web-component-wrapper)
 
-[![dependencies](https://img.shields.io/david/thaibault/clientnode.svg)](https://david-dm.org/thaibault/clientnode)
-[![development dependencies](https://img.shields.io/david/dev/thaibault/clientnode.svg)](https://david-dm.org/thaibault/clientnode?type=dev)
-[![peer dependencies](https://img.shields.io/david/peer/thaibault/clientnode.svg)](https://david-dm.org/thaibault/clientnode?type=peer)
-[![documentation website](https://img.shields.io/website-up-down-green-red/https/torben.website/clientnode.svg?label=documentation-website)](https://torben.website/clientnode)
+[![dependencies](https://img.shields.io/david/thaibault/web-component-wrapper.svg)](https://david-dm.org/thaibault/web-component-wrapper)
+[![development dependencies](https://img.shields.io/david/dev/thaibault/web-component-wrapper.svg)](https://david-dm.org/thaibault/web-component-wrapper?type=dev)
+[![peer dependencies](https://img.shields.io/david/peer/thaibault/web-component-wrapper.svg)](https://david-dm.org/thaibault/web-component-wrapper?type=peer)
+[![documentation website](https://img.shields.io/website-up-down-green-red/https/torben.website/web-component-wrapper.svg?label=documentation-website)](https://torben.website/web-component-wrapper)
 
 Use case
 --------
