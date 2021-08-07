@@ -1,13 +1,7 @@
 {
   "name": "web-component-wrapper",
   "version": "0.0.289",
-  "license": "CC-BY-3.0",
   "description": "Generic web-component base class and framework specific wrapper.",
-  "homepage": "https://torben.website/web-component-wrapper",
-  "documentationWebsite": {
-    "tagline": "Encapsulate your components as web-components.",
-    "trackingCode": "TODO"
-  },
   "keywords": [
     "component",
     "decouple",
@@ -18,7 +12,17 @@
     "webcomponent",
     "web-component"
   ],
-  "main": "index.js",
+  "homepage": "https://torben.website/web-component-wrapper",
+  "bugs": {
+    "email": "info@torben.website",
+    "url": "https://github.com/thaibault/web-component-wrapper/issues"
+  },
+  "license": "CC-BY-3.0",
+  "author": {
+    "name": "Torben Sickert",
+    "email": "info@torben.website",
+    "url": "https://torben.website"
+  },
   "files": [
     "decorator.d.ts",
     "decorator.js",
@@ -114,10 +118,18 @@
       "optional": true
     }
   },
+  "engines": {
+    "node": ">=16",
+    "npm": ">=7"
+  },
   "resolutions": {
     "@types/webpack": "https://registry.yarnpkg.com/@favware/skip-dependency/-/skip-dependency-1.1.0.tgz"
   },
   "sideEffects": false,
+  "documentationWebsite": {
+    "tagline": "Encapsulate your components as web-components.",
+    "trackingCode": "TODO"
+  },
   "webOptimizer": {
     "commandLine": {
       "test": {
