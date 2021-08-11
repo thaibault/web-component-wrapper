@@ -27,6 +27,7 @@
     "decorator.d.ts",
     "decorator.js",
     "index.d.ts",
+    "index.js",
     "polyfill.html.ejs",
     "React.d.ts",
     "React.js",
@@ -34,8 +35,7 @@
     "Web.d.ts",
     "Web.js",
     "WebNext.js",
-    "type.d.ts",
-    "type.ts"
+    "type.d.ts"
   ],
   "repository": {
     "type": "git",
