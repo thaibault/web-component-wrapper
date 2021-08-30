@@ -359,7 +359,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     defineGetterAndSetterInterface():void {
-        const allPropertyNames:Array<string> = Tools.arrayUnique(
+        const allPropertyNames:Array<string> = Tools.arrayUnique<string>(
             Object.keys(this.self.propertyTypes)
                 .concat(Object.keys(this.self._propertyAliasIndex!))
         )
@@ -959,7 +959,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Converts given list, item or map to a map (with ordering).
-     * @param list - List to convert.
+     * @param value - Attribute reflection configuration.
      * @returns Generated map.
      */
     static normalizePropertyTypeList(
@@ -975,7 +975,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 if (Web.propertyTypes.hasOwnProperty(name))
                     value.set(name, Web.propertyTypes[name])
         } else
-            value = Tools.convertPlainObjectToMap(value)
+            value = Tools.convertPlainObjectToMap(value) as
+                AttributesReflectionConfiguration
 
         return value as Map<string, string|ValueOf<typeof PropertyTypes>>
     }

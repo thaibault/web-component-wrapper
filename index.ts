@@ -65,7 +65,7 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
         component.propTypes || {}
     const propertyAliases:Mapping =
         configuration.propertyAliases || component.propertyAliases || {}
-    const allPropertyNames:Array<string> = Tools.arrayUnique(
+    const allPropertyNames:Array<string> = Tools.arrayUnique<string>(
         Object.keys(propertyTypes)
             .concat(Object.keys(propertyAliases))
             .concat(Object.values(propertyAliases))
