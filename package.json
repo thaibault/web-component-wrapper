@@ -71,7 +71,6 @@
     "@types/jquery": "*",
     "@types/jsdom": "*",
     "@types/node": "*",
-    "@types/node-fetch": "*",
     "@types/react": "*",
     "@types/react-dom": "*",
     "@types/workbox-webpack-plugin": "*",
