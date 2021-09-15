@@ -1639,9 +1639,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                                             'Failed to evaluate function "' +
                                             `${attributeName}" with ` +
                                             `expression "${value}" and scope` +
-                                            'variables "' +
+                                            ' variables "' +
                                             `${scopeNames.join('", "')}" set` +
-                                            `to "` +
+                                            ` to "` +
                                             `${Tools.represent(parameters)}"` +
                                             `: ${error}. Set property to "` +
                                             'undedefined".'
