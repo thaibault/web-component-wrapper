@@ -219,9 +219,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
     slots:Mapping<HTMLElement> & {default?:Array<Node>} = {}
     // endregion
-    // region live cycle hooks
+    // region live cycle  hooks
     /**
      * Initializes host dom content and properties.
+     *
      * @returns Nothing.
      */
     constructor() {
@@ -356,6 +357,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Registers needed getter and setter to get notified about changes and
      * reflect them.
+     *
      * @returns Nothing.
      */
     defineGetterAndSetterInterface():void {
@@ -392,7 +394,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Creates an index to match alias source and target against each other on
      * constant runtime.
+     *
      * @param name - Name to search an alternate name for.
+     *
      * @returns Found alias or "null".
      */
     getPropertyAlias(name:string):null|string {
@@ -400,6 +404,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.self._propertyAliasIndex, name
         ))
             return this.self._propertyAliasIndex![name]
+
         return null
     }
     /**
@@ -426,12 +431,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             )
         )
             return this.instance.current.state[name]
+
         return result
     }
     /**
      * External property setter. Respects configured aliases.
+     *
      * @param name - Property name to write.
      * @param value - New value to write.
+     *
      * @returns Nothing.
      */
     setExternalPropertyValue(name:string, value:unknown):void {
@@ -443,8 +451,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Internal property setter. Respects configured aliases.
+     *
      * @param name - Property name to write.
      * @param value - New value to write.
+     *
      * @returns Nothing.
      */
     setInternalPropertyValue(name:string, value:unknown):void {
@@ -467,12 +477,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.reflectProperties({[name]: value})
         this.setInternalPropertyValue(name, value)
     }
-    /*
+    /**
      * Triggers a new rendering cycle and respects property specific state
      * connection.
+     *
      * @param name - Property name to write.
      * @param value - New value to write.
      * @param render - Indicates to trigger a new render cycle.
+     *
      * @returns Nothing.
      */
     triggerPropertySpecificRendering(name:string, value:unknown):void {
@@ -529,8 +541,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // // region dom nodes
     /**
      * Binds properties and event handler to given dom node.
+     *
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
+     *
      * @returns Nothing.
      */
     applyBinding(domNode:Node, scope:Mapping<unknown>):void {
@@ -667,10 +681,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Binds properties and event handler to given, sibling and nested nodes.
+     *
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
      * @param renderSlots - Indicates whether to render nested elements of
      * slots (determined by an existing corresponding attribute).
+     *
      * @returns Nothing.
      */
     applyBindings(
@@ -700,6 +716,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param domNode - Node to compile.
      * @param scope - Scope to extract names from.
      * @param options - Additional compile options.
+     *
      * @returns Map of compiled templates.
      */
     compileDomNodeTemplate<NodeType extends Node = Node>(
@@ -793,6 +810,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @param domNode - Node to evaluate.
      * @param scope - Scope to render against.
      * @param options - Compile options.
+     *
      * @returns Map of compiled templates.
      */
     evaluateDomNodeTemplate<NodeType extends Node = Node>(
@@ -830,9 +848,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     )
                 } catch (error) {
                     console.warn(
-                        `Error occurred when running "${templateFunction}": ` +
-                        `with bound names "${scopeNames.join('", "')}": "` +
-                        `${error}".`
+                        `Error occurred when "${this.self._name}" is running` +
+                        `"${templateFunction}": with bound names ` +
+                        `"${scopeNames.join('", "')}": "${error}".`
                     )
                 }
                 if (output !== null)
@@ -872,8 +890,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Replaces given dom node with given nodes.
+     *
      * @param domNode - Node to replace its children.
      * @param children - Element or array of elements to set as children.
+     *
      * @returns Nothing.
      */
     static replaceDomNodes(
@@ -889,11 +909,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             ))
                 domNode.after(child)
         }
+
         domNode.remove()
     }
     /**
      * Moves content of given dom node one level up and removes given node.
+     *
      * @param domNode - Node to unwrap.
+     *
      * @returns List of unwrapped nodes.
      */
     static unwrapDomNode(domNode:HTMLElement):Array<ChildNode> {
@@ -912,6 +935,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // // endregion
     /**
      * Determines initial root wich initializes rendering digest.
+     *
      * @returns Nothing.
      */
     determineRootBinding():void {
@@ -945,7 +969,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Checks if given content hast code (to compile and render).
+     *
      * @param content - Potential string with code inside.
+     *
      * @returns A boolean indicating whether given content has code.
      */
     static hasCode(content:any):boolean {
@@ -959,7 +985,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Converts given list, item or map to a map (with ordering).
+     *
      * @param value - Attribute reflection configuration.
+     *
      * @returns Generated map.
      */
     static normalizePropertyTypeList(
@@ -985,6 +1013,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Attaches event handler to keep in sync with nested components properties
      * states.
+     *
      * @returns Nothing.
      */
     attachEventHandler():void {
@@ -1003,6 +1032,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Attach explicitly defined event handler to synchronize internal and
      * external property states.
+     *
      * @returns Returns "true" if there are some defined and "false" otherwise.
      */
     attachExplicitDefinedOutputEventHandler():boolean {
@@ -1026,13 +1056,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     }
                 )
             }
+
         return result
     }
     /**
      * Attach implicitly defined event handler to synchronize internal and
      * external property states.
+     *
      * @param reflectProperties - Indicates whether implicitly determined
      * properties should be reflected.
+     *
      * @returns Nothing.
      */
     attachImplicitDefinedOutputEventHandler(
@@ -1064,6 +1097,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Triggers all identified events to communicate internal property / state
      * changes.
+     *
      * @returns Nothing.
      */
     triggerOuputEvents():void {
@@ -1072,8 +1106,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Forwards given event as native web event.
+     *
      * @param name - Event name.
      * @param parameters - Event parameters.
+     *
      * @returns Nothing.
      */
     forwardEvent(name:string, parameters:Array<unknown>):boolean {
@@ -1090,8 +1126,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Renders component given slot contents into given dom node. If expected
      * slots are not given but a fallback is specified they will be loaded into
      * internal slot mapping.
+     *
      * @param targetDomNode - Target dom node to render slots into.
      * @param scope - Environment to render slots again if specified.
+     *
      * @returns Nothing.
      */
     applySlots(targetDomNode:HTMLElement, scope:Mapping<unknown>):void {
@@ -1129,7 +1167,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Determines slot content from given node.
+     *
      * @param slot - Node to grab slot content from.
+     *
      * @returns Determined slot.
      */
     grabSlotContent(slot:Node):Node {
@@ -1175,6 +1215,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Saves given slots.
+     *
      * @returns Nothing.
      */
     grabGivenSlots():void {
@@ -1217,7 +1258,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / region properties
     /**
      * Determines if given property name exists in wrapped component state.
+     *
      * @param name - Property name to check if exists in state.
+     *
      * @returns Boolean result.
      */
     isStateProperty(name:string):boolean {
@@ -1253,7 +1296,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Reflects wrapped component state back to web-component's attributes.
+     *
      * @param properties - Properties to update in reflected attribute state.
+     *
      * @returns Nothing.
      */
     reflectExternalProperties(properties:Mapping<unknown>):void {
@@ -1361,7 +1406,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Reflects wrapped component state back to web-component's attributes and
      * properties.
+     *
      * @param properties - Properties to update in reflected property state.
+     *
      * @returns Nothing.
      */
     reflectProperties(properties:Mapping<unknown>):void {
@@ -1406,7 +1453,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Triggers a new rendering cycle by respecting batch configuration.
+     *
      * @param reason - A description why rendering should be triggered.
+     *
      * @returns Nothing.
      */
     triggerRender(reason:string):void {
@@ -1424,8 +1473,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Reflect given event handler call with given parameter back to current
      * properties state.
+     *
      * @param name - Event name.
      * @param parameters - List of parameter to given event handler call.
+     *
      * @returns Mapped properties or null if nothing could be mapped.
      */
     reflectEventToProperties(
@@ -1526,8 +1577,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Evaluates given property value depending on its type specification and
      * registers in properties mapping object.
+     *
      * @param attributeName - Name of given value.
      * @param value - Value to evaluate.
+     *
      * @returns Nothing.
      */
     evaluateStringOrNullAndSetAsProperty(
@@ -1769,7 +1822,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Determines new scope object with useful default set of environment
      * values.
+     *
      * @param scope - To apply to generated scope.
+     *
      * @returns Generated scope.
      */
     determineRenderScope(scope:Mapping<unknown> = {}):void {
@@ -1788,6 +1843,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Creates shadow root if not created yet and assigns to current root
      * property.
+     *
      * @returns Nothing.
      */
     applyShadowRootIfNotExisting():void {
