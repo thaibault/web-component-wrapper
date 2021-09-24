@@ -773,7 +773,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 if (this.self.hasCode(content))
                     template = content!.replace(/&nbsp;/g, ' ').trim()
             }
+
             const children:Array<CompiledDomNodeTemplate> = []
+
             if (template) {
                 const result:CompilationResult =
                     Tools.stringCompile(`\`${template}\``, scope)
@@ -788,6 +790,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     }
                 )
             }
+
             // Render content of each nested node.
             let currentDomNode:ChildNode|null = domNode.firstChild
             while (currentDomNode) {
@@ -798,9 +801,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     children.push(this.compileDomNodeTemplate<NodeType>(
                         currentDomNode as unknown as NodeType, scope, options
                     ))
+
                 currentDomNode = currentDomNode.nextSibling
             }
         }
+
         return options.map as CompiledDomNodeTemplate<NodeType>
     }
     /**
@@ -878,6 +883,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         scope,
                         {...options, applyBindings: false}
                     )
+
                 currentDomNode = currentDomNode.nextSibling as
                     unknown as NodeType
             }
@@ -1143,6 +1149,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         if (this.self.evaluateSlots)
                             for (const domNode of this.slots.default)
                                 this.evaluateDomNodeTemplate(domNode, scope)
+
                         this.self.replaceDomNodes(domNode, this.slots.default)
                     }
                 } else
@@ -1154,6 +1161,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 if (this.self.renderSlots) {
                     if (this.self.evaluateSlots)
                         this.evaluateDomNodeTemplate(this.slots[name], scope)
+
                     this.self.replaceDomNodes(domNode, this.slots[name])
                 }
             } else
