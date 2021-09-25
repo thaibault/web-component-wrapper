@@ -854,7 +854,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 } catch (error) {
                     console.warn(
                         `Error occurred when "${this.self._name}" is running` +
-                        `"${templateFunction}": with bound names ` +
+                        ` "${templateFunction}": with bound names ` +
                         `"${scopeNames.join('", "')}": "${error}".`
                     )
                 }
