@@ -724,11 +724,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         scope:any = [],
         options:{
             filter?:(domNode:NodeType) => boolean
+            ignoreComponents?:boolean
+            ignoreNestedComponents?:boolean
             map?:CompiledDomNodeTemplate
             unsafe?:boolean
         } = {}
     ):CompiledDomNodeTemplate<NodeType> {
         options = {
+            ignoreComponents: true,
+            ignoreNestedComponents: true,
             map: this.domNodeTemplateCache,
             unsafe: this.self.renderUnsafe,
             ...options
@@ -737,7 +741,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             NOTE: Slots of nested custom components (recognized by their dash
             in name) should be rendered / controlled by themself.
         */
-        if (domNode.nodeName?.toLowerCase().includes('-'))
+        if (
+            options.ignoreComponents &&
+            domNode.nodeName?.toLowerCase().includes('-')
+        )
             return options.map as CompiledDomNodeTemplate<NodeType>
 
         if (options.unsafe) {
@@ -802,7 +809,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     options.filter(currentDomNode as unknown as NodeType)
                 )
                     children.push(this.compileDomNodeTemplate<NodeType>(
-                        currentDomNode as unknown as NodeType, scope, options
+                        currentDomNode as unknown as NodeType,
+                        scope,
+                        {
+                            ...options,
+                            ignoreComponents: options.ignoreNestedComponents
+                        }
                     ))
 
                 currentDomNode = currentDomNode.nextSibling
@@ -827,12 +839,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         options:{
             applyBindings?:boolean
             filter?:(domNode:NodeType) => boolean
+            ignoreComponents?:boolean
+            ignoreNestedComponents?:boolean
             map?:CompiledDomNodeTemplate
             unsafe?:boolean
         } = {}
     ):CompiledDomNodeTemplate<NodeType> {
         options = {
             applyBindings: true,
+            ignoreComponents: true,
+            ignoreNestedComponents: true,
             map: this.domNodeTemplateCache,
             unsafe: this.self.renderUnsafe,
             ...options
@@ -881,7 +897,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             in name) should be rendered / controlled by themself.
         */
         if (!(
-            options.unsafe || domNode.nodeName?.toLowerCase().includes('-')
+            options.unsafe ||
+            options.ignoreComponents &&
+            domNode.nodeName?.toLowerCase().includes('-')
         )) {
             // Render content of each nested node.
             let currentDomNode:NodeType|null =
@@ -893,7 +911,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.evaluateDomNodeTemplate<NodeType>(
                         currentDomNode as NodeType,
                         scope,
-                        {...options, applyBindings: false}
+                        {
+                            ...options,
+                            applyBindings: false,
+                            ignoreComponents: options.ignoreNestedComponents
+                        }
                     )
                 }
 
