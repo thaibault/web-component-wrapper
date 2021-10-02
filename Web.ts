@@ -766,10 +766,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             const nodeName:string = domNode.nodeName.toLowerCase()
             let template:string|undefined
             if (['a', '#text'].includes(nodeName)) {
-                const content:null|string = nodeName === 'a' ?
-                    (domNode as unknown as HTMLLinkElement)
-                        .getAttribute('href') :
-                    domNode.textContent
+                const content:null|string =
+                    nodeName === 'a' ?
+                        (domNode as unknown as HTMLLinkElement)
+                            .getAttribute('href') :
+                        domNode.textContent
+
                 if (this.self.hasCode(content))
                     template = content!.replace(/&nbsp;/g, ' ').trim()
             }
@@ -779,6 +781,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             if (template) {
                 const result:CompilationResult =
                     Tools.stringCompile(`\`${template}\``, scope)
+
                 options.map!.set(
                     domNode,
                     {
@@ -791,7 +794,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 )
             }
 
-            // Render content of each nested node.
+            // Compile content of each nested node.
             let currentDomNode:ChildNode|null = domNode.firstChild
             while (currentDomNode) {
                 if (
@@ -857,7 +860,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     console.warn(
                         `Error occurred when "${this.self._name}" is running` +
                         ` "${templateFunction}": with bound names ` +
-                        `"${scopeNames.join('", "')}": "${error}".`
+                        `"${scopeNames.join('", "')}": "${error}". ` +
+                        'Rendering node:',
+                        domNode
                     )
                 }
 
@@ -871,21 +876,26 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         domNode.textContent = output
             }
         }
-
-        if (!options.unsafe) {
+        /*
+            NOTE: Slots of nested custom components (recognized by their dash
+            in name) should be rendered / controlled by themself.
+        */
+        if (!(
+            options.unsafe || domNode.nodeName?.toLowerCase().includes('-')
+        )) {
             // Render content of each nested node.
-            let currentDomNode:NodeType|null = domNode.firstChild as
-                unknown as NodeType
+            let currentDomNode:NodeType|null =
+                domNode.firstChild as unknown as NodeType
+
             while (currentDomNode) {
-                if (
-                    !options.filter ||
-                    options.filter(currentDomNode)
-                )
+                if (!options.filter || options.filter(currentDomNode)) {
+                    console.log('UU', domNode, '->', currentDomNode)
                     this.evaluateDomNodeTemplate<NodeType>(
                         currentDomNode as NodeType,
                         scope,
                         {...options, applyBindings: false}
                     )
+                }
 
                 currentDomNode = currentDomNode.nextSibling as
                     unknown as NodeType
