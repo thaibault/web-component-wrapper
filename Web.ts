@@ -735,7 +735,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         }
         /*
             NOTE: Slots of nested custom components (recognized by their dash
-            in name) should be rendered by themself.
+            in name) should be rendered / controlled by themself.
         */
         if (domNode.nodeName?.toLowerCase().includes('-'))
             return options.map as CompiledDomNodeTemplate<NodeType>
@@ -841,12 +841,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (options.map!.has(domNode)) {
             const {error, scopeNames, templateFunction} =
                 options.map!.get(domNode) as CompiledDomNodeTemplateItem
+
             if (error)
                 console.warn(
                     `Error occurred during compiling node content: ${error}`
                 )
             else {
                 let output:null|string = null
+
                 try {
                     output = templateFunction(
                         ...scopeNames.map((name:string):unknown => scope[name])
@@ -858,6 +860,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         `"${scopeNames.join('", "')}": "${error}".`
                     )
                 }
+
                 if (output !== null)
                     if (options.unsafe)
                         (domNode as unknown as HTMLElement).innerHTML = output
