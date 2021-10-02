@@ -906,8 +906,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 domNode.firstChild as unknown as NodeType
 
             while (currentDomNode) {
-                if (!options.filter || options.filter(currentDomNode)) {
-                    console.log('UU', domNode, '->', currentDomNode)
+                if (!options.filter || options.filter(currentDomNode))
                     this.evaluateDomNodeTemplate<NodeType>(
                         currentDomNode as NodeType,
                         scope,
@@ -917,7 +916,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                             ignoreComponents: options.ignoreNestedComponents
                         }
                     )
-                }
 
                 currentDomNode = currentDomNode.nextSibling as
                     unknown as NodeType
