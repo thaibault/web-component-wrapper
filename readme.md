@@ -7,7 +7,7 @@ License
 -------
 
 This library written by Torben Sickert stand under a creative commons naming
-3.0 unported license. see http://creativecommons.org/licenses/by/3.0/deed.de
+3.0 unported license. See https://creativecommons.org/licenses/by/3.0/deed.de
 endregion -->
 
 Project status
@@ -24,9 +24,11 @@ Project status
 
 [![code coverage](https://coveralls.io/repos/github/thaibault/web-component-wrapper/badge.svg)](https://coveralls.io/github/thaibault/web-component-wrapper)
 
+<!-- Too unstable yet
 [![dependencies](https://img.shields.io/david/thaibault/web-component-wrapper.svg)](https://david-dm.org/thaibault/web-component-wrapper)
 [![development dependencies](https://img.shields.io/david/dev/thaibault/web-component-wrapper.svg)](https://david-dm.org/thaibault/web-component-wrapper?type=dev)
 [![peer dependencies](https://img.shields.io/david/peer/thaibault/web-component-wrapper.svg)](https://david-dm.org/thaibault/web-component-wrapper?type=peer)
+-->
 [![documentation website](https://img.shields.io/website-up-down-green-red/https/torben.website/web-component-wrapper.svg?label=documentation-website)](https://torben.website/web-component-wrapper)
 
 Use case
