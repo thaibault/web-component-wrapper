@@ -1577,7 +1577,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     )) {
                         const currentValue:unknown =
                             (
-                                parameters[0].currentTarget &&
+                                (parameters[0] as Event).currentTarget &&
                                 Object.prototype.hasOwnProperty.call(
                                     (parameters[0] as
                                         {currentTarget:Mapping<unknown>}
