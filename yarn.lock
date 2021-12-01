@@ -1436,7 +1436,6 @@
 
 "@types/webpack@https://registry.yarnpkg.com/@favware/skip-dependency/-/skip-dependency-1.1.1.tgz":
   version "1.1.1"
-  uid f8cae15d883ffc0abc663b5eaaa711fcc64bb5c2
   resolved "https://registry.yarnpkg.com/@favware/skip-dependency/-/skip-dependency-1.1.1.tgz#f8cae15d883ffc0abc663b5eaaa711fcc64bb5c2"
 
 "@types/workbox-webpack-plugin@*":
