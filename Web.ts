@@ -17,7 +17,7 @@
     endregion
 */
 // region imports
-import Tools, {globalContext} from 'clientnode'
+import Tools from 'clientnode'
 import PropertyTypes, {
     any,
     array,
@@ -155,10 +155,10 @@ import {
  */
 export class Web<TElement = HTMLElement> extends HTMLElement {
     // region properties
-    static applyRootBinding:boolean = true
-    static content:any =
+    static applyRootBinding = true
+    static content:unknown =
         '<slot>Please provide a template to transclude.</slot>'
-    static determineRootBinding:boolean = true
+    static determineRootBinding = true
 
     static shadowDOM:boolean|null|{
         delegateFocus?:boolean
@@ -175,24 +175,24 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         []
     static renderProperties:Array<string> = ['children']
 
-    static cloneSlots:boolean = false
-    static evaluateSlots:boolean = false
-    static renderSlots:boolean = true
-    static trimSlots:boolean = true
+    static cloneSlots = false
+    static evaluateSlots = false
+    static renderSlots = true
+    static trimSlots = true
 
-    static renderUnsafe:boolean = false
+    static renderUnsafe = false
 
-    static _name:string = 'BaseWeb'
+    static _name = 'BaseWeb'
     static _propertyAliasIndex:Mapping|undefined
     static _propertiesToReflectAsAttributes:Map<string, string|ValueOf<typeof PropertyTypes>>|undefined
 
-    batchAttributeUpdates:boolean = true
-    batchPropertyUpdates:boolean = true
-    batchUpdates:boolean = true
+    batchAttributeUpdates = true
+    batchPropertyUpdates = true
+    batchUpdates = true
 
-    batchedAttributeUpdateRunning:boolean = true
-    batchedPropertyUpdateRunning:boolean = true
-    batchedUpdateRunning:boolean = true
+    batchedAttributeUpdateRunning = true
+    batchedPropertyUpdateRunning = true
+    batchedUpdateRunning = true
 
     parent:null|Web = null
     rootInstance:null|Web = null
@@ -202,18 +202,18 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
     externalProperties:Mapping<unknown> = {}
-    ignoreAttributeUpdateObservations:boolean = false
+    ignoreAttributeUpdateObservations = false
     internalProperties:Mapping<unknown> = {}
 
     outputEventNames:Set<string> = new Set<string>()
 
     instance:null|{current?:ComponentAdapter} = null
     @property({type: boolean, writeAttribute: true})
-    isRoot:boolean = true
+        isRoot = true
 
     root:ShadowRoot|Web<TElement>
 
-    runDomConnectionAndRenderingInSameEventQueue:boolean = false
+    runDomConnectionAndRenderingInSameEventQueue = false
 
     readonly self:typeof Web = Web
 
@@ -222,7 +222,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // region live cycle  hooks
     /**
      * Initializes host dom content and properties.
-     *
      * @returns Nothing.
      */
     constructor() {
@@ -255,7 +254,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Triggered when ever a given attribute has changed and triggers to update
      * configured dom content.
-     *
      * @param name - Attribute name which was updates.
      * @param oldValue - Old attribute value.
      * @param newValue - New updated value.
@@ -272,7 +270,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Updates given attribute representation.
-     *
      * @param name - Attribute name which was updates.
      * @param newValue - New updated value.
      *
@@ -294,6 +291,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
                     this.render('attributeChanged')
                 })
+                    .then(Tools.noop, Tools.noop)
             }
         } else
             this.render('attributeChanged')
@@ -302,14 +300,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Triggered when this component is mounted into the document.
      * Attaches event handler, grabs given slots, reflects external properties
      * and enqueues first rendering.
-     *
      * @returns Nothing.
      */
     connectedCallback():void {
         // NOTE: Hack to support IE 11 here.
         try {
             ;(this as {isConnected:boolean}).isConnected = true
-        } catch (error) {}
+        } catch (error) {
+            // Ignore error.
+        }
 
         // NOTE: Can be overwritten during option root determining.
         this.parent = this

@@ -21,20 +21,16 @@ import Tools from 'clientnode'
 import {
     func, NullSymbol, PropertyTypes, UndefinedSymbol
 } from 'clientnode/property-types'
-import {
-    CompilationResult, Mapping, TemplateFunction, ValueOf
-} from 'clientnode/type'
+import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
 import React, {
     Attributes,
     createElement,
     createRef,
     forwardRef,
     Fragment,
-    isValidElement as isValidReactElement,
     memo as memorize,
     ReactElement,
     Ref,
-    useCallback,
     useImperativeHandle
 } from 'react'
 import {render, unmountComponentAtNode} from 'react-dom'
@@ -85,10 +81,11 @@ import {
  * @property isWrapped - Indicates whether react component is wrapped already.
  */
 export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
-    static attachWebComponentAdapterIfNotExists:boolean = true
+    static attachWebComponentAdapterIfNotExists = true
     static content:ComponentType|string = 'div'
     static react:typeof React = React
-    static _name:string = 'ReactWebComponent'
+
+    static _name = 'ReactWebComponent'
 
     compiledSlots:Mapping<ReactRenderItemsFactory> & {
         children?:ReactRenderItemsFactory
@@ -99,12 +96,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     readonly self:typeof ReactWeb = ReactWeb
 
     wrapMemorizingWrapper:boolean|null = null
-    isWrapped:boolean = false
+    isWrapped = false
     // region live-cycle
     /**
      * Triggered when this component is mounted into the document. Event
      * handlers will be attached and final render proceed.
-     *
      * @returns Nothing.
      */
     connectedCallback():void {
@@ -132,6 +128,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Reflects wrapped component state back to web-component's attributes.
      * @param properties - Properties to update in reflected attribute state.
+     *
      * @returns Nothing.
      */
     reflectExternalProperties(properties:Mapping<unknown>):void {
@@ -141,12 +138,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
-     *
      * @param reason - Description why rendering is necessary.
      *
      * @returns Nothing.
      */
-    render(reason:string = 'unknown'):void {
+    render(reason = 'unknown'):void {
         /*
             NOTE: We prevent a nested react component from self rendering since
             they will be rendered by highest react parent.
@@ -196,6 +192,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             this.reflectInstanceProperties()
         else
             Tools.timeout(this.reflectInstanceProperties)
+                .then(Tools.noop, Tools.noop)
     }
     // endregion
     // region property handling
@@ -220,13 +217,12 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      *    (Converts reacts declarative nature into an imperative web-component
      *    style).
      * 4. Further state changes should be communicated back via output events.
-     *
      * @param name - Property name to write.
      * @param value - New value to write.
      *
      * @returns Nothing.
      */
-    setPropertyValue(name:string, value:any):void {
+    setPropertyValue(name:string, value:unknown):void {
         this.reflectProperties({[name]: Tools.copy(value, 1)})
         this.setInternalPropertyValue(name, Tools.copy(value, 1))
     }
@@ -234,9 +230,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * Internal property setter. Respects configured aliases.
      * @param name - Property name to write.
      * @param value - New value to write.
+     *
      * @returns Nothing.
      */
-    setInternalPropertyValue(name:string, value:any):void {
+    setInternalPropertyValue(name:string, value:unknown):void {
         if (value === null)
             value = NullSymbol
         else if (value === undefined)
@@ -249,7 +246,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Converts given html dom nodes into a compiled function to generate a
      * react element or a react element list.
-     *
      * @param domNodes - Nodes to convert.
      * @param scope - Additional scope to render sub components against.
      * Necessary to bound needed environment variables into compiled context.
@@ -260,21 +256,19 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Transformed react elements.
      */
     preCompileDomNodes(
-        domNodes:Array<Node>,
-        scope:Mapping<unknown> = {},
-        isFunction:boolean = false
+        domNodes:Array<Node>, scope:Mapping<unknown> = {}, isFunction = false
     ):ReactRenderItemsFactory {
         // NOTE: We ignore empty text nodes (like reacts jsx does).
         domNodes = domNodes.filter((domNode:Node):boolean => (
             domNode.nodeType !== Node.TEXT_NODE ||
-            typeof (domNode as Node).nodeValue === 'string' &&
-            ((domNode as Node).nodeValue as string).trim() !== ''
+            typeof domNode.nodeValue === 'string' &&
+            domNode.nodeValue.trim() !== ''
         ))
 
         if (domNodes.length === 1)
             return this.preCompileDomNode(domNodes[0], scope, isFunction)
 
-        let index:number = 1
+        let index = 1
         const result:Array<ReactRenderItemFactory> = []
         for (const node of domNodes) {
             const element:ReactRenderItemFactory = this.preCompileDomNode(
@@ -305,7 +299,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     }
     /**
      * Converts given html dom node into a react element.
-     *
      * @param domNode - Node to convert.
      * @param scope - Additional scope to render sub components against.
      * @param isFunction - Indicates whether given nodes should be provided as
@@ -317,8 +310,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     preCompileDomNode(
         domNode:Node,
         scope:Mapping<unknown> = {},
-        isFunction:boolean = false,
-        key?:string,
+        isFunction = false,
+        key?:string
     ):ReactRenderItemFactory {
         // region render property
         if (isFunction) {
@@ -351,15 +344,15 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                         options: firstArgument,
                         scope: firstArgument,
                         parameters
-                    }) as ReactRenderBaseItem
+                    })
                 }
         }
         // endregion
         // region text node
         if (domNode.nodeType === Node.TEXT_NODE) {
             const value:string =
-                typeof (domNode as Node).nodeValue === 'string' ?
-                    ((domNode as Node).nodeValue as string).trim() :
+                typeof domNode.nodeValue === 'string' ?
+                    domNode.nodeValue.trim() :
                     ''
 
             const result:ReactRenderItem = (key && value) ?
@@ -413,8 +406,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             if (value === null)
                 continue
 
-            let extend:boolean = false
-            let name:string = ''
+            let extend = false
+            let name = ''
             if (attributeName.startsWith('data-bind-'))
                 name = attributeName.substring('data-bind-'.length)
             else if (attributeName.startsWith('bind-'))
@@ -501,8 +494,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                             'Error occurred during processing given ' +
                             `event binding "${attributeName}" on node: `,
                             domNode,
-                            `Given expression "${value}" could not be ` +
-                            'evaluated with given scope names "' +
+                            `Given expression "${value as string}" could ` +
+                            'not be evaluated with given scope names "' +
                             `${scopeNames.join('", "')}": ` +
                             Tools.represent(error)
                         )
@@ -598,7 +591,6 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Evaluates given pre-compiled nodes into a single react element or a
      * react element list.
-     *
      * @param nodes - Pre-compiled nodes.
      * @param scope - Additional scope to render sub components against.
      *
@@ -658,6 +650,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Evaluates pre compiled slots.
      * @param scope - To render again.
+     *
      * @returns Nothing.
      */
     evaluateSlots(scope:Mapping<unknown>):void {
@@ -665,14 +658,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
         for (const name in this.compiledSlots)
             if (Object.prototype.hasOwnProperty.call(this.compiledSlots, name))
-                if (name === 'children') {
+                if (name === 'children')
                     this.preparedSlots.children =
                         this.evaluatePreCompiledDomNodes(
                             this.compiledSlots[name] as
                                 Array<ReactRenderItemFactory>,
                             scope
                         )
-                } else
+                else
                     this.preparedSlots[name] = (
                         this.compiledSlots[name] as ReactRenderItemFactory
                     )(scope)
@@ -682,6 +675,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     /**
      * Determines if given element type is a react wrapped component.
      * @param domNode - Node to determine from.
+     *
      * @returns Boolean indicator.
      */
     static isReactComponent(domNode:Node):boolean {
@@ -726,19 +720,16 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         this.isWrapped = true
 
         const wrapped:ComponentType =
-            (this.self.content as ComponentType).wrapped ||
-            this.self.content as ComponentType
+            this.self.content.wrapped || this.self.content
 
-        if ((this.self.content as ComponentType).webComponentAdapterWrapped) {
+        if (this.self.content.webComponentAdapterWrapped) {
             if (this.wrapMemorizingWrapper) {
-                this.self.content =
-                    memorize(this.self.content as ComponentType)
+                this.self.content = memorize(this.self.content)
                 ;(this.self.content as ComponentType).wrapped = wrapped
             }
         } else if (this.self.attachWebComponentAdapterIfNotExists) {
-            if (!(this.self.content as ComponentType).displayName)
-                (this.self.content as ComponentType).displayName =
-                    this.self._name
+            if (!this.self.content.displayName)
+                this.self.content.displayName = this.self._name
 
             this.self.content = forwardRef((
                 properties:Attributes, reference:Ref<ComponentAdapter>
@@ -755,11 +746,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             )
                 this.self.content = memorize(this.self.content)
 
-            ;(this.self.content as ComponentType).wrapped = wrapped
-            ;(this.self.content as ComponentType).webComponentAdapterWrapped =
-                'react'
+            this.self.content.wrapped = wrapped
+            this.self.content.webComponentAdapterWrapped = 'react'
         } else if (this.wrapMemorizingWrapper) {
-            this.self.content = memorize(this.self.content as ComponentType)
+            this.self.content = memorize(this.self.content)
             ;(this.self.content as ComponentType).wrapped = wrapped
         }
     }
@@ -768,6 +758,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * Creates a reference for being recognized of reacts internal state
      * updates.
      * @param properties - Properties to prepare.
+     *
      * @returns Nothing.
      */
     prepareProperties(properties:Mapping<unknown>):void {
@@ -790,26 +781,25 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     reflectInstanceProperties = ():void => {
-        if (this.instance?.current) {
-            if (
+        if (
+            this.instance?.current &&
+            (this.instance as {current:ComponentAdapter}).current.properties
+        )
+            this.reflectProperties(
                 (this.instance as {current:ComponentAdapter}).current
-                    .properties
+                    .properties as Mapping<unknown>
             )
-                this.reflectProperties(
-                    (this.instance as {current:ComponentAdapter}).current
-                        .properties as Mapping<any>
-                )
-        }
     }
     /**
      * Removes unwanted known and not specified properties from given
      * properties object (usually added by dev-tools).
      * @param target - ReactElement where properties belong to.
      * @param properties - Properties object to trim.
+     *
      * @returns Nothing.
      */
     static removeKnownUnwantedPropertyKeys(
-        target:typeof ReactWeb, properties:Mapping<any>
+        target:typeof ReactWeb, properties:Mapping<unknown>
     ):void {
         if (typeof target.content === 'string')
             return
@@ -824,7 +814,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                             target.content, 'propTypes'
                         ) &&
                         !Object.prototype.hasOwnProperty.call(
-                            (target.content as ComponentType).propTypes, name
+                            target.content.propTypes, name
                         )
                     ) ||
                     (
@@ -835,7 +825,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                             target.content.wrapped, 'propTypes'
                         ) &&
                         !Object.prototype.hasOwnProperty.call(
-                            target.content.wrapped!.propTypes, name
+                            target.content.wrapped.propTypes, name
                         )
                     )
                 )
