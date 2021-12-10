@@ -86,8 +86,8 @@ import {
  * @property static:renderProperties - List of known render properties.
  *
  * @property static:cloneSlots - Indicates whether to clone slot nots before
- * transcluding them. If a slot should be used multiple times (e.g. when it
- * works as a template node) they should be copied to avoid unexpected
+ * transcluding them. If a slot should be used multiple times (for example when
+ * it works as a template node) they should be copied to avoid unexpected
  * mutations.
  * @property static:evaluateSlots - Indicates whether to evaluate slot content
  * when before rendering them.
@@ -184,7 +184,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
     static _name = 'BaseWeb'
     static _propertyAliasIndex:Mapping|undefined
-    static _propertiesToReflectAsAttributes:Map<string, string|ValueOf<typeof PropertyTypes>>|undefined
+    static _propertiesToReflectAsAttributes:Map<
+        string, string|ValueOf<typeof PropertyTypes>
+    >|undefined
 
     batchAttributeUpdates = true
     batchPropertyUpdates = true
@@ -305,6 +307,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     connectedCallback():void {
         // NOTE: Hack to support IE 11 here.
         try {
+            // eslint-disable-next-line @typescript-eslint/no-extra-semi
             ;(this as {isConnected:boolean}).isConnected = true
         } catch (error) {
             // Ignore error.
@@ -335,6 +338,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render('connected') :
             Tools.timeout(():void => this.render('connected'))
+                .then(Tools.noop, Tools.noop)
     }
     /**
      * Frees some memory.
@@ -342,10 +346,13 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     disconnectedCallback():void {
         // NOTE: Hack to support IE 11 here.
         try {
+            // eslint-disable-next-line @typescript-eslint/no-extra-semi
             ;(this as {isConnected:boolean}).isConnected = false
-        } catch (error) {}
+        } catch (error) {
+            // Ignore error.
+        }
 
-        for (const [domNode, map] of this.domNodeEventBindings)
+        for (const [_domNode, map] of this.domNodeEventBindings)
             for (const deregister of map.values())
                 deregister()
 
@@ -356,7 +363,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Registers needed getter and setter to get notified about changes and
      * reflect them.
-     *
      * @returns Nothing.
      */
     defineGetterAndSetterInterface():void {
@@ -377,11 +383,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 propertyName,
                 {
                     configurable: true,
-                    get: function():unknown {
-                        return this.getPropertyValue(propertyName)
-                    },
-                    set: function(value:unknown):void {
+                    get: ():unknown => this.getPropertyValue(propertyName),
+                    set: (value:unknown):void => {
                         this.setPropertyValue(propertyName, value)
+
                         this.triggerPropertySpecificRendering(
                             propertyName, value
                         )
@@ -393,7 +398,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Creates an index to match alias source and target against each other on
      * constant runtime.
-     *
      * @param name - Name to search an alternate name for.
      *
      * @returns Found alias or "null".
@@ -410,6 +414,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Generic property getter. Forwards properties from the "properties"
      * field.
      * @param name - Property name to retrieve.
+     *
      * @returns Retrieved property value.
      */
     getPropertyValue(name:string):unknown {
@@ -417,8 +422,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             this.instance?.current?.properties &&
             (
                 // NOTE: Base properties should not be shadowed.
-                !Web.propertyTypes.hasOwnProperty(name) ||
-                this.instance.current.properties.hasOwnProperty(name)
+                Object.prototype.hasOwnProperty.call(
+                    !Web.propertyTypes, name
+                ) ||
+                Object.prototype.hasOwnProperty.call(
+                    this.instance.current.properties, name
+                )
             )
         ) ?
             this.instance.current.properties[name] :
@@ -435,7 +444,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * External property setter. Respects configured aliases.
-     *
      * @param name - Property name to write.
      * @param value - New value to write.
      *
@@ -450,7 +458,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Internal property setter. Respects configured aliases.
-     *
      * @param name - Property name to write.
      * @param value - New value to write.
      *
@@ -466,7 +473,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Generic property setter. Forwards field writes into internal and
      * external property representations.
-     *
      * @param name - Property name to write.
      * @param value - New value to write.
      *
@@ -479,10 +485,8 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Triggers a new rendering cycle and respects property specific state
      * connection.
-     *
      * @param name - Property name to write.
      * @param value - New value to write.
-     * @param render - Indicates to trigger a new render cycle.
      *
      * @returns Nothing.
      */
@@ -508,6 +512,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
                             this.triggerOuputEvents()
                         })
+                            .then(Tools.noop, Tools.noop)
                     } else {
                         this.batchedPropertyUpdateRunning = false
                         this.batchedUpdateRunning = false
@@ -517,6 +522,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         this.triggerOuputEvents()
                     }
                 })
+                    .then(Tools.noop, Tools.noop)
             }
         } else {
             const isStateProperty:boolean = this.isStateProperty(name)
@@ -540,7 +546,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // // region dom nodes
     /**
      * Binds properties and event handler to given dom node.
-     *
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
      *
@@ -552,7 +557,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
         )) {
-            let name:string = ''
+            let name = ''
             if (attributeName.startsWith('data-bind-'))
                 name = attributeName.substring('data-bind-'.length)
             else if (attributeName.startsWith('bind-'))
@@ -680,7 +685,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Binds properties and event handler to given, sibling and nested nodes.
-     *
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
      * @param renderSlots - Indicates whether to render nested elements of
@@ -689,7 +693,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     applyBindings(
-        domNode:Node|null, scope:Mapping<unknown>, renderSlots:boolean = true
+        domNode:Node|null, scope:Mapping<unknown>, renderSlots = true
     ):void {
         while (domNode) {
             if (
@@ -711,10 +715,19 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Compiles given node content and their children. Provides corresponding
      * map of compiled template functions connected to their (sub) nodes and
      * expected scope names.
-     *
      * @param domNode - Node to compile.
      * @param scope - Scope to extract names from.
      * @param options - Additional compile options.
+     * @param options.filter - Callback to exclude some node from being
+     * compiled.
+     * @param options.ignoreComponents - Indicates if component properties
+     * should be traversed or not.
+     * @param options.ignoreNestedComponents - Indicates if nested components
+     * should be traversed or not.
+     * @param options.map - Yet compiled dom nodes to just reference instead of
+     * recompiling.
+     * @param options.unsafe - Indicates if full html generation should be
+     * allowed.
      *
      * @returns Map of compiled templates.
      */
@@ -722,7 +735,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         domNode:NodeType,
         scope:any = [],
         options:{
-            filter?:(domNode:NodeType) => boolean
+            filter?:(_domNode:NodeType) => boolean
             ignoreComponents?:boolean
             ignoreNestedComponents?:boolean
             map?:CompiledDomNodeTemplate
@@ -825,10 +838,21 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Compiles and evaluates given node content and their children. Replaces
      * each node content with their evaluated representation.
-     *
      * @param domNode - Node to evaluate.
      * @param scope - Scope to render against.
      * @param options - Compile options.
+     * @param options.applyBindings - Indicates whether to apply bindings to
+     * given dom nodes.
+     * @param options.filter - Callback to exclude some node from being
+     * compiled.
+     * @param options.ignoreComponents - Indicates if component properties
+     * should be traversed or not.
+     * @param options.ignoreNestedComponents - Indicates if nested components
+     * should be traversed or not.
+     * @param options.map - Yet compiled dom nodes to just reference instead of
+     * recompiling.
+     * @param options.unsafe - Indicates if full html generation should be
+     * allowed.
      *
      * @returns Map of compiled templates.
      */
@@ -837,7 +861,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         scope:any = {},
         options:{
             applyBindings?:boolean
-            filter?:(domNode:NodeType) => boolean
+            filter?:(_domNode:NodeType) => boolean
             ignoreComponents?:boolean
             ignoreNestedComponents?:boolean
             map?:CompiledDomNodeTemplate
@@ -874,9 +898,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 } catch (error) {
                     console.warn(
                         `Error occurred when "${this.self._name}" is running` +
-                        ` "${templateFunction}": with bound names ` +
-                        `"${scopeNames.join('", "')}": "${error}". ` +
-                        'Rendering node:',
+                        ` "${templateFunction as unknown as string}": with ` +
+                        `bound names "${scopeNames.join('", "')}": "` +
+                        `${error as string}". Rendering node:`,
                         domNode
                     )
                 }
@@ -907,7 +931,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             while (currentDomNode) {
                 if (!options.filter || options.filter(currentDomNode))
                     this.evaluateDomNodeTemplate<NodeType>(
-                        currentDomNode as NodeType,
+                        currentDomNode,
                         scope,
                         {
                             ...options,
@@ -928,7 +952,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Replaces given dom node with given nodes.
-     *
      * @param domNode - Node to replace its children.
      * @param children - Element or array of elements to set as children.
      *
@@ -937,7 +960,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static replaceDomNodes(
         domNode:HTMLElement, children:Array<Node>|Node
     ):void {
-        for (const child of ([] as Array<Node>).concat(children).reverse()) {
+        for (const child of ([] as Array<Node>).concat(children).reverse())
             if (!(
                 Web.trimSlots &&
                 (
@@ -946,13 +969,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 )
             ))
                 domNode.after(child)
-        }
 
         domNode.remove()
     }
     /**
      * Moves content of given dom node one level up and removes given node.
-     *
      * @param domNode - Node to unwrap.
      *
      * @returns List of unwrapped nodes.
@@ -973,7 +994,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // // endregion
     /**
      * Determines initial root wich initializes rendering digest.
-     *
      * @returns Nothing.
      */
     determineRootBinding():void {
@@ -992,7 +1012,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 */
                 currentElement.parentNode === null &&
                 currentElement.toString() === '[object ShadowRoot]'
-            ) {
+            )
                 if (this.rootInstance === this) {
                     this.parent = currentElement as Web
                     this.rootInstance = currentElement as Web
@@ -1000,14 +1020,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.setPropertyValue('isRoot', false)
                 } else
                     this.rootInstance = currentElement as Web
-            }
 
             currentElement = currentElement.parentNode
         }
     }
     /**
      * Checks if given content hast code (to compile and render).
-     *
      * @param content - Potential string with code inside.
      *
      * @returns A boolean indicating whether given content has code.
@@ -1023,7 +1041,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Converts given list, item or map to a map (with ordering).
-     *
      * @param value - Attribute reflection configuration.
      *
      * @returns Generated map.
@@ -1038,7 +1055,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             const givenValue:Array<string> = value
             value = new Map<string, string|ValueOf<typeof PropertyTypes>>()
             for (const name of givenValue)
-                if (Web.propertyTypes.hasOwnProperty(name))
+                if (Object.prototype.hasOwnProperty.call(
+                    Web.propertyTypes, name
+                ))
                     value.set(name, Web.propertyTypes[name])
         } else
             value = Tools.convertPlainObjectToMap(value) as
@@ -1051,7 +1070,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Attaches event handler to keep in sync with nested components properties
      * states.
-     *
      * @returns Nothing.
      */
     attachEventHandler():void {
@@ -1070,12 +1088,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Attach explicitly defined event handler to synchronize internal and
      * external property states.
-     *
      * @returns Returns "true" if there are some defined and "false" otherwise.
      */
     attachExplicitDefinedOutputEventHandler():boolean {
         // Grab all existing output to property specifications
-        let result:boolean = false
+        let result = false
         for (const name of Object.keys(this.self.eventToPropertyMapping!))
             if (!Object.prototype.hasOwnProperty.call(
                 this.internalProperties, name
@@ -1100,27 +1117,25 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Attach implicitly defined event handler to synchronize internal and
      * external property states.
-     *
      * @param reflectProperties - Indicates whether implicitly determined
      * properties should be reflected.
      *
      * @returns Nothing.
      */
     attachImplicitDefinedOutputEventHandler(
-        reflectProperties:boolean = true
+        reflectProperties = true
     ):void {
         // Determine all event handler to inject
-        for (const [name, type] of Object.entries(this.self.propertyTypes))
+        for (const [name, type] of Object.keys(this.self.propertyTypes))
             if (
                 !Object.prototype.hasOwnProperty.call(
                     this.internalProperties, name
                 ) &&
-                [func, 'function'].includes(
-                    this.self.propertyTypes![name] as string
-                ) &&
+                [func, 'function'].includes(type) &&
                 !this.self.renderProperties.includes(name)
             ) {
                 this.outputEventNames.add(name)
+
                 this.setInternalPropertyValue(
                     name,
                     (...parameters:Array<unknown>):void => {
@@ -1135,7 +1150,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Triggers all identified events to communicate internal property / state
      * changes.
-     *
      * @returns Nothing.
      */
     triggerOuputEvents():void {
@@ -1144,7 +1158,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Forwards given event as native web event.
-     *
      * @param name - Event name.
      * @param parameters - Event parameters.
      *
@@ -1164,7 +1177,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * Renders component given slot contents into given dom node. If expected
      * slots are not given but a fallback is specified they will be loaded into
      * internal slot mapping.
-     *
      * @param targetDomNode - Target dom node to render slots into.
      * @param scope - Environment to render slots again if specified.
      *
@@ -1207,7 +1219,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Determines slot content from given node.
-     *
      * @param slot - Node to grab slot content from.
      *
      * @returns Determined slot.
@@ -1255,22 +1266,23 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Saves given slots.
-     *
      * @returns Nothing.
      */
     grabGivenSlots():void {
         this.slots = {}
 
-        for (let slot of Array.from(this.querySelectorAll('[slot]'))) {
+        for (const slot of Array.from(this.querySelectorAll('[slot]'))) {
             // NOTE: This is how we avoid to grab slots from nested components.
             let currentElement:Node|null = slot.parentNode
-            let skip:boolean = true
+            let skip = true
             while (currentElement) {
                 if (currentElement.nodeName.includes('-')) {
                     if (currentElement === this)
                         skip = false
+
                     break
                 }
+
                 currentElement = currentElement.parentNode
             }
             if (skip)
@@ -1298,7 +1310,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     // / region properties
     /**
      * Determines if given property name exists in wrapped component state.
-     *
      * @param name - Property name to check if exists in state.
      *
      * @returns Boolean result.
@@ -1336,7 +1347,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Reflects wrapped component state back to web-component's attributes.
-     *
      * @param properties - Properties to update in reflected attribute state.
      *
      * @returns Nothing.
@@ -1358,95 +1368,89 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 switch (
                     this.self._propertiesToReflectAsAttributes!.get(name)
                 ) {
-                    case boolean:
-                    case 'boolean':
-                        if (value) {
-                            if (this.getAttribute(attributeName) !== '')
-                                this.setAttribute(attributeName, '')
-                        } else if (this.hasAttribute(attributeName))
-                            this.removeAttribute(attributeName)
-                        break
-                    case func:
-                    case 'function':
-                        break
-                    case 'json':
-                        if (value) {
-                            const representation:string = JSON.stringify(value)
-                            if (
-                                representation &&
-                                this.getAttribute(attributeName) !==
-                                    representation
-                            ) {
-                                this.setAttribute(
-                                    attributeName, representation
-                                )
-                                break
-                            }
+                case boolean:
+                case 'boolean':
+                    if (value) {
+                        if (this.getAttribute(attributeName) !== '')
+                            this.setAttribute(attributeName, '')
+                    } else if (this.hasAttribute(attributeName))
+                        this.removeAttribute(attributeName)
+                    break
+                case func:
+                case 'function':
+                    break
+                case 'json':
+                    if (value) {
+                        const representation:string = JSON.stringify(value)
+                        if (
+                            representation &&
+                            this.getAttribute(attributeName) !== representation
+                        ) {
+                            this.setAttribute(attributeName, representation)
+
+                            break
                         }
-                        if (this.hasAttribute(attributeName))
-                            this.removeAttribute(attributeName)
-                        break
-                    case number:
-                    case 'number':
-                        if (typeof value === 'number' && !isNaN(value)) {
-                            const valueAsString:string = `${value}`
-                            if (
-                                this.getAttribute(attributeName) !==
-                                    valueAsString
-                            )
-                                this.setAttribute(attributeName, valueAsString)
-                        } else if (this.hasAttribute(attributeName))
-                            this.removeAttribute(attributeName)
-                        break
-                    case string:
-                    case 'string':
-                        if (value) {
-                            if (this.getAttribute(attributeName) !== value)
-                                this.setAttribute(
-                                    attributeName, value as string
-                                )
-                        } else if (this.hasAttribute(attributeName))
-                            this.removeAttribute(attributeName)
-                        break
-                    case any:
-                    case array:
-                    case arrayOf:
-                    case element:
-                    case elementType:
-                    case instanceOf:
-                    case node:
-                    case object:
-                    case 'object':
-                    case objectOf:
-                    case shape:
-                    case exact:
-                    case symbol:
-                    default:
-                        if (value) {
-                            const representation:string =
-                                Tools.represent(value)
-                            if (
-                                representation &&
-                                this.getAttribute(attributeName) !==
-                                    representation
-                            ) {
-                                this.setAttribute(
-                                    attributeName, representation
-                                )
-                                break
-                            }
+                    }
+                    if (this.hasAttribute(attributeName))
+                        this.removeAttribute(attributeName)
+
+                    break
+                case number:
+                case 'number':
+                    if (typeof value === 'number' && !isNaN(value)) {
+                        const valueAsString = `${value}`
+                        if (this.getAttribute(attributeName) !== valueAsString)
+                            this.setAttribute(attributeName, valueAsString)
+                    } else if (this.hasAttribute(attributeName))
+                        this.removeAttribute(attributeName)
+
+                    break
+                case string:
+                case 'string':
+                    if (value) {
+                        if (this.getAttribute(attributeName) !== value)
+                            this.setAttribute(attributeName, value as string)
+                    } else if (this.hasAttribute(attributeName))
+                        this.removeAttribute(attributeName)
+
+                    break
+                case any:
+                case array:
+                case arrayOf:
+                case element:
+                case elementType:
+                case instanceOf:
+                case node:
+                case object:
+                case 'object':
+                case objectOf:
+                case shape:
+                case exact:
+                case symbol:
+                default:
+                    if (value) {
+                        const representation:string = Tools.represent(value)
+                        if (
+                            representation &&
+                            this.getAttribute(attributeName) !== representation
+                        ) {
+                            this.setAttribute(attributeName, representation)
+
+                            break
                         }
-                        if (this.hasAttribute(attributeName))
-                            this.removeAttribute(attributeName)
-                        break
+                    }
+                    if (this.hasAttribute(attributeName))
+                        this.removeAttribute(attributeName)
+
+                    break
                 }
         }
+
         this.ignoreAttributeUpdateObservations = false
     }
     /**
      * Reflects wrapped component state back to web-component's attributes and
      * properties.
-     *
      * @param properties - Properties to update in reflected property state.
      *
      * @returns Nothing.
@@ -1493,7 +1497,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     }
     /**
      * Triggers a new rendering cycle by respecting batch configuration.
-     *
      * @param reason - A description why rendering should be triggered.
      *
      * @returns Nothing.
@@ -1506,6 +1509,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.batchedUpdateRunning = false
                     this.render(reason)
                 })
+                    .then(Tools.noop, Tools.noop)
             }
         } else
             this.render(reason)
@@ -1513,7 +1517,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Reflect given event handler call with given parameter back to current
      * properties state.
-     *
      * @param name - Event name.
      * @param parameters - List of parameter to given event handler call.
      *
@@ -1617,7 +1620,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Evaluates given property value depending on its type specification and
      * registers in properties mapping object.
-     *
      * @param attributeName - Name of given value.
      * @param value - Value to evaluate.
      *
@@ -1668,193 +1670,188 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 }
             } else
                 switch (type) {
-                    case boolean:
-                    case 'boolean':
-                        const booleanValue:boolean =
-                            ![null, 'false'].includes(value)
-                        this.setInternalPropertyValue(name, booleanValue)
-                        this.setExternalPropertyValue(name, booleanValue)
+                case boolean:
+                case 'boolean':
+                    const booleanValue = ![null, 'false'].includes(value)
+                    this.setInternalPropertyValue(name, booleanValue)
+                    this.setExternalPropertyValue(name, booleanValue)
 
-                        break
-                    case func:
-                    case 'function':
-                        let error:null|string = null
-                        let templateFunction:TemplateFunction
+                    break
+                case func:
+                case 'function':
+                    let error:null|string = null
+                    let templateFunction:TemplateFunction
 
-                        const scopeNames:Array<string> = [
-                            'data',
-                            'event',
-                            'firstArgument',
-                            'firstParameter',
-                            'options',
-                            'scope',
-                            'parameters',
-                            'Tools'
-                        ]
+                    const scopeNames:Array<string> = [
+                        'data',
+                        'event',
+                        'firstArgument',
+                        'firstParameter',
+                        'options',
+                        'scope',
+                        'parameters',
+                        'Tools'
+                    ]
 
-                        if (value) {
-                            const result:CompilationResult =
-                                Tools.stringCompile(value, scopeNames)
-                            error = result.error
-                            templateFunction = result.templateFunction
+                    if (value) {
+                        const result:CompilationResult =
+                            Tools.stringCompile(value, scopeNames)
+                        error = result.error
+                        templateFunction = result.templateFunction
 
-                            if (error)
-                                console.warn(
-                                    'Failed to compile given handler "' +
-                                    `${attributeName}": ${error}.`
+                        if (error)
+                            console.warn(
+                                'Failed to compile given handler "' +
+                                `${attributeName}": ${error}.`
+                            )
+                    }
+
+                    this.setInternalPropertyValue(
+                        name,
+                        (...parameters:Array<unknown>):unknown => {
+                            if (this.outputEventNames.has(name))
+                                this.reflectEventToProperties(
+                                    name, parameters
                                 )
-                        }
 
-                        this.setInternalPropertyValue(
-                            name,
-                            (...parameters:Array<unknown>):unknown => {
-                                if (this.outputEventNames.has(name))
-                                    this.reflectEventToProperties(
-                                        name, parameters
+                            let result:unknown = undefined
+                            if (!error)
+                                try {
+                                    result = templateFunction.call(
+                                        this,
+                                        parameters[0],
+                                        parameters[0],
+                                        parameters[0],
+                                        parameters[0],
+                                        parameters[0],
+                                        parameters[0],
+                                        parameters,
+                                        Tools
                                     )
+                                } catch (error) {
+                                    console.warn(
+                                        'Failed to evaluate function "' +
+                                        `${attributeName}" with expression "` +
+                                        `${value}" and scope variables "` +
+                                        `${scopeNames.join('", "')}" set to ` +
+                                        `"${Tools.represent(parameters)}": ` +
+                                        `${error as string}. Set property ` +
+                                        `to "undedefined".`
+                                    )
+                                }
 
-                                let result:unknown = undefined
-                                if (!error)
-                                    try {
-                                        result = templateFunction.call(
-                                            this,
-                                            parameters[0],
-                                            parameters[0],
-                                            parameters[0],
-                                            parameters[0],
-                                            parameters[0],
-                                            parameters[0],
-                                            parameters,
-                                            Tools
-                                        )
-                                    } catch (error) {
-                                        console.warn(
-                                            'Failed to evaluate function "' +
-                                            `${attributeName}" with ` +
-                                            `expression "${value}" and scope` +
-                                            ' variables "' +
-                                            `${scopeNames.join('", "')}" set` +
-                                            ` to "` +
-                                            `${Tools.represent(parameters)}"` +
-                                            `: ${error}. Set property to "` +
-                                            'undedefined".'
-                                        )
-                                    }
+                            if (!this.self.renderProperties.includes(name))
+                                this.forwardEvent(name, parameters)
 
-                                if (!this.self.renderProperties.includes(name))
-                                    this.forwardEvent(name, parameters)
-
-                                return result
-                            }
-                        )
-
-                        if (!error)
-                            this.setExternalPropertyValue(
-                                name, templateFunction!
-                            )
-
-                        break
-                    case 'json':
-                        if (value) {
-                            let evaluated:PlainObject
-                            try {
-                                evaluated = JSON.parse(value)
-                            } catch (error) {
-                                console.warn(
-                                    'Error occurred during parsing given ' +
-                                    `json attribute "${attributeName}": ` +
-                                    Tools.represent(error)
-                                )
-
-                                break
-                            }
-                            /*
-                                NOTE: We have to avoid that both values changes
-                                each other.
-                            */
-                            this.setInternalPropertyValue(name, evaluated)
-                            this.setExternalPropertyValue(
-                                name, Tools.copy(evaluated, 1)
-                            )
-                        } else {
-                            this.setInternalPropertyValue(name, null)
-                            this.setExternalPropertyValue(name, null)
+                            return result
                         }
+                    )
 
-                        break
-                    case number:
-                    case 'number':
-                        if (value === null) {
-                            this.setInternalPropertyValue(name, value)
-                            this.setExternalPropertyValue(name, value)
+                    if (!error)
+                        this.setExternalPropertyValue(name, templateFunction!)
+
+                    break
+                case 'json':
+                    if (value) {
+                        let evaluated:PlainObject
+                        try {
+                            evaluated = JSON.parse(value)
+                        } catch (error) {
+                            console.warn(
+                                'Error occurred during parsing given json ' +
+                                `attribute "${attributeName}": ` +
+                                Tools.represent(error)
+                            )
 
                             break
                         }
                         /*
-                            NOTE: You should not name this variable "number"
-                            since babel gets confused caused by existing module
-                            wide property type variable "number".
+                            NOTE: We have to avoid that both values changes
+                            each other.
                         */
-                        let numberValue:number|undefined = parseFloat(value)
-                        if (isNaN(numberValue))
-                            numberValue = undefined
-                        this.setInternalPropertyValue(name, numberValue)
-                        this.setExternalPropertyValue(name, numberValue)
+                        this.setInternalPropertyValue(name, evaluated)
+                        this.setExternalPropertyValue(
+                            name, Tools.copy(evaluated, 1)
+                        )
+                    } else {
+                        this.setInternalPropertyValue(name, null)
+                        this.setExternalPropertyValue(name, null)
+                    }
 
-                        break
-                    case string:
-                    case 'string':
+                    break
+                case number:
+                case 'number':
+                    if (value === null) {
                         this.setInternalPropertyValue(name, value)
                         this.setExternalPropertyValue(name, value)
 
                         break
-                    case any:
-                    case array:
-                    case arrayOf:
-                    case element:
-                    case elementType:
-                    case instanceOf:
-                    case node:
-                    case object:
-                    case 'object':
-                    case objectOf:
-                    case oneOf:
-                    case oneOfType:
-                    case shape:
-                    case exact:
-                    case symbol:
-                    default:
-                        if (value) {
-                            const evaluated:EvaluationResult =
-                                Tools.stringEvaluate(value, {}, false, this)
-                            if (evaluated.error) {
-                                console.warn(
-                                    'Error occurred during processing given ' +
-                                    'attribute configuration "' +
-                                    `${attributeName}": ${evaluated.error}`
-                                )
-                                break
-                            }
-                            /*
-                                NOTE: We have to avoid that both values changes
-                                each other.
-                            */
-                            this.setInternalPropertyValue(
-                                name, evaluated.result
-                            )
-                            this.setExternalPropertyValue(
-                                name, Tools.copy(evaluated.result, 1)
-                            )
-                        } else if (this.hasAttribute(attributeName)) {
-                            this.setInternalPropertyValue(name, true)
-                            this.setExternalPropertyValue(name, true)
-                        } else {
-                            this.setInternalPropertyValue(name, null)
-                            this.setExternalPropertyValue(name, null)
-                        }
+                    }
+                    /*
+                        NOTE: You should not name this variable "number" since
+                        babel gets confused caused by existing module wide
+                        property type variable "number".
+                    */
+                    let numberValue:number|undefined = parseFloat(value)
+                    if (isNaN(numberValue))
+                        numberValue = undefined
 
-                        break
-            }
+                    this.setInternalPropertyValue(name, numberValue)
+                    this.setExternalPropertyValue(name, numberValue)
+
+                    break
+                case string:
+                case 'string':
+                    this.setInternalPropertyValue(name, value)
+                    this.setExternalPropertyValue(name, value)
+
+                    break
+                case any:
+                case array:
+                case arrayOf:
+                case element:
+                case elementType:
+                case instanceOf:
+                case node:
+                case object:
+                case 'object':
+                case objectOf:
+                case oneOf:
+                case oneOfType:
+                case shape:
+                case exact:
+                case symbol:
+                default:
+                    if (value) {
+                        const evaluated:EvaluationResult =
+                            Tools.stringEvaluate(value, {}, false, this)
+                        if (evaluated.error) {
+                            console.warn(
+                                'Error occurred during processing given ' +
+                                `attribute configuration "${attributeName}":` +
+                                evaluated.error
+                            )
+
+                            break
+                        }
+                        /*
+                            NOTE: We have to avoid that both values changes
+                            each other.
+                        */
+                        this.setInternalPropertyValue(name, evaluated.result)
+                        this.setExternalPropertyValue(
+                            name, Tools.copy(evaluated.result, 1)
+                        )
+                    } else if (this.hasAttribute(attributeName)) {
+                        this.setInternalPropertyValue(name, true)
+                        this.setExternalPropertyValue(name, true)
+                    } else {
+                        this.setInternalPropertyValue(name, null)
+                        this.setExternalPropertyValue(name, null)
+                    }
+
+                    break
+                }
         }
     }
     // / endregion
@@ -1862,7 +1859,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Determines new scope object with useful default set of environment
      * values.
-     *
      * @param scope - To apply to generated scope.
      *
      * @returns Generated scope.
@@ -1883,7 +1879,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Creates shadow root if not created yet and assigns to current root
      * property.
-     *
      * @returns Nothing.
      */
     applyShadowRootIfNotExisting():void {
@@ -1892,7 +1887,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 (!('attachShadow' in this) && 'ShadyDOM' in window) ?
                     (
                         window as unknown as
-                            {ShadyDOM:{wrap:(domNode:HTMLElement) =>
+                            {ShadyDOM:{wrap:(_domNode:HTMLElement) =>
                                 HTMLElement
                             }}
                     ).ShadyDOM.wrap(this) :
@@ -1909,12 +1904,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     /**
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
-     *
      * @param reason - Description why rendering is necessary.
      *
      * @returns Nothing.
      */
-    render(reason:string = 'unknown'):void {
+    render(reason = 'unknown'):void {
         this.determineRenderScope()
 
         if (!this.dispatchEvent(new CustomEvent(
@@ -1922,10 +1916,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         )))
             return
 
-        const evaluated:EvaluationResult =
-            Tools.stringEvaluate(`\`${this.self.content}\``, this.scope)
+        const evaluated:EvaluationResult = Tools.stringEvaluate(
+            `\`${this.self.content as string}\``, this.scope
+        )
         if (evaluated.error) {
             console.warn(`Faild to process template: ${evaluated.error}`)
+
             return
         }
 

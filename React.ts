@@ -50,7 +50,8 @@ import {
     ReactRenderItem,
     ReactRenderItems,
 
-    WebComponentAPI
+    WebComponentAPI,
+    WebComponentConfiguration
 } from './type'
 // endregion
 /*
@@ -372,6 +373,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         const isComponent:boolean = this.self.isReactComponent(domNode)
         if (isComponent) {
             // region pre-compile nested render context
+            // eslint-disable-next-line @typescript-eslint/no-extra-semi
             ;(domNode as ReactWeb).determineRenderScope()
 
             if (Object.keys(this.compiledSlots).length === 0)
@@ -568,6 +570,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 delete properties.textContent
             } else if (isComponent) {
                 // region evaluate nested render contexts
+                // eslint-disable-next-line @typescript-eslint/no-extra-semi
                 ;(domNode as ReactWeb).evaluateSlots({
                     ...properties, ...runtimeScope, parent: domNode
                 })
@@ -720,7 +723,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         this.isWrapped = true
 
         const wrapped:ComponentType =
-            this.self.content.wrapped || this.self.content
+            this.self.content.wrapped as ComponentType || this.self.content
 
         if (this.self.content.webComponentAdapterWrapped) {
             if (this.wrapMemorizingWrapper) {
@@ -825,7 +828,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                             target.content.wrapped, 'propTypes'
                         ) &&
                         !Object.prototype.hasOwnProperty.call(
-                            target.content.wrapped.propTypes, name
+                            (
+                                target.content.wrapped as
+                                    WebComponentConfiguration
+                            ).propTypes,
+                            name
                         )
                     )
                 )
