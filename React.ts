@@ -192,8 +192,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         if (this.instance?.current)
             this.reflectInstanceProperties()
         else
-            Tools.timeout(this.reflectInstanceProperties)
-                .then(Tools.noop, Tools.noop)
+            void Tools.timeout(this.reflectInstanceProperties)
     }
     // endregion
     // region property handling

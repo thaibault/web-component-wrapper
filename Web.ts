@@ -287,13 +287,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.batchedAttributeUpdateRunning = true
                 this.batchedUpdateRunning = true
 
-                Tools.timeout(():void => {
+                void Tools.timeout(():void => {
                     this.batchedAttributeUpdateRunning = false
                     this.batchedUpdateRunning = false
 
                     this.render('attributeChanged')
                 })
-                    .then(Tools.noop, Tools.noop)
             }
         } else
             this.render('attributeChanged')
@@ -337,8 +336,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
 
         this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render('connected') :
-            Tools.timeout(():void => this.render('connected'))
-                .then(Tools.noop, Tools.noop)
+            void Tools.timeout(():void => this.render('connected'))
     }
     /**
      * Frees some memory.
@@ -498,7 +496,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 this.batchedPropertyUpdateRunning = true
                 this.batchedUpdateRunning = true
 
-                Tools.timeout(():void => {
+                void Tools.timeout(():void => {
                     if (value !== undefined && this.isStateProperty(name)) {
                         this.render('preStatePropertyChanged')
 
@@ -522,7 +520,6 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         this.triggerOuputEvents()
                     }
                 })
-                    .then(Tools.noop, Tools.noop)
             }
         } else {
             const isStateProperty:boolean = this.isStateProperty(name)
@@ -1505,11 +1502,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         if (this.batchUpdates) {
             if (!this.batchedUpdateRunning) {
                 this.batchedUpdateRunning = true
-                Tools.timeout(():void => {
+                void Tools.timeout(():void => {
                     this.batchedUpdateRunning = false
                     this.render(reason)
                 })
-                    .then(Tools.noop, Tools.noop)
             }
         } else
             this.render(reason)
