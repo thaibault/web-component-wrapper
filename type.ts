@@ -15,14 +15,13 @@
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
 */
-// region imports 
-import Tools from 'clientnode'
+// region imports
 import PropertyTypes from 'clientnode/property-types'
 import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
 import {ComponentType as ReactComponentType, ReactElement} from 'react'
 
 import Web from './Web'
-// endregion 
+// endregion
 // region exports
 export type CompiledDomNodeTemplateItem = {
     children:Array<CompiledDomNodeTemplate>
@@ -36,25 +35,32 @@ export type CompiledDomNodeTemplate<NodeType = Node> =
 
 export type EventMapping = [Mapping<any>, Mapping<any>]|Mapping<any>
 export type EventToPropertyMapping =
-    Mapping<true|((...parameter:Array<any>) => EventMapping)>
+    Mapping<true|((..._parameter:Array<any>) => EventMapping)>
 
 export type AttributesReflectionConfiguration =
-    Array<string>|Map<string, string|ValueOf<typeof PropertyTypes>>|string|Mapping<ValueOf<typeof PropertyTypes>|string>
+    Array<string> |
+    Map<
+        string, string |
+        ValueOf<typeof PropertyTypes>> |
+        string |
+        Mapping<ValueOf<typeof PropertyTypes> |
+        string
+    >
 
 export type PreCompiledItem = {
     originalScopeNames:Array<string>
     templateFunction:TemplateFunction
 }
-export type ReactRenderBaseItemFactory = (scope:Mapping<unknown>) =>
+export type ReactRenderBaseItemFactory = (_scope:Mapping<unknown>) =>
     ReactRenderBaseItem
-export type ReactRenderItemFactory = (scope:Mapping<unknown>) =>
+export type ReactRenderItemFactory = (_scope:Mapping<unknown>) =>
     ReactRenderItem
 export type ReactRenderItemsFactory =
     Array<ReactRenderItemFactory>|ReactRenderItemFactory
 
 export type ReactRenderBaseItem = ReactElement|string|null
 export type ReactRenderItem =
-    ((...parameters:Array<unknown>) => ReactRenderBaseItem)|ReactRenderBaseItem
+    ((..._parameters:Array<unknown>) => ReactRenderBaseItem)|ReactRenderBaseItem
 export type ReactRenderItems = Array<ReactRenderItem>|ReactRenderItem
 
 export interface WebComponentConfiguration {
@@ -69,7 +75,7 @@ export interface WebComponentConfiguration {
 }
 export interface StaticWebComponent extends WebComponentConfiguration {
     webComponentAdapterWrapped?:string
-    wrapped?:any
+    wrapped?:unknown
 
     _name?:string
     ___types?:{name?:{name?:string}}
@@ -83,7 +89,7 @@ export interface ComponentAdapter<
 }
 export type WebComponentAPI<WebComponent extends typeof Web = typeof Web> = {
     component:WebComponent
-    register:(tagName?:string) => void
+    register:(_tagName?:string) => void
 }
 // endregion
 // region vim modline

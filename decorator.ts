@@ -16,7 +16,7 @@
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
 */
-// region impor ts
+// region imports
 import Tools from 'clientnode'
 import PropertyTypes, {string} from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
@@ -27,6 +27,15 @@ import Web from './Web'
  * Generates a decorator based on given configuration.
  * @param options - Property configuration to define how to transfer attributes
  * and properties into each other.
+ * @param options.alias - Alternate property name.
+ * @param options.readAttribute - Indicates whether to read from existing
+ * attribute also.
+ * @param options.type - Value type to parse value.
+ * @param options.update - Indicates whether to already existing property
+ * configurations.
+ * @param options.writeAttribute - Indicates whether to sync attribute
+ * representation back into dom.
+ *
  * @returns Generated decorator.
  */
 export function property(
@@ -45,13 +54,12 @@ export function property(
      * NOTE: It is important to set static configuration properties on its
      * "own" properties instead of some inherited one. So we have to check via
      * "hasOwnProperty" for existence in this decorator.
-     *
      * @param target - Instance to apply given property to.
      * @param name - Field name to apply.
      *
      * @returns Modified given property.
      */
-    return function(target:Object, name:string|symbol):void {
+    return function(target:object, name:string|symbol):void {
         if (typeof name !== 'string')
             return
 
@@ -62,7 +70,9 @@ export function property(
             (target as unknown as {constructor:TargetType}).constructor
 
         if (options.readAttribute) {
-            if (!self.hasOwnProperty('observedAttributes'))
+            if (!Object.prototype.hasOwnProperty.call(
+                self, 'observedAttributes'
+            ))
                 self.observedAttributes = self.observedAttributes ?
                     [...self.observedAttributes] :
                     []
@@ -73,17 +83,22 @@ export function property(
         }
 
         if (options.type) {
-            if (!self.hasOwnProperty('propertyTypes'))
+            if (!Object.prototype.hasOwnProperty.call(self, 'propertyTypes'))
                 self.propertyTypes = self.propertyTypes ?
                     {...self.propertyTypes} :
                     {}
 
-            if (options.update || !self.propertyTypes.hasOwnProperty(name))
+            if (
+                options.update ||
+                !Object.prototype.hasOwnProperty.call(self, name)
+            )
                 self.propertyTypes[name] = options.type
         }
 
         if (options.writeAttribute) {
-            if (!self.hasOwnProperty('propertiesToReflectAsAttributes'))
+            if (!Object.prototype.hasOwnProperty.call(
+                self, 'propertiesToReflectAsAttributes'
+            ))
                 self.propertiesToReflectAsAttributes =
                     self.propertiesToReflectAsAttributes ?
                         Tools.copy(self.propertiesToReflectAsAttributes) :
@@ -97,13 +112,18 @@ export function property(
                 !self.propertiesToReflectAsAttributes.includes(name) ||
                 self.propertiesToReflectAsAttributes !== null &&
                 typeof self.propertiesToReflectAsAttributes === 'object' &&
-                !self.propertiesToReflectAsAttributes.hasOwnProperty(name)
+                !Object.prototype.hasOwnProperty.call(
+                    self.propertiesToReflectAsAttributes, name
+                )
             ) {
                 let result:string|ValueOf<typeof PropertyTypes>|undefined
                 if (typeof options.writeAttribute === 'boolean') {
                     if (
                         options.writeAttribute === true &&
-                        self.propertyTypes?.hasOwnProperty(name)
+                        self.propertyTypes &&
+                        Object.prototype.hasOwnProperty.call(
+                            self.propertyTypes, name
+                        )
                     )
                         result = self.propertyTypes[name]
                 } else
@@ -136,12 +156,15 @@ export function property(
         }
 
         if (options.alias) {
-            if (!self.hasOwnProperty('propertyAliases'))
+            if (!Object.prototype.hasOwnProperty.call(self, 'propertyAliases'))
                 self.propertyAliases = self.propertyAliases ?
                     {...self.propertyAliases} :
                     {}
 
-            if (options.update || !self.propertyAliases.hasOwnProperty(name))
+            if (
+                options.update ||
+                !Object.prototype.hasOwnProperty.call(self, name)
+            )
                 self.propertyAliases[name] = options.alias
         }
     }

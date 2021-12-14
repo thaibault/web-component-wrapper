@@ -41,11 +41,12 @@ export const Web = WebImport
  * @param nameHint - A name to set as property in runtime generated web
  * component class.
  * @param configuration - Additional web component configurations.
+ *
  * @returns Generated object to register and retrieve generated web component.
  */
 export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
     component:Type,
-    nameHint:string = 'NoName',
+    nameHint = 'NoName',
     configuration:WebComponentConfiguration = {}
 ):WebComponentAPI => {
     // Determine class / function name.
@@ -57,7 +58,7 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
             member variables under this property. Try to respect these.
         */
         component.___types?.name?.name ||
-        nameHint.replace(/^(.*\/+)?([^\/]+)\.tsx$/, '$2')
+        nameHint.replace(/^(.*\/+)?([^/]+)\.tsx$/, '$2')
 
     if (configuration.propTypes)
         component.propTypes = configuration.propTypes
@@ -90,17 +91,17 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
                 propertiesToReflectAsAttributes.set(
                     name, ReactWeb.propertyTypes[name]
                 )
-            if (
-                propertiesToReflectAsAttributes !== null &&
-                typeof propertiesToReflectAsAttributes === 'object'
+        else if (
+            propertiesToReflectAsAttributes !== null &&
+            typeof propertiesToReflectAsAttributes === 'object'
+        )
+            for (
+                const name of ReactWeb.propertiesToReflectAsAttributes as
+                    Array<string>
             )
-                for (
-                    const name of ReactWeb.propertiesToReflectAsAttributes as
-                        Array<string>
-                )
-                    (propertiesToReflectAsAttributes as unknown as Mapping)[
-                        name
-                    ] = ReactWeb.propertyTypes[name] as string
+                (propertiesToReflectAsAttributes as unknown as Mapping)[
+                    name
+                ] = ReactWeb.propertyTypes[name] as string
 
     const attributeNames:Array<string> =
         allPropertyNames.map((name:string):string =>
@@ -113,8 +114,8 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
         static attachWebComponentAdapterIfNotExists:boolean =
             typeof configuration.attachWebComponentAdapterIfNotExists ===
                 'boolean' ?
-                    configuration.attachWebComponentAdapterIfNotExists :
-                    true
+                configuration.attachWebComponentAdapterIfNotExists :
+                true
 
         static content:ComponentType = component
 
@@ -141,8 +142,9 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
         static propertyAliases:Mapping = {
             ...ReactWeb.propertyAliases, ...propertyAliases
         }
-        static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
-            propertiesToReflectAsAttributes
+        static propertiesToReflectAsAttributes:(
+            AttributesReflectionConfiguration
+        ) = propertiesToReflectAsAttributes
         static propertyTypes:Mapping<string|ValueOf<typeof PropertyTypes>> = {
             ...ReactWeb.propertyTypes,
             ...propertyTypes
@@ -156,7 +158,7 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
 
         readonly self:typeof ConcreteComponent = ConcreteComponent
 
-        internalProperties:Mapping<any> =
+        internalProperties:Mapping<unknown> =
             configuration.internalProperties ?
                 {...configuration.internalProperties} :
                 component.internalProperties ?
