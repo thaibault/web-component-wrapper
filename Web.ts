@@ -1728,7 +1728,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                                     console.warn(
                                         'Failed to evaluate function "' +
                                         `${attributeName}" with expression "` +
-                                        `${value}" and scope variables "` +
+                                        `${value!}" and scope variables "` +
                                         `${scopeNames.join('", "')}" set to ` +
                                         `"${Tools.represent(parameters)}": ` +
                                         `${error as string}. Set property ` +
