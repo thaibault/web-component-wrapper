@@ -1471,7 +1471,10 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             for (const name of Object.keys(this.instance.current.state)
                 .concat(
                     this.instance.current.state.modelState ?
-                        Object.keys(this.instance.current.state.modelState) :
+                        Object.keys(
+                            this.instance.current.state.modelState as
+                                Mapping<unknown>
+                        ) :
                         []
                 )
             )
@@ -1551,11 +1554,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             if (Array.isArray(mapping)) {
                 result = mapping[0]
                 this.reflectProperties(result)
-                Tools.extend(
-                    true,
-                    this.internalProperties,
-                    mapping[1] as Mapping<unknown>
-                )
+                Tools.extend(true, this.internalProperties, mapping[1])
             } else if (mapping !== null && typeof mapping === 'object') {
                 result = mapping
                 this.reflectProperties(mapping)

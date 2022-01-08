@@ -734,11 +734,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 this.self.content.displayName = this.self._name
 
             this.self.content = forwardRef((
-                properties:Attributes, reference:Ref<ComponentAdapter>
+                properties:Attributes,
+                reference:Ref<ComponentAdapter<Attributes>>
             ):ReactElement => {
                 useImperativeHandle(
-                    reference, ():ComponentAdapter => ({properties})
+                    reference,
+                    ():ComponentAdapter<Attributes> => ({properties})
                 )
+
                 return createElement(wrapped, properties)
             }) as ComponentType
 
