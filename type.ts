@@ -88,7 +88,7 @@ export interface StaticWebComponent extends WebComponentConfiguration {
 }
 export type ComponentType = ReactComponentType & StaticWebComponent
 export interface ComponentAdapter<
-    Properties = Mapping<any>, State = Mapping<any>
+    Properties = Mapping<unknown>, State = Mapping<unknown>
 > {
     properties?:Properties
     state?:State
