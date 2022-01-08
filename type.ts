@@ -33,9 +33,13 @@ export type CompiledDomNodeTemplateItem = {
 export type CompiledDomNodeTemplate<NodeType = Node> =
     Map<NodeType, CompiledDomNodeTemplateItem>
 
-export type EventMapping = [Mapping<any>, Mapping<any>]|Mapping<any>
-export type EventToPropertyMapping =
-    Mapping<true|((..._parameter:Array<any>) => EventMapping)>
+export type EventCallbackMapping = Map<string, () => void>
+export type EventMapping<
+    ExternalPropertiesType = Mapping<unknown>,
+    InternalPropertiesType = Mapping<unknown>
+> = [ExternalPropertiesType, InternalPropertiesType]|ExternalPropertiesType
+export type EventMapper = (..._parameter:Array<unknown>) => EventMapping
+export type EventToPropertyMapping = Mapping<true|EventMapper>
 
 export type AttributesReflectionConfiguration =
     Array<string> |
@@ -47,10 +51,12 @@ export type AttributesReflectionConfiguration =
         string
     >
 
+export type ScopeDeclaration = Array<string>|Mapping<unknown>
 export type PreCompiledItem = {
     originalScopeNames:Array<string>
     templateFunction:TemplateFunction
 }
+
 export type ReactRenderBaseItemFactory = (_scope:Mapping<unknown>) =>
     ReactRenderBaseItem
 export type ReactRenderItemFactory = (_scope:Mapping<unknown>) =>
@@ -67,7 +73,7 @@ export interface WebComponentConfiguration {
     attachWebComponentAdapterIfNotExists?:boolean
     controllableProperties?:Array<string>
     eventToPropertyMapping?:EventToPropertyMapping
-    internalProperties?:Mapping<any>
+    internalProperties?:Mapping<unknown>
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>

@@ -53,8 +53,11 @@ import {
     CompiledDomNodeTemplate,
     CompiledDomNodeTemplateItem,
     ComponentAdapter,
+    EventCallbackMapping,
+    EventMapper,
     EventMapping,
     EventToPropertyMapping,
+    ScopeDeclaration,
     WebComponentAPI
 } from './type'
 // endregion
@@ -200,7 +203,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     rootInstance:null|Web = null
     scope:Mapping<unknown> = {Tools}
 
-    domNodeEventBindings:Map<Node, Map<string, Function>> = new Map()
+    domNodeEventBindings:Map<Node, EventCallbackMapping> = new Map()
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
     externalProperties:Mapping<unknown> = {}
@@ -350,7 +353,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             // Ignore error.
         }
 
-        for (const [_domNode, map] of this.domNodeEventBindings)
+        for (const map of this.domNodeEventBindings.values())
             for (const deregister of map.values())
                 deregister()
 
@@ -600,10 +603,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 } else if (name.startsWith('on-')) {
                     if (!this.domNodeEventBindings.has(domNode))
                         this.domNodeEventBindings.set(
-                            domNode, new Map<string, Function>()
+                            // eslint-disable-next-line func-call-spacing
+                            domNode, new Map<string, () => void>()
                         )
 
-                    const eventMap:Map<string, Function> =
+                    const eventMap:EventCallbackMapping =
                         this.domNodeEventBindings.get(domNode)!
 
                     name = Tools.stringDelimitedToCamelCase(
@@ -730,7 +734,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     compileDomNodeTemplate<NodeType extends Node = Node>(
         domNode:NodeType,
-        scope:any = [],
+        scope:ScopeDeclaration = [],
         options:{
             filter?:(_domNode:NodeType) => boolean
             ignoreComponents?:boolean
@@ -855,7 +859,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     evaluateDomNodeTemplate<NodeType extends Node = Node>(
         domNode:NodeType,
-        scope:any = {},
+        scope:Mapping<unknown> = {},
         options:{
             applyBindings?:boolean
             filter?:(_domNode:NodeType) => boolean
@@ -1027,7 +1031,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      *
      * @returns A boolean indicating whether given content has code.
      */
-    static hasCode(content:any):boolean {
+    static hasCode(content:unknown):boolean {
         return (
             // NOTE: First three conditions are only for performance.
             typeof content === 'string' &&
@@ -1542,12 +1546,16 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             Tools.isFunction(this.self.eventToPropertyMapping[name])
         ) {
             const mapping:EventMapping = (
-                this.self.eventToPropertyMapping[name] as Function
+                this.self.eventToPropertyMapping[name] as EventMapper
             )(...parameters, this)
             if (Array.isArray(mapping)) {
                 result = mapping[0]
                 this.reflectProperties(result)
-                Tools.extend(true, this.internalProperties, mapping[1])
+                Tools.extend(
+                    true,
+                    this.internalProperties,
+                    mapping[1] as Mapping<unknown>
+                )
             } else if (mapping !== null && typeof mapping === 'object') {
                 result = mapping
                 this.reflectProperties(mapping)
@@ -1566,7 +1574,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 parameters[0] as Mapping<unknown>
             if (
                 'persist' in parameters[0]! &&
-                Tools.isFunction((parameters[0] as {persist:Function}).persist)
+                Tools.isFunction(
+                    (parameters[0] as {persist:() => void}).persist
+                )
             ) {
                 newProperties = {}
                 for (const propertyName of Object.keys(this.self.propertyTypes))
@@ -1667,14 +1677,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             } else
                 switch (type) {
                 case boolean:
-                case 'boolean':
+                case 'boolean': {
                     const booleanValue = ![null, 'false'].includes(value)
                     this.setInternalPropertyValue(name, booleanValue)
                     this.setExternalPropertyValue(name, booleanValue)
 
                     break
+                }
                 case func:
-                case 'function':
+                case 'function': {
                     let error:null|string = null
                     let templateFunction:TemplateFunction
 
@@ -1747,11 +1758,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                         this.setExternalPropertyValue(name, templateFunction!)
 
                     break
-                case 'json':
+                }
+                case 'json': {
                     if (value) {
                         let evaluated:PlainObject
                         try {
-                            evaluated = JSON.parse(value)
+                            evaluated = JSON.parse(value) as PlainObject
                         } catch (error) {
                             console.warn(
                                 'Error occurred during parsing given json ' +
@@ -1775,8 +1787,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     }
 
                     break
+                }
                 case number:
-                case 'number':
+                case 'number': {
                     if (value === null) {
                         this.setInternalPropertyValue(name, value)
                         this.setExternalPropertyValue(name, value)
@@ -1796,12 +1809,14 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     this.setExternalPropertyValue(name, numberValue)
 
                     break
+                }
                 case string:
-                case 'string':
+                case 'string': {
                     this.setInternalPropertyValue(name, value)
                     this.setExternalPropertyValue(name, value)
 
                     break
+                }
                 case any:
                 case array:
                 case arrayOf:
@@ -1817,7 +1832,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 case shape:
                 case exact:
                 case symbol:
-                default:
+                default: {
                     if (value) {
                         const evaluated:EvaluationResult =
                             Tools.stringEvaluate(value, {}, false, this)
@@ -1847,6 +1862,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                     }
 
                     break
+                }
                 }
         }
     }
