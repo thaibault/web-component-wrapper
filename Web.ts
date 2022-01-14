@@ -171,7 +171,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     static observedAttributes:Array<string> = []
 
     static controllableProperties:Array<string> = []
-    static eventToPropertyMapping:EventToPropertyMapping|null = {}
+    static eventToPropertyMapping:(
+        EventToPropertyMapping<
+            ExternalPropertiesType, InternalPropertiesType
+        > |
+        null
+    ) = {}
     static propertyAliases:Mapping = {}
     static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
