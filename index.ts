@@ -44,10 +44,16 @@ export const Web = WebImport
  *
  * @returns Generated object to register and retrieve generated web component.
  */
-export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
+export const wrapAsWebComponent = <
+    Type extends ComponentType = ComponentType,
+    ExternalPropertiesType = Mapping<unknown>,
+    InternalPropertiesType = Mapping<unknown>
+>(
     component:Type,
     nameHint = 'NoName',
-    configuration:WebComponentConfiguration = {}
+    configuration:WebComponentConfiguration<
+        ExternalPropertiesType, InternalPropertiesType
+    > = {}
 ):WebComponentAPI => {
     // Determine class / function name.
     const name:string =
