@@ -44,10 +44,16 @@ export const Web = WebImport
  *
  * @returns Generated object to register and retrieve generated web component.
  */
-export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
+export const wrapAsWebComponent = <
+    Type extends ComponentType = ComponentType,
+    ExternalPropertiesType = Mapping<unknown>,
+    InternalPropertiesType = Mapping<unknown>
+>(
     component:Type,
     nameHint = 'NoName',
-    configuration:WebComponentConfiguration = {}
+    configuration:WebComponentConfiguration<
+        ExternalPropertiesType, InternalPropertiesType
+    > = {}
 ):WebComponentAPI => {
     // Determine class / function name.
     const name:string =
@@ -129,7 +135,7 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
             component.controllableProperties ||
             configuration.controllableProperties ||
             []
-        static eventToPropertyMapping:EventToPropertyMapping|null =
+        static eventToPropertyMapping:EventToPropertyMapping|null = (
             configuration.eventToPropertyMapping === null ?
                 configuration.eventToPropertyMapping :
                 configuration.eventToPropertyMapping ?
@@ -139,6 +145,7 @@ export const wrapAsWebComponent = <Type extends ComponentType = ComponentType>(
                         component.eventToPropertyMapping ?
                             {...component.eventToPropertyMapping} :
                             {}
+        ) as unknown as EventToPropertyMapping|null
         static propertyAliases:Mapping = {
             ...ReactWeb.propertyAliases, ...propertyAliases
         }

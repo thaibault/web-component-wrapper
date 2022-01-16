@@ -88,9 +88,10 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
     static _name = 'ReactWebComponent'
 
-    compiledSlots:Mapping<ReactRenderItemsFactory> & {
-        children?:ReactRenderItemsFactory
-    } = {}
+    compiledSlots:(
+        Mapping<ReactRenderItemsFactory> &
+        {children?:ReactRenderItemsFactory}
+    ) = {}
     preparedSlots:Mapping<ReactRenderItems> & {children?:ReactRenderItems} = {}
     rootReactInstance:null|ReactWeb = null
 

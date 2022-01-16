@@ -72,10 +72,15 @@ export type ReactRenderItem =
     ((..._parameters:Array<unknown>) => ReactRenderBaseItem)|ReactRenderBaseItem
 export type ReactRenderItems = Array<ReactRenderItem>|ReactRenderItem
 
-export interface WebComponentConfiguration {
+export interface WebComponentConfiguration<
+    ExternalPropertiesType = Mapping<unknown>,
+    InternalPropertiesType = Mapping<unknown>
+> {
     attachWebComponentAdapterIfNotExists?:boolean
     controllableProperties?:Array<string>
-    eventToPropertyMapping?:EventToPropertyMapping
+    eventToPropertyMapping?:EventToPropertyMapping<
+        ExternalPropertiesType, InternalPropertiesType
+    >
     internalProperties?:Mapping<unknown>
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
