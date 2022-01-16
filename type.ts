@@ -38,11 +38,12 @@ export type EventMapping<
     ExternalPropertiesType = Mapping<unknown>,
     InternalPropertiesType = Mapping<unknown>
 > = [ExternalPropertiesType, InternalPropertiesType]|ExternalPropertiesType
-export type EventMapper<E = Mapping<unknown>, I = Mapping<unknown>> =
-    (..._parameter:Array<unknown>) => EventMapping<E, I>
-export type EventToPropertyMapping<
+export type EventMapper<
     E = Mapping<unknown>, I = Mapping<unknown>
-> = Mapping<true|EventMapper<E, I>>
+> = (..._parameter:Array<unknown>) => EventMapping<E, I>
+export type EventToPropertyMapping<
+    E = Mapping<unknown>, I = Mapping<unknown>, B = {}
+> = B & Mapping<true|EventMapper<E, I>>
 
 export type AttributesReflectionConfiguration =
     Array<string> |
