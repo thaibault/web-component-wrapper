@@ -24,6 +24,7 @@ import {
 import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
 import React, {
     Attributes,
+    HTMLAttributes,
     createElement,
     createRef,
     forwardRef,
@@ -81,7 +82,18 @@ import {
  * reacts memorizing wrapper to cache component render results.
  * @property isWrapped - Indicates whether react component is wrapped already.
  */
-export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
+export class ReactWeb<
+    TElement = HTMLElement,
+    ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    InternalProperties extends Mapping<unknown> & {
+        children?:Array<React.ReactNode>|React.ReactNode
+        dangerouslySetInnerHTML?:HTMLAttributes<TElement>[
+            'dangerouslySetInnerHTML'
+        ]
+        key?:string
+        ref?:null|{current?:ComponentAdapter}
+    } = Mapping<unknown>
+> extends Web<TElement, ExternalProperties, InternalProperties> {
     static attachWebComponentAdapterIfNotExists = true
     static content:ComponentType|string = 'div'
     static react:typeof React = React
@@ -108,8 +120,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     connectedCallback():void {
         this.applyComponentWrapper()
 
-        // NOTE: Can be overwritten during option root determining.
-        this.rootReactInstance = this
+        // NOTE: Can be overwritten during optional root determining.
+        this.rootReactInstance = this as unknown as ReactWeb
 
         /*
             Attaches event handler, grabs given slots, reflects external
@@ -133,7 +145,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      *
      * @returns Nothing.
      */
-    reflectExternalProperties(properties:Mapping<unknown>):void {
+    reflectExternalProperties(properties:ExternalProperties):void {
         if (this.isRoot)
             super.reflectExternalProperties(properties)
     }
@@ -150,7 +162,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             they will be rendered by highest react parent.
         */
         if (
-            this.rootReactInstance !== this ||
+            this.rootReactInstance !== this as unknown as ReactWeb ||
             !this.dispatchEvent(new CustomEvent(
                 'render', {detail: {reason, scope: this.scope}}
             ))
@@ -224,7 +236,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      * @returns Nothing.
      */
     setPropertyValue(name:string, value:unknown):void {
-        this.reflectProperties({[name]: Tools.copy(value, 1)})
+        this.reflectProperties(
+            {[name]: Tools.copy(value, 1)} as unknown as ExternalProperties
+        )
         this.setInternalPropertyValue(name, Tools.copy(value, 1))
     }
     /**
@@ -314,6 +328,8 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
         isFunction = false,
         key?:string
     ):ReactRenderItemFactory {
+        type PreCompiledInternalProperties =
+            InternalProperties & {children?:ReactRenderItemsFactory}
         // region render property
         if (isFunction) {
             const node:ReactRenderBaseItemFactory = this.preCompileDomNode(
@@ -367,7 +383,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             return ():null => null
         // region native elements and wrapped react components
         // / region prepare type and static properties
-        let staticProperties:Mapping<unknown>
+        let staticProperties:PreCompiledInternalProperties
         let target:ComponentType|string
 
         const isComponent:boolean = this.self.isReactComponent(domNode)
@@ -383,7 +399,9 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 NOTE: Nested components are already instantiated and connected
                 so use their initialized properties.
             */
-            staticProperties = (domNode as ReactWeb).internalProperties
+            staticProperties =
+                (domNode as ReactWeb).internalProperties as
+                    PreCompiledInternalProperties
 
             if (
                 key &&
@@ -393,7 +411,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
 
             target = (domNode.constructor as typeof ReactWeb).content
         } else {
-            staticProperties = {key}
+            staticProperties = {key} as PreCompiledInternalProperties
             target = (domNode as HTMLElement).tagName.toLowerCase()
         }
         // / endregion
@@ -517,14 +535,14 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                 compiledProperties[extend ? '' : name] =
                     value as PreCompiledItem
             else
-                staticProperties[name] = value
+                (staticProperties as Mapping<unknown>)[name] = value
         }
         // / endregion
         // / region pre-compiled nested nodes of native elements
         if (!isComponent) {
             const childNodes:Array<Node> = Array.from(domNode.childNodes)
             if (childNodes.length)
-                staticProperties.children =
+                (staticProperties.children as ReactRenderItemsFactory) =
                     this.preCompileDomNodes(childNodes, scope)
         }
         // / endregion
@@ -534,7 +552,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             runtimeScope = {...scope, ...runtimeScope}
             runtimeScope.scope = runtimeScope
             // endregion
-            let properties:Mapping<unknown> = {...staticProperties}
+            let properties:InternalProperties = {...staticProperties}
             // region evaluate dynamic properties
             for (const [
                 name, {originalScopeNames, templateFunction}
@@ -544,10 +562,11 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
                         runtimeScope[name]
                     )
                 )
+
                 if (name === '')
                     properties = {...properties, ...value as Mapping<unknown>}
                 else
-                    properties[name] = value
+                    (properties as Mapping<unknown>)[name] = value
             }
             // endregion
             // region prepare react specific element property handling
@@ -565,7 +584,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
             if (
                 Object.prototype.hasOwnProperty.call(properties, 'textContent')
             ) {
-                properties.children = properties.textContent
+                properties.children = properties.textContent as string
 
                 delete properties.textContent
             } else if (isComponent) {
@@ -767,7 +786,7 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
      *
      * @returns Nothing.
      */
-    prepareProperties(properties:Mapping<unknown>):void {
+    prepareProperties(properties:InternalProperties):void {
         Tools.extend(properties, this.preparedSlots)
 
         this.self.removeKnownUnwantedPropertyKeys(this.self, properties)
@@ -789,11 +808,13 @@ export class ReactWeb<TElement = HTMLElement> extends Web<TElement> {
     reflectInstanceProperties = ():void => {
         if (
             this.instance?.current &&
-            (this.instance as {current:ComponentAdapter}).current.properties
+            (
+                this.instance as {current:ComponentAdapter<InternalProperties>}
+            ).current.properties
         )
             this.reflectProperties(
                 (this.instance as {current:ComponentAdapter}).current
-                    .properties as Mapping<unknown>
+                    .properties as ExternalProperties
             )
     }
     /**

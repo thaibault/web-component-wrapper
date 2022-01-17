@@ -25,7 +25,9 @@ import Web from './Web'
 // region exports
 export type CompiledDomNodeTemplateItem = {
     children:Array<CompiledDomNodeTemplate>
+
     error:null|string
+
     scopeNames:Array<string>
     template:string
     templateFunction:TemplateFunction
@@ -35,15 +37,18 @@ export type CompiledDomNodeTemplate<NodeType = Node> =
 
 export type EventCallbackMapping = Map<string, () => void>
 export type EventMapping<
-    ExternalPropertiesType = Mapping<unknown>,
-    InternalPropertiesType = Mapping<unknown>
-> = [ExternalPropertiesType, InternalPropertiesType]|ExternalPropertiesType
+    ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    InternalProperties extends Mapping<unknown> = Mapping<unknown>
+> = [ExternalProperties, InternalProperties]|ExternalProperties
 export type EventMapper<
-    E = Mapping<unknown>, I = Mapping<unknown>
-> = (..._parameter:Array<unknown>) => EventMapping<E, I>
+    E extends Mapping<unknown> = Mapping<unknown>,
+    I extends Mapping<unknown> = Mapping<unknown>
+> = (..._parameters:Array<unknown>) => EventMapping<E, I>
 export type EventToPropertyMapping<
-    E = Mapping<unknown>, I = Mapping<unknown>, B = {}
-> = B & Mapping<true|EventMapper<E, I>>
+    E extends Mapping<unknown> = Mapping<unknown>,
+    I extends Mapping<unknown> = Mapping<unknown>,
+    A = unknown
+> = A & Mapping<true|EventMapper<E, I>>
 
 export type AttributesReflectionConfiguration =
     Array<string> |
@@ -69,20 +74,24 @@ export type ReactRenderItemsFactory =
     Array<ReactRenderItemFactory>|ReactRenderItemFactory
 
 export type ReactRenderBaseItem = ReactElement|string|null
-export type ReactRenderItem =
-    ((..._parameters:Array<unknown>) => ReactRenderBaseItem)|ReactRenderBaseItem
+export type ReactRenderItem = ((..._parameters:Array<unknown>) =>
+    ReactRenderBaseItem)|ReactRenderBaseItem
 export type ReactRenderItems = Array<ReactRenderItem>|ReactRenderItem
 
 export interface WebComponentConfiguration<
-    ExternalPropertiesType = Mapping<unknown>,
-    InternalPropertiesType = Mapping<unknown>
+    ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    InternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    AdditionalEventToPropertyMapping = unknown
 > {
     attachWebComponentAdapterIfNotExists?:boolean
+
     controllableProperties?:Array<string>
     eventToPropertyMapping?:EventToPropertyMapping<
-        ExternalPropertiesType, InternalPropertiesType
+        ExternalProperties,
+        InternalProperties,
+        AdditionalEventToPropertyMapping
     >
-    internalProperties?:Mapping<unknown>
+    internalProperties?:InternalProperties
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
     propTypes?:Mapping<ValueOf<typeof PropertyTypes>>

@@ -46,15 +46,18 @@ export const Web = WebImport
  */
 export const wrapAsWebComponent = <
     Type extends ComponentType = ComponentType,
-    ExternalPropertiesType = Mapping<unknown>,
-    InternalPropertiesType = Mapping<unknown>
+    ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    InternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    AdditionalEventToPropertyMapping = unknown
 >(
-    component:Type,
-    nameHint = 'NoName',
-    configuration:WebComponentConfiguration<
-        ExternalPropertiesType, InternalPropertiesType
-    > = {}
-):WebComponentAPI => {
+        component:Type,
+        nameHint = 'NoName',
+        configuration:WebComponentConfiguration<
+            ExternalProperties,
+            InternalProperties,
+            AdditionalEventToPropertyMapping
+        > = {}
+    ):WebComponentAPI => {
     // Determine class / function name.
     const name:string =
         component._name ||
@@ -116,7 +119,11 @@ export const wrapAsWebComponent = <
     /**
      * Runtime generated web component.
      */
-    class ConcreteComponent extends ReactWeb {
+    class ConcreteComponent<
+        TElement = HTMLElement,
+        ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+        InternalProperties extends Mapping<unknown> = Mapping<unknown>
+    > extends ReactWeb<TElement, ExternalProperties, InternalProperties> {
         static attachWebComponentAdapterIfNotExists:boolean =
             typeof configuration.attachWebComponentAdapterIfNotExists ===
                 'boolean' ?
@@ -165,12 +172,13 @@ export const wrapAsWebComponent = <
 
         readonly self:typeof ConcreteComponent = ConcreteComponent
 
-        internalProperties:Mapping<unknown> =
+        internalProperties:InternalProperties = (
             configuration.internalProperties ?
                 {...configuration.internalProperties} :
                 component.internalProperties ?
                     {...component.internalProperties} :
                     {}
+        ) as InternalProperties
     }
 
     const webComponentAPI:WebComponentAPI<typeof ConcreteComponent> = {
