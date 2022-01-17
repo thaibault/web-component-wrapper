@@ -39,16 +39,20 @@ export type EventCallbackMapping = Map<string, () => void>
 export type EventMapping<
     ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
     InternalProperties extends Mapping<unknown> = Mapping<unknown>
-> = [ExternalProperties, InternalProperties]|ExternalProperties
+> = (
+    [Partial<ExternalProperties>, Partial<InternalProperties>] |
+    Partial<ExternalProperties>
+)
 export type EventMapper<
     E extends Mapping<unknown> = Mapping<unknown>,
-    I extends Mapping<unknown> = Mapping<unknown>
-> = (..._parameters:Array<unknown>) => EventMapping<E, I>
+    I extends Mapping<unknown> = Mapping<unknown>,
+    P extends Array<unknown> = Array<unknown>
+> = (..._parameters:P) => EventMapping<E, I>
 export type EventToPropertyMapping<
     E extends Mapping<unknown> = Mapping<unknown>,
     I extends Mapping<unknown> = Mapping<unknown>,
-    A = unknown
-> = A & Mapping<true|EventMapper<E, I>>
+    P extends Array<unknown> = Array<unknown>
+> = Mapping<true|EventMapper<E, I, P>>
 
 export type AttributesReflectionConfiguration =
     Array<string> |
@@ -81,15 +85,13 @@ export type ReactRenderItems = Array<ReactRenderItem>|ReactRenderItem
 export interface WebComponentConfiguration<
     ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
     InternalProperties extends Mapping<unknown> = Mapping<unknown>,
-    AdditionalEventToPropertyMapping = unknown
+    EventParameters extends Array<unknown> = Array<unknown>
 > {
     attachWebComponentAdapterIfNotExists?:boolean
 
     controllableProperties?:Array<string>
     eventToPropertyMapping?:EventToPropertyMapping<
-        ExternalProperties,
-        InternalProperties,
-        AdditionalEventToPropertyMapping
+        ExternalProperties, InternalProperties, EventParameters
     >
     internalProperties?:InternalProperties
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
