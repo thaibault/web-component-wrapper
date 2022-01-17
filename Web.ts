@@ -156,7 +156,11 @@ import {
  *
  * @property slots - Grabbed slots which where present in the connecting phase.
  */
-export class Web<TElement = HTMLElement> extends HTMLElement {
+export class Web<
+    TElement = HTMLElement,
+    ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    InternalProperties extends Mapping<unknown> = Mapping<unknown>
+> extends HTMLElement {
     // region properties
     static applyRootBinding = true
     static content:unknown =
@@ -206,9 +210,9 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     domNodeEventBindings:Map<Node, EventCallbackMapping> = new Map()
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
 
-    externalProperties:Mapping<unknown> = {}
+    externalProperties:ExternalProperties = {} as ExternalProperties
     ignoreAttributeUpdateObservations = false
-    internalProperties:Mapping<unknown> = {}
+    internalProperties:InternalProperties = {} as InternalProperties
 
     outputEventNames:Set<string> = new Set<string>()
 
@@ -216,7 +220,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
     @property({type: boolean, writeAttribute: true})
         isRoot = true
 
-    root:ShadowRoot|Web<TElement>
+    root:ShadowRoot|Web<TElement, ExternalProperties, InternalProperties>
 
     runDomConnectionAndRenderingInSameEventQueue = false
 
@@ -432,7 +436,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             )
         ) ?
             this.instance.current.properties[name] :
-            this.externalProperties[name]
+            (this.externalProperties as Mapping<unknown>)[name]
         if (
             this.instance?.current?.state &&
             Object.prototype.hasOwnProperty.call(
@@ -451,11 +455,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     setExternalPropertyValue(name:string, value:unknown):void {
-        this.externalProperties[name] = value
+        // eslint-disable-next-line @typescript-eslint/no-extra-semi
+        ;(this.externalProperties as Mapping<unknown>)[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
         if (alias)
-            this.externalProperties[alias] = value
+            (this.externalProperties as Mapping<unknown>)[alias] = value
     }
     /**
      * Internal property setter. Respects configured aliases.
@@ -465,11 +470,12 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     setInternalPropertyValue(name:string, value:unknown):void {
-        this.internalProperties[name] = value
+        // eslint-disable-next-line @typescript-eslint/no-extra-semi
+        ;(this.internalProperties as Mapping<unknown>)[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
         if (alias)
-            this.internalProperties[alias] = value
+            (this.internalProperties as Mapping<unknown>)[alias] = value
     }
     /**
      * Generic property setter. Forwards field writes into internal and
@@ -480,7 +486,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      * @returns Nothing.
      */
     setPropertyValue(name:string, value:unknown):void {
-        this.reflectProperties({[name]: value})
+        this.reflectProperties({[name]: value} as ExternalProperties)
         this.setInternalPropertyValue(name, value)
     }
     /**
@@ -1352,7 +1358,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      *
      * @returns Nothing.
      */
-    reflectExternalProperties(properties:Mapping<unknown>):void {
+    reflectExternalProperties(properties:ExternalProperties):void {
         /*
             NOTE: We can avoid an additional attribute parsing for this
             reflections.
@@ -1456,7 +1462,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      *
      * @returns Nothing.
      */
-    reflectProperties(properties:Mapping<unknown>):void {
+    reflectProperties(properties:ExternalProperties):void {
         this.reflectExternalProperties(properties)
 
         /*
@@ -1527,7 +1533,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
      */
     reflectEventToProperties(
         name:string, parameters:Array<unknown>
-    ):Mapping<unknown>|null {
+    ):ExternalProperties|null {
         /*
             NOTE: We enforce to update components state immediately after an
             event occurs since batching usually does not make sense here. An
@@ -1539,7 +1545,7 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
         const oldBatchUpdatesConfiguration:boolean = this.batchUpdates
         this.batchUpdates = false
 
-        let result:Mapping<unknown>|null = null
+        let result:ExternalProperties|null = null
 
         if (
             this.self.eventToPropertyMapping &&
@@ -1548,8 +1554,11 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
             ) &&
             Tools.isFunction(this.self.eventToPropertyMapping[name])
         ) {
-            const mapping:EventMapping = (
-                this.self.eventToPropertyMapping[name] as EventMapper
+            const mapping:EventMapping<
+                ExternalProperties, InternalProperties
+            > = (
+                this.self.eventToPropertyMapping[name] as
+                    EventMapper<ExternalProperties, InternalProperties>
             )(...parameters, this)
             if (Array.isArray(mapping)) {
                 result = mapping[0]
@@ -1569,15 +1578,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                 event; derived from a user triggered one) when following
                 condition does not hold.
             */
-            let newProperties:Mapping<unknown> =
-                parameters[0] as Mapping<unknown>
+            let newProperties:ExternalProperties =
+                parameters[0] as ExternalProperties
             if (
                 'persist' in parameters[0]! &&
                 Tools.isFunction(
                     (parameters[0] as {persist:() => void}).persist
                 )
             ) {
-                newProperties = {}
+                newProperties = {} as ExternalProperties
                 for (const propertyName of Object.keys(this.self.propertyTypes))
                     for (const name of [propertyName].concat(
                         this.getPropertyAlias(propertyName) ?? []
@@ -1604,13 +1613,15 @@ export class Web<TElement = HTMLElement> extends HTMLElement {
                                     instance.
                                 */
                                 this.getPropertyValue(name)
+
                         if (currentValue !== this.externalProperties[name])
-                            newProperties[name] = currentValue
+                            (newProperties as Mapping<unknown>)[name] =
+                                currentValue
                     }
             } else if (![null, undefined].includes(
                 (newProperties.detail as {value:null})?.value
             ))
-                newProperties = {...newProperties.detail as Mapping<unknown>}
+                newProperties = {...newProperties.detail as ExternalProperties}
 
             result = newProperties
             this.reflectProperties(newProperties)
