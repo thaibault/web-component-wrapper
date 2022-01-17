@@ -48,14 +48,12 @@ export const wrapAsWebComponent = <
     Type extends ComponentType = ComponentType,
     ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
     InternalProperties extends Mapping<unknown> = Mapping<unknown>,
-    AdditionalEventToPropertyMapping = unknown
+    EventParameters extends Array<unknown> = Array<unknown>
 >(
         component:Type,
         nameHint = 'NoName',
         configuration:WebComponentConfiguration<
-            ExternalProperties,
-            InternalProperties,
-            AdditionalEventToPropertyMapping
+            ExternalProperties, InternalProperties, EventParameters
         > = {}
     ):WebComponentAPI => {
     // Determine class / function name.

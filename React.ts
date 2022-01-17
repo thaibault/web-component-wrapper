@@ -145,7 +145,7 @@ export class ReactWeb<
      *
      * @returns Nothing.
      */
-    reflectExternalProperties(properties:ExternalProperties):void {
+    reflectExternalProperties(properties:Partial<ExternalProperties>):void {
         if (this.isRoot)
             super.reflectExternalProperties(properties)
     }
@@ -237,7 +237,9 @@ export class ReactWeb<
      */
     setPropertyValue(name:string, value:unknown):void {
         this.reflectProperties(
-            {[name]: Tools.copy(value, 1)} as unknown as ExternalProperties
+            {[name]: Tools.copy(value, 1)} as
+                unknown as
+                Partial<ExternalProperties>
         )
         this.setInternalPropertyValue(name, Tools.copy(value, 1))
     }
@@ -814,7 +816,7 @@ export class ReactWeb<
         )
             this.reflectProperties(
                 (this.instance as {current:ComponentAdapter}).current
-                    .properties as ExternalProperties
+                    .properties as Partial<ExternalProperties>
             )
     }
     /**

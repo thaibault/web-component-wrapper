@@ -1358,7 +1358,7 @@ export class Web<
      *
      * @returns Nothing.
      */
-    reflectExternalProperties(properties:ExternalProperties):void {
+    reflectExternalProperties(properties:Partial<ExternalProperties>):void {
         /*
             NOTE: We can avoid an additional attribute parsing for this
             reflections.
@@ -1462,7 +1462,7 @@ export class Web<
      *
      * @returns Nothing.
      */
-    reflectProperties(properties:ExternalProperties):void {
+    reflectProperties(properties:Partial<ExternalProperties>):void {
         this.reflectExternalProperties(properties)
 
         /*
@@ -1533,7 +1533,7 @@ export class Web<
      */
     reflectEventToProperties(
         name:string, parameters:Array<unknown>
-    ):ExternalProperties|null {
+    ):Partial<ExternalProperties>|null {
         /*
             NOTE: We enforce to update components state immediately after an
             event occurs since batching usually does not make sense here. An
@@ -1545,7 +1545,7 @@ export class Web<
         const oldBatchUpdatesConfiguration:boolean = this.batchUpdates
         this.batchUpdates = false
 
-        let result:ExternalProperties|null = null
+        let result:Partial<ExternalProperties>|null = null
 
         if (
             this.self.eventToPropertyMapping &&
