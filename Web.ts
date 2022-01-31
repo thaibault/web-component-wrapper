@@ -1138,7 +1138,10 @@ export class Web<
                 !Object.prototype.hasOwnProperty.call(
                     this.internalProperties, name
                 ) &&
-                [func, 'function'].includes(type) &&
+                (
+                    [func, 'function'] as
+                        Array<ValueOf<typeof this.self.propertyTypes>>
+                ).includes(type) &&
                 !this.self.renderProperties.includes(name)
             ) {
                 this.outputEventNames.add(name)
