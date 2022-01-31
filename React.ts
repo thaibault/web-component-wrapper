@@ -123,7 +123,6 @@ export class ReactWeb<
         // NOTE: Can be overwritten during optional root determining.
         this.rootReactInstance = this as unknown as ReactWeb
 
-        console.log('A', this)
         /*
             Attaches event handler, grabs given slots, reflects external
             properties and enqueues first rendering.
