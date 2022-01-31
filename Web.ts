@@ -517,7 +517,7 @@ export class Web<
 
                             this.render('postStatePropertyChanged')
 
-                            this.triggerOuputEvents()
+                            this.triggerOutputEvents()
                         })
                             .then(Tools.noop, Tools.noop)
                     } else {
@@ -526,7 +526,7 @@ export class Web<
 
                         this.render('propertyChanged')
 
-                        this.triggerOuputEvents()
+                        this.triggerOutputEvents()
                     }
                 })
             }
@@ -543,7 +543,7 @@ export class Web<
                 this.render('postStatePropertyChanged')
             }
 
-            this.triggerOuputEvents()
+            this.triggerOutputEvents()
         }
     }
     // endregion
@@ -1133,7 +1133,7 @@ export class Web<
         reflectProperties = true
     ):void {
         // Determine all event handler to inject
-        for (const [name, type] of Object.keys(this.self.propertyTypes))
+        for (const [name, type] of Object.entries(this.self.propertyTypes))
             if (
                 !Object.prototype.hasOwnProperty.call(
                     this.internalProperties, name
@@ -1159,7 +1159,7 @@ export class Web<
      * changes.
      * @returns Nothing.
      */
-    triggerOuputEvents():void {
+    triggerOutputEvents():void {
         for (const name of this.outputEventNames)
             this.forwardEvent(name, [this.externalProperties])
     }
