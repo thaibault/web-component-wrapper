@@ -177,7 +177,9 @@ export class Web<
     static controllableProperties:Array<string> = []
     static eventToPropertyMapping:EventToPropertyMapping|null = {}
     static propertyAliases:Mapping = {}
-    static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {}
+    static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {
+        onClick: func
+    }
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
         []
     static renderProperties:Array<string> = ['children']
@@ -228,7 +230,7 @@ export class Web<
 
     slots:Mapping<HTMLElement> & {default?:Array<Node>} = {}
     // endregion
-    // region live cycle  hooks
+    // region live cycle hooks
     /**
      * Initializes host dom content and properties.
      * @returns Nothing.

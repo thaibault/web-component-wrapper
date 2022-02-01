@@ -14,6 +14,7 @@
     endregion
 */
 // region imports
+import Tools from 'clientnode'
 import {createElement, ReactElement} from 'react'
 
 import wrapAsWebComponent from './index'
@@ -23,7 +24,7 @@ import {WebComponentAPI} from './type'
 // endregion
 // region Web
 describe('Web', ():void => {
-    test('constructor', ():void => {
+    test('constructor', async ():Promise<void> => {
         expect(Web).toHaveProperty('content')
         expect(Web).toHaveProperty('observedAttributes')
 
@@ -32,6 +33,13 @@ describe('Web', ():void => {
         document.body.appendChild(web)
 
         expect(web).toHaveProperty('root', web)
+
+        // TODO
+        web.setAttribute('bind-on-click', "console.log('click', event)")
+
+        await Tools.timeout()
+
+        web.click()
     })
 })
 // endregion
