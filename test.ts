@@ -30,16 +30,24 @@ describe('Web', ():void => {
 
         customElements.define('test-web', Web)
         const web:Web = document.createElement('test-web') as Web
+
+        expect(web).not.toHaveProperty('clicked')
+        web.setAttribute('bind-on-click', 'this.clicked = true')
+        expect(web).not.toHaveProperty('clicked')
+
         document.body.appendChild(web)
 
         expect(web).toHaveProperty('root', web)
 
-        // TODO
-        web.setAttribute('bind-on-click', "console.log('click', event)")
-
-        await Tools.timeout()
-
+        expect(web).not.toHaveProperty('clicked')
         web.click()
+        expect(web).toHaveProperty('clicked', true)
+
+        const clickCallback = jest.fn()
+        web.addEventListener('click', clickCallback)
+        expect(clickCallback).not.toHaveBeenCalled()
+        web.click()
+        expect(clickCallback).toHaveBeenCalled()
     })
 })
 // endregion
@@ -49,13 +57,29 @@ describe('React', ():void => {
         expect(React).toHaveProperty('content')
         expect(React).toHaveProperty('observedAttributes')
 
+        // TODO React.content = () => createElement('div', {onClick: () => {}})
+
         customElements.define('test-react', React)
         const react:React = document.createElement('test-react') as React
+
+        expect(react).not.toHaveProperty('clicked')
+        react.setAttribute('bind-on-click', 'this.clicked = true')
+        expect(react).not.toHaveProperty('clicked')
+
         document.body.appendChild(react)
 
         expect(react).toHaveProperty('root', react)
+
+        expect(react).not.toHaveProperty('clicked')
+        react.click()
+        expect(react).toHaveProperty('clicked', true)
+
+        const clickCallback = jest.fn()
+        react.addEventListener('click', clickCallback)
+        expect(clickCallback).not.toHaveBeenCalled()
+        react.click()
+        expect(clickCallback).toHaveBeenCalled()
     })
-    // TODO
 })
 // endregion
 // region index
