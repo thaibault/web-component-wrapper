@@ -128,7 +128,7 @@ export const wrapAsWebComponent = <
                 configuration.attachWebComponentAdapterIfNotExists :
                 true
 
-        static content:ComponentType = component
+        static content:Type = component
 
         static readonly observedAttributes:Array<string> =
             ReactWeb.observedAttributes

@@ -15,6 +15,7 @@
 */
 // region imports
 import Tools from 'clientnode'
+import {Mapping} from 'clientnode/type'
 import {createElement, ReactElement} from 'react'
 
 import wrapAsWebComponent from './index'
@@ -25,11 +26,13 @@ import {WebComponentAPI} from './type'
 // region Web
 describe('Web', ():void => {
     test('constructor', async ():Promise<void> => {
-        expect(Web).toHaveProperty('content')
-        expect(Web).toHaveProperty('observedAttributes')
+        class WebTest extends Web {}
 
-        customElements.define('test-web', Web)
-        const web:Web = document.createElement('test-web') as Web
+        expect(WebTest).toHaveProperty('content')
+        expect(WebTest).toHaveProperty('observedAttributes')
+
+        customElements.define('test-web', WebTest)
+        const web:WebTest = document.createElement('test-web') as WebTest
 
         expect(web).not.toHaveProperty('clicked')
         web.setAttribute('bind-on-click', 'this.clicked = true')
@@ -53,15 +56,31 @@ describe('Web', ():void => {
 // endregion
 // region React
 describe('React', ():void => {
-    test('constructor', ():void => {
-        expect(React).toHaveProperty('content')
-        expect(React).toHaveProperty('observedAttributes')
+    test('constructor', async ():Promise<void> => {
+        let numberOfComponentClicks:number = 0
 
-        // TODO React.content = () => createElement('div', {onClick: () => {}})
+        class TestReact<
+            TElement = HTMLElement,
+            ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+            InternalProperties extends Mapping<unknown> = Mapping<unknown>
+        > extends React<TElement, ExternalProperties, InternalProperties> {
+            static content = () => createElement('div', {onClick: () => {
+                numberOfComponentClicks += 1
+            }})
 
-        customElements.define('test-react', React)
-        const react:React = document.createElement('test-react') as React
+            static _name:string = 'Test'
 
+            readonly self:typeof TestReact = TestReact
+        }
+
+        expect(TestReact).toHaveProperty('content')
+        expect(TestReact).toHaveProperty('observedAttributes')
+
+        customElements.define('test-react', TestReact)
+        const react:TestReact =
+            document.createElement('test-react') as TestReact
+
+        expect(numberOfComponentClicks).toStrictEqual(0)
         expect(react).not.toHaveProperty('clicked')
         react.setAttribute('bind-on-click', 'this.clicked = true')
         expect(react).not.toHaveProperty('clicked')
@@ -70,9 +89,15 @@ describe('React', ():void => {
 
         expect(react).toHaveProperty('root', react)
 
+        expect(numberOfComponentClicks).toStrictEqual(0)
         expect(react).not.toHaveProperty('clicked')
         react.click()
         expect(react).toHaveProperty('clicked', true)
+        /*
+        TODO
+        await Tools.timeout()
+        expect(numberOfComponentClicks).toStrictEqual(1)
+        */
 
         const clickCallback = jest.fn()
         react.addEventListener('click', clickCallback)
@@ -92,7 +117,7 @@ describe('index', ():void => {
     })
     // TODO
 })
-// endregion
+//  endregion
 // region vim modline
 // vim: set tabstop=4 shiftwidth=4 expandtab:
 // vim: foldmethod=marker foldmarker=region,endregion:
