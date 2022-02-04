@@ -18,13 +18,12 @@
 */
 // region imports
 import Tools from 'clientnode'
-import {
-    func, NullSymbol, PropertyTypes, UndefinedSymbol
-} from 'clientnode/property-types'
-import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
+import {func, NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
+import {Mapping, TemplateFunction} from 'clientnode/type'
 import React, {
     Attributes,
     HTMLAttributes,
+    ComponentType as ReactComponentType,
     createElement,
     createRef,
     forwardRef,
@@ -42,6 +41,8 @@ import {
     ComponentType,
 
     PreCompiledItem,
+
+    PropertyConfiguration,
 
     ReactRenderBaseItemFactory,
     ReactRenderItemFactory,
@@ -194,7 +195,11 @@ export class ReactWeb<
         }
 
         render(
-            createElement(this.self.content, this.internalProperties),
+            createElement<InternalProperties>(
+                this.self.content as
+                    ReactComponentType<InternalProperties>,
+                this.internalProperties
+            ),
             this.root
         )
 
@@ -607,7 +612,7 @@ export class ReactWeb<
                     runtimeScope
                 )
             // endregion
-            return createElement(target, properties)
+            return createElement(target as ReactComponentType, properties)
         }
         // / endregion
         // endregion
@@ -652,23 +657,19 @@ export class ReactWeb<
                 this.compiledSlots[name] = this.preCompileDomNode(
                     this.slots[name],
                     {...this.scope, parent: this},
-                    (
-                        [func, 'function'] as
-                            Array<ValueOf<typeof PropertyTypes>|string>
-                    ).includes(
-                        this.self.propertyTypes &&
-                        this.self.propertyTypes[name]
-                    )
+                    ([func, 'function'] as Array<PropertyConfiguration>)
+                        .includes(
+                            this.self.propertyTypes &&
+                            this.self.propertyTypes[name]
+                        )
                 )
 
         if (this.slots.default && this.slots.default.length > 0)
             this.compiledSlots.children = this.preCompileDomNodes(
                 this.slots.default,
                 {...this.scope, parent: this},
-                (
-                    [func, 'function'] as
-                        Array<ValueOf<typeof PropertyTypes>|string>
-                ).includes(this.self.propertyTypes?.children)
+                ([func, 'function'] as Array<PropertyConfiguration>)
+                    .includes(this.self.propertyTypes?.children)
             )
     }
     /**
@@ -709,8 +710,7 @@ export class ReactWeb<
             typeof type.content === 'object' &&
             (
                 type.attachWebComponentAdapterIfNotExists === false ||
-                (type.content as ComponentType).webComponentAdapterWrapped ===
-                    'react'
+                type.content.webComponentAdapterWrapped === 'react'
             )
         )
     }
@@ -748,15 +748,16 @@ export class ReactWeb<
 
         if (this.self.content.webComponentAdapterWrapped) {
             if (this.wrapMemorizingWrapper) {
-                this.self.content = memorize(this.self.content)
-                ;(this.self.content as ComponentType).wrapped = wrapped
+                this.self.content =
+                    memorize(this.self.content as ReactComponentType)
+                this.self.content.wrapped = wrapped
             }
         } else if (this.self.attachWebComponentAdapterIfNotExists) {
             if (!this.self.content.displayName)
                 this.self.content.displayName = this.self._name
 
             this.self.content = forwardRef((
-                properties:Attributes,
+                properties:Attributes & Mapping<unknown>,
                 reference:Ref<ComponentAdapter<Attributes>>
             ):ReactElement => {
                 useImperativeHandle(
@@ -764,20 +765,22 @@ export class ReactWeb<
                     ():ComponentAdapter<Attributes> => ({properties})
                 )
 
-                return createElement(wrapped, properties)
+                return createElement(wrapped as ReactComponentType, properties)
             }) as ComponentType
 
             if (
                 this.wrapMemorizingWrapper ||
                 this.wrapMemorizingWrapper === null
             )
-                this.self.content = memorize(this.self.content)
+                this.self.content =
+                    memorize(this.self.content as ReactComponentType)
 
             this.self.content.wrapped = wrapped
             this.self.content.webComponentAdapterWrapped = 'react'
         } else if (this.wrapMemorizingWrapper) {
-            this.self.content = memorize(this.self.content)
-            ;(this.self.content as ComponentType).wrapped = wrapped
+            this.self.content =
+                memorize(this.self.content as ReactComponentType)
+            this.self.content.wrapped = wrapped
         }
     }
     /**

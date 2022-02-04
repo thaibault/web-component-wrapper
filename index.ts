@@ -18,8 +18,7 @@
 */
 // region imports
 import Tools from 'clientnode'
-import PropertyTypes from 'clientnode/property-types'
-import {Mapping, ValueOf} from 'clientnode/type'
+import {Mapping} from 'clientnode/type'
 
 import ReactWebImport, {api as reactWebAPIImport} from './React'
 import WebImport, {api as webAPIImport} from './Web'
@@ -27,6 +26,7 @@ import {
     AttributesReflectionConfiguration,
     ComponentType,
     EventToPropertyMapping,
+    PropertiesConfiguration,
     WebComponentAPI,
     WebComponentConfiguration
 } from './type'
@@ -55,7 +55,7 @@ export const wrapAsWebComponent = <
         configuration:WebComponentConfiguration<
             ExternalProperties, InternalProperties, EventParameters
         > = {}
-    ):WebComponentAPI => {
+    ):WebComponentAPI<typeof ReactWeb> => {
     // Determine class / function name.
     const name:string =
         component._name ||
@@ -69,8 +69,7 @@ export const wrapAsWebComponent = <
 
     if (configuration.propTypes)
         component.propTypes = configuration.propTypes
-    const propertyTypes:Mapping<string|ValueOf<typeof PropertyTypes>> =
-        component.propTypes || {}
+    const propertyTypes:PropertiesConfiguration = component.propTypes || {}
     const propertyAliases:Mapping =
         configuration.propertyAliases || component.propertyAliases || {}
     const allPropertyNames:Array<string> = Tools.arrayUnique<string>(
@@ -157,7 +156,7 @@ export const wrapAsWebComponent = <
         static propertiesToReflectAsAttributes:(
             AttributesReflectionConfiguration
         ) = propertiesToReflectAsAttributes
-        static propertyTypes:Mapping<string|ValueOf<typeof PropertyTypes>> = {
+        static propertyTypes:PropertiesConfiguration = {
             ...ReactWeb.propertyTypes,
             ...propertyTypes
         }

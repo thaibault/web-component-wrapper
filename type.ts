@@ -54,15 +54,15 @@ export type EventToPropertyMapping<
     P extends Array<unknown> = Array<unknown>
 > = Mapping<true|EventMapper<E, I, P>>
 
-export type AttributesReflectionConfiguration =
+export type PropertyConfiguration = string|ValueOf<typeof PropertyTypes>
+export type PropertiesConfiguration = Mapping<PropertyConfiguration>
+export type NormalizedAttributesReflectionConfiguration =
+    Map<string, PropertyConfiguration>
+export type AttributesReflectionConfiguration = (
     Array<string> |
-    Map<
-        string, string |
-        ValueOf<typeof PropertyTypes>> |
-        string |
-        Mapping<ValueOf<typeof PropertyTypes> |
-        string
-    >
+    PropertiesConfiguration |
+    NormalizedAttributesReflectionConfiguration
+)
 
 export type ScopeDeclaration = Array<string>|Mapping<unknown>
 export type PreCompiledItem = {
@@ -96,7 +96,7 @@ export interface WebComponentConfiguration<
     internalProperties?:InternalProperties
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
-    propTypes?:Mapping<ValueOf<typeof PropertyTypes>>
+    propTypes?:PropertiesConfiguration
     renderProperties?:Array<string>
 }
 export interface StaticWebComponent extends WebComponentConfiguration {
@@ -106,7 +106,9 @@ export interface StaticWebComponent extends WebComponentConfiguration {
     _name?:string
     ___types?:{name?:{name?:string}}
 }
-export type ComponentType = ReactComponentType & StaticWebComponent
+export type ComponentType<PropertyTypes = Mapping<unknown>> =
+    Omit<ReactComponentType<PropertyTypes>, 'propTypes'> &
+    StaticWebComponent
 export interface ComponentAdapter<
     Properties = Mapping<unknown>, State = Mapping<unknown>
 > {

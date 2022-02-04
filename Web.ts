@@ -18,7 +18,7 @@
 */
 // region imports
 import Tools from 'clientnode'
-import PropertyTypes, {
+import {
     any,
     array,
     arrayOf,
@@ -43,8 +43,7 @@ import {
     EvaluationResult,
     Mapping,
     PlainObject,
-    TemplateFunction,
-    ValueOf
+    TemplateFunction
 } from 'clientnode/type'
 
 import property from './decorator'
@@ -57,6 +56,9 @@ import {
     EventMapper,
     EventMapping,
     EventToPropertyMapping,
+    NormalizedAttributesReflectionConfiguration,
+    PropertiesConfiguration,
+    PropertyConfiguration,
     ScopeDeclaration,
     WebComponentAPI
 } from './type'
@@ -177,7 +179,7 @@ export class Web<
     static controllableProperties:Array<string> = []
     static eventToPropertyMapping:EventToPropertyMapping|null = {}
     static propertyAliases:Mapping = {}
-    static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {
+    static propertyTypes:PropertiesConfiguration = {
         onClick: func
     }
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
@@ -193,9 +195,9 @@ export class Web<
 
     static _name = 'BaseWeb'
     static _propertyAliasIndex:Mapping|undefined
-    static _propertiesToReflectAsAttributes:Map<
-        string, string|ValueOf<typeof PropertyTypes>
-    >|undefined
+    static _propertiesToReflectAsAttributes:(
+        NormalizedAttributesReflectionConfiguration
+    )
 
     batchAttributeUpdates = true
     batchPropertyUpdates = true
@@ -1057,23 +1059,25 @@ export class Web<
      */
     static normalizePropertyTypeList(
         value:AttributesReflectionConfiguration
-    ):Map<string, string|ValueOf<typeof PropertyTypes>> {
+    ):NormalizedAttributesReflectionConfiguration {
         if (typeof value === 'string')
             value = [value]
 
         if (Array.isArray(value)) {
             const givenValue:Array<string> = value
-            value = new Map<string, string|ValueOf<typeof PropertyTypes>>()
+            const newValue:NormalizedAttributesReflectionConfiguration =
+                new Map<string, PropertyConfiguration>()
             for (const name of givenValue)
                 if (Object.prototype.hasOwnProperty.call(
                     Web.propertyTypes, name
                 ))
-                    value.set(name, Web.propertyTypes[name])
-        } else
-            value = Tools.convertPlainObjectToMap(value) as
-                AttributesReflectionConfiguration
+                    newValue.set(name, Web.propertyTypes[name])
 
-        return value as Map<string, string|ValueOf<typeof PropertyTypes>>
+            return newValue
+        }
+
+        return Tools.convertPlainObjectToMap(value) as
+            NormalizedAttributesReflectionConfiguration
     }
     // / endregion
     // / region events
@@ -1141,10 +1145,8 @@ export class Web<
                 !Object.prototype.hasOwnProperty.call(
                     this.internalProperties, name
                 ) &&
-                (
-                    [func, 'function'] as
-                        Array<ValueOf<typeof this.self.propertyTypes>>
-                ).includes(type) &&
+                ([func, 'function'] as Array<PropertyConfiguration>)
+                    .includes(type) &&
                 !this.self.renderProperties.includes(name)
             ) {
                 this.outputEventNames.add(name)
@@ -1377,9 +1379,9 @@ export class Web<
                 continue
 
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
-            if (this.self._propertiesToReflectAsAttributes!.has(name))
+            if (this.self._propertiesToReflectAsAttributes.has(name))
                 switch (
-                    this.self._propertiesToReflectAsAttributes!.get(name)
+                    this.self._propertiesToReflectAsAttributes.get(name)
                 ) {
                 case boolean:
                 case 'boolean':
@@ -1669,8 +1671,7 @@ export class Web<
         if (Object.prototype.hasOwnProperty.call(
             this.self.propertyTypes, name
         )) {
-            const type:string|ValueOf<typeof PropertyTypes> =
-                this.self.propertyTypes[name]
+            const type:PropertyConfiguration = this.self.propertyTypes[name]
 
             if (preEvaluate) {
                 if (value) {

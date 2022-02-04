@@ -17,16 +17,19 @@
 import Tools from 'clientnode'
 import {func} from 'clientnode/property-types'
 import {Mapping} from 'clientnode/type'
-import {createElement, ReactElement} from 'react'
+import {createElement, FunctionComponent, ReactElement} from 'react'
 
 import wrapAsWebComponent from './index'
 import React from './React'
 import Web from './Web'
-import {WebComponentAPI} from './type'
+import {ComponentType, PropertiesConfiguration, WebComponentAPI} from './type'
 // endregion
 // region Web
 describe('Web', ():void => {
-    test('constructor', async ():Promise<void> => {
+    test('constructor', ():void => {
+        /**
+         * Mock Test class.
+         */
         class WebTest extends Web {}
 
         expect(WebTest).toHaveProperty('content')
@@ -58,27 +61,30 @@ describe('Web', ():void => {
 // region React
 describe('React', ():void => {
     test('constructor', async ():Promise<void> => {
-        let numberOfComponentCustomEvents:number = 0
-        let triggerOnEvent:() => void
+        let triggerOnEvent:(() => void)|undefined
 
+        const component:FunctionComponent<{onEvent:() => void}> =
+            ({onEvent}):ReactElement => {
+                triggerOnEvent = onEvent
+
+                return createElement('div')
+            }
+
+        /**
+         * Mock test class.
+         */
         class TestReact<
             TElement = HTMLElement,
             ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
             InternalProperties extends Mapping<unknown> = Mapping<unknown>
         > extends React<TElement, ExternalProperties, InternalProperties> {
-            static content = ({onEvent}) => {
-                triggerOnEvent = onEvent
-
-                return createElement('div')
-            }
-            static propertyTypes:Mapping<
-                string|ValueOf<typeof PropertyTypes>
-            > = {
+            static content:ComponentType = component as ComponentType
+            static propertyTypes:PropertiesConfiguration = {
                 ...Web.propertyTypes,
                 onEvent: func
             }
 
-            static _name:string = 'Test'
+            static _name = 'Test'
 
             readonly self:typeof TestReact = TestReact
         }
@@ -107,13 +113,13 @@ describe('React', ():void => {
         expect(triggerOnEvent).toBeDefined()
 
         expect(react).not.toHaveProperty('eventHappened')
-        triggerOnEvent()
+        triggerOnEvent!()
         expect(react).toHaveProperty('eventHappened', true)
 
         const eventCallback = jest.fn()
         react.addEventListener('event', eventCallback)
         expect(eventCallback).not.toHaveBeenCalled()
-        triggerOnEvent()
+        triggerOnEvent!()
         expect(eventCallback).toHaveBeenCalled()
 
         expect(react).not.toHaveProperty('clicked')
@@ -131,8 +137,8 @@ describe('React', ():void => {
 // region index
 describe('index', ():void => {
     test('wrapAsWebComponent', ():void => {
-        const componentAPI:WebComponentAPI =
-            wrapAsWebComponent(
+        const componentAPI:WebComponentAPI<typeof React> =
+            wrapAsWebComponent<FunctionComponent<unknown>>(
                 ():ReactElement => createElement('div'),
                 'TestComponent',
                 {
@@ -145,7 +151,6 @@ describe('index', ():void => {
 
         expect(componentAPI).toHaveProperty('component')
         expect(componentAPI).toHaveProperty('register')
-
 
         expect(componentAPI.component).toHaveProperty('_name', 'TestComponent')
         expect(componentAPI.component)
