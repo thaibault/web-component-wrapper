@@ -18,14 +18,10 @@
 */
 // region imports
 import Tools from 'clientnode'
-import PropertyTypes, {string} from 'clientnode/property-types'
+import {string} from 'clientnode/property-types'
 
 import Web from './Web'
-import {
-    NormalizedAttributesReflectionConfiguration,
-    PropertiesConfiguration,
-    PropertyConfiguration
-} from './type'
+import {PropertiesConfiguration, PropertyConfiguration} from './type'
 // endregion
 /**
  * Generates a decorator based on given configuration.
@@ -129,8 +125,7 @@ export function property(
                             self.propertyTypes, name
                         )
                     )
-                        result =
-                            self.propertyTypes[name] as PropertyConfiguration
+                        result = self.propertyTypes[name]
                 } else
                     result = options.writeAttribute
 
@@ -145,10 +140,7 @@ export function property(
                                 )
 
                     if (self.propertiesToReflectAsAttributes instanceof Map)
-                        (
-                            self.propertiesToReflectAsAttributes as
-                                NormalizedAttributesReflectionConfiguration
-                        ).set(name, result)
+                        self.propertiesToReflectAsAttributes.set(name, result)
                     if (
                         self.propertiesToReflectAsAttributes !== null &&
                         typeof self.propertiesToReflectAsAttributes ===

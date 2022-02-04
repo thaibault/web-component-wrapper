@@ -18,7 +18,7 @@
 */
 // region imports
 import Tools from 'clientnode'
-import PropertyTypes, {
+import {
     any,
     array,
     arrayOf,
@@ -195,7 +195,9 @@ export class Web<
 
     static _name = 'BaseWeb'
     static _propertyAliasIndex:Mapping|undefined
-    static _propertiesToReflectAsAttributes:NormalizedAttributesReflectionConfiguration
+    static _propertiesToReflectAsAttributes:(
+        NormalizedAttributesReflectionConfiguration
+    )
 
     batchAttributeUpdates = true
     batchPropertyUpdates = true
@@ -1377,9 +1379,9 @@ export class Web<
                 continue
 
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
-            if (this.self._propertiesToReflectAsAttributes!.has(name))
+            if (this.self._propertiesToReflectAsAttributes.has(name))
                 switch (
-                    this.self._propertiesToReflectAsAttributes!.get(name)
+                    this.self._propertiesToReflectAsAttributes.get(name)
                 ) {
                 case boolean:
                 case 'boolean':
@@ -1669,8 +1671,7 @@ export class Web<
         if (Object.prototype.hasOwnProperty.call(
             this.self.propertyTypes, name
         )) {
-            const type:PropertyConfiguration =
-                this.self.propertyTypes[name] PropertyConfiguration
+            const type:PropertyConfiguration = this.self.propertyTypes[name]
 
             if (preEvaluate) {
                 if (value) {

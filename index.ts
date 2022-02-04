@@ -18,7 +18,6 @@
 */
 // region imports
 import Tools from 'clientnode'
-import PropertyTypes from 'clientnode/property-types'
 import {Mapping} from 'clientnode/type'
 
 import ReactWebImport, {api as reactWebAPIImport} from './React'
@@ -56,7 +55,7 @@ export const wrapAsWebComponent = <
         configuration:WebComponentConfiguration<
             ExternalProperties, InternalProperties, EventParameters
         > = {}
-    ):WebComponentAPI => {
+    ):WebComponentAPI<typeof ReactWeb> => {
     // Determine class / function name.
     const name:string =
         component._name ||

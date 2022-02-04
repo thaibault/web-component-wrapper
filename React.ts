@@ -18,9 +18,7 @@
 */
 // region imports
 import Tools from 'clientnode'
-import {
-    func, NullSymbol, PropertyTypes, UndefinedSymbol
-} from 'clientnode/property-types'
+import {func, NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
 import {Mapping, TemplateFunction} from 'clientnode/type'
 import React, {
     Attributes,
@@ -33,8 +31,7 @@ import React, {
     memo as memorize,
     ReactElement,
     Ref,
-    useImperativeHandle,
-    WeakValidationMap
+    useImperativeHandle
 } from 'react'
 import {render, unmountComponentAtNode} from 'react-dom'
 
@@ -713,8 +710,7 @@ export class ReactWeb<
             typeof type.content === 'object' &&
             (
                 type.attachWebComponentAdapterIfNotExists === false ||
-                (type.content as ComponentType).webComponentAdapterWrapped ===
-                    'react'
+                type.content.webComponentAdapterWrapped === 'react'
             )
         )
     }
@@ -754,7 +750,7 @@ export class ReactWeb<
             if (this.wrapMemorizingWrapper) {
                 this.self.content =
                     memorize(this.self.content as ReactComponentType)
-                ;(this.self.content as ComponentType).wrapped = wrapped
+                this.self.content.wrapped = wrapped
             }
         } else if (this.self.attachWebComponentAdapterIfNotExists) {
             if (!this.self.content.displayName)
@@ -784,7 +780,7 @@ export class ReactWeb<
         } else if (this.wrapMemorizingWrapper) {
             this.self.content =
                 memorize(this.self.content as ReactComponentType)
-            ;(this.self.content as ComponentType).wrapped = wrapped
+            this.self.content.wrapped = wrapped
         }
     }
     /**
