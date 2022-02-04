@@ -22,6 +22,7 @@ import PropertyTypes, {string} from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
 
 import Web from './Web'
+import {NormalizedAttributesReflectionConfiguration} from './type'
 // endregion
 /**
  * Generates a decorator based on given configuration.
@@ -92,7 +93,7 @@ export function property(
                 options.update ||
                 !Object.prototype.hasOwnProperty.call(self, name)
             )
-                self.propertyTypes[name] = options.type
+                self.propertyTypes[name] = options.type as string
         }
 
         if (options.writeAttribute) {
@@ -102,7 +103,7 @@ export function property(
                 self.propertiesToReflectAsAttributes =
                     self.propertiesToReflectAsAttributes ?
                         Tools.copy(self.propertiesToReflectAsAttributes) :
-                        new Map()
+                        []
 
             if (
                 options.update ||
@@ -125,7 +126,8 @@ export function property(
                             self.propertyTypes, name
                         )
                     )
-                        result = self.propertyTypes[name]
+                        result = self.propertyTypes[name] as
+                            string|ValueOf<typeof PropertyTypes>
                 } else
                     result = options.writeAttribute
 
@@ -140,7 +142,10 @@ export function property(
                                 )
 
                     if (self.propertiesToReflectAsAttributes instanceof Map)
-                        self.propertiesToReflectAsAttributes.set(name, result)
+                        (
+                            self.propertiesToReflectAsAttributes as
+                                NormalizedAttributesReflectionConfiguration
+                        ).set(name, result)
                     if (
                         self.propertiesToReflectAsAttributes !== null &&
                         typeof self.propertiesToReflectAsAttributes ===

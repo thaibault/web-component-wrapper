@@ -17,7 +17,7 @@
 import Tools from 'clientnode'
 import {func} from 'clientnode/property-types'
 import {Mapping} from 'clientnode/type'
-import {createElement, ReactElement} from 'react'
+import {createElement, ReactElement, WeakValidationMap} from 'react'
 
 import wrapAsWebComponent from './index'
 import React from './React'
@@ -59,7 +59,7 @@ describe('Web', ():void => {
 describe('React', ():void => {
     test('constructor', async ():Promise<void> => {
         let numberOfComponentCustomEvents:number = 0
-        let triggerOnEvent:() => void
+        let triggerOnEvent:() => void = Tools.noop
 
         class TestReact<
             TElement = HTMLElement,
@@ -71,9 +71,9 @@ describe('React', ():void => {
 
                 return createElement('div')
             }
-            static propertyTypes:Mapping<
-                string|ValueOf<typeof PropertyTypes>
-            > = {
+            static propertyTypes:(
+                Mapping|WeakValidationMap<Mapping<unknown>>
+            ) = {
                 ...Web.propertyTypes,
                 onEvent: func
             }

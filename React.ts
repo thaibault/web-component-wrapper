@@ -756,7 +756,7 @@ export class ReactWeb<
                 this.self.content.displayName = this.self._name
 
             this.self.content = forwardRef((
-                properties:Attributes,
+                properties:Attributes & Mapping<unknown>,
                 reference:Ref<ComponentAdapter<Attributes>>
             ):ReactElement => {
                 useImperativeHandle(

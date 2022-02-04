@@ -46,6 +46,7 @@ import {
     TemplateFunction,
     ValueOf
 } from 'clientnode/type'
+import {WeakValidationMap} from 'react'
 
 import property from './decorator'
 import {
@@ -57,6 +58,7 @@ import {
     EventMapper,
     EventMapping,
     EventToPropertyMapping,
+    NormalizedAttributesReflectionConfiguration,
     ScopeDeclaration,
     WebComponentAPI
 } from './type'
@@ -177,7 +179,7 @@ export class Web<
     static controllableProperties:Array<string> = []
     static eventToPropertyMapping:EventToPropertyMapping|null = {}
     static propertyAliases:Mapping = {}
-    static propertyTypes:Mapping<ValueOf<typeof PropertyTypes>|string> = {
+    static propertyTypes:Mapping|WeakValidationMap<Mapping<unknown>> = {
         onClick: func
     }
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
@@ -193,9 +195,7 @@ export class Web<
 
     static _name = 'BaseWeb'
     static _propertyAliasIndex:Mapping|undefined
-    static _propertiesToReflectAsAttributes:Map<
-        string, string|ValueOf<typeof PropertyTypes>
-    >|undefined
+    static _propertiesToReflectAsAttributes:NormalizedAttributesReflectionConfiguration
 
     batchAttributeUpdates = true
     batchPropertyUpdates = true
@@ -1057,23 +1057,30 @@ export class Web<
      */
     static normalizePropertyTypeList(
         value:AttributesReflectionConfiguration
-    ):Map<string, string|ValueOf<typeof PropertyTypes>> {
+    ):NormalizedAttributesReflectionConfiguration {
         if (typeof value === 'string')
             value = [value]
 
         if (Array.isArray(value)) {
             const givenValue:Array<string> = value
-            value = new Map<string, string|ValueOf<typeof PropertyTypes>>()
+            const newValue:NormalizedAttributesReflectionConfiguration =
+                new Map<string, ValueOf<Mapping|WeakValidationMap<unknown>>>()
             for (const name of givenValue)
                 if (Object.prototype.hasOwnProperty.call(
                     Web.propertyTypes, name
                 ))
-                    value.set(name, Web.propertyTypes[name])
-        } else
-            value = Tools.convertPlainObjectToMap(value) as
-                AttributesReflectionConfiguration
+                    newValue.set(
+                        name,
+                        (Web.propertyTypes as Mapping)[name] as
+                            unknown as
+                            ValueOf<Mapping|WeakValidationMap<unknown>>
+                    )
 
-        return value as Map<string, string|ValueOf<typeof PropertyTypes>>
+            return newValue
+        }
+
+        return Tools.convertPlainObjectToMap(value) as
+            NormalizedAttributesReflectionConfiguration
     }
     // / endregion
     // / region events
@@ -1379,7 +1386,8 @@ export class Web<
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
             if (this.self._propertiesToReflectAsAttributes!.has(name))
                 switch (
-                    this.self._propertiesToReflectAsAttributes!.get(name)
+                    this.self._propertiesToReflectAsAttributes!.get(name) as
+                        ValueOf<Mapping|WeakValidationMap<unknown>>
                 ) {
                 case boolean:
                 case 'boolean':
@@ -1670,7 +1678,8 @@ export class Web<
             this.self.propertyTypes, name
         )) {
             const type:string|ValueOf<typeof PropertyTypes> =
-                this.self.propertyTypes[name]
+                this.self.propertyTypes[name] as
+                    string|ValueOf<typeof PropertyTypes>
 
             if (preEvaluate) {
                 if (value) {
