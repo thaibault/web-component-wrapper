@@ -17,12 +17,12 @@
 import Tools from 'clientnode'
 import {func} from 'clientnode/property-types'
 import {Mapping} from 'clientnode/type'
-import {createElement, ReactElement, WeakValidationMap} from 'react'
+import {createElement, FunctionComponent, ReactElement, WeakValidationMap} from 'react'
 
 import wrapAsWebComponent from './index'
 import React from './React'
 import Web from './Web'
-import {WebComponentAPI} from './type'
+import {PropertiesConfiguration, WebComponentAPI} from './type'
 // endregion
 // region Web
 describe('Web', ():void => {
@@ -66,14 +66,12 @@ describe('React', ():void => {
             ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
             InternalProperties extends Mapping<unknown> = Mapping<unknown>
         > extends React<TElement, ExternalProperties, InternalProperties> {
-            static content = ({onEvent}) => {
+            static content:FunctionComponent<{onEvent:() => void}> = ({onEvent}):ReactElement => {
                 triggerOnEvent = onEvent
 
                 return createElement('div')
             }
-            static propertyTypes:(
-                Mapping|WeakValidationMap<Mapping<unknown>>
-            ) = {
+            static propertyTypes:PropertiesConfiguration = {
                 ...Web.propertyTypes,
                 onEvent: func
             }
@@ -131,17 +129,16 @@ describe('React', ():void => {
 // region index
 describe('index', ():void => {
     test('wrapAsWebComponent', ():void => {
-        const componentAPI:WebComponentAPI =
-            wrapAsWebComponent(
-                ():ReactElement => createElement('div'),
-                'TestComponent',
-                {
-                    eventToPropertyMapping: {},
-                    propertyAliases: {alternateName: 'name'},
-                    propertiesToReflectAsAttributes: [],
-                    propTypes: {name: 'string'}
-                }
-            )
+        const componentAPI:WebComponentAPI = wrapAsWebComponent(
+            ():ReactElement => createElement('div'),
+            'TestComponent',
+            {
+                eventToPropertyMapping: {},
+                propertyAliases: {alternateName: 'name'},
+                propertiesToReflectAsAttributes: [],
+                propTypes: {name: 'string'}
+            }
+        )
 
         expect(componentAPI).toHaveProperty('component')
         expect(componentAPI).toHaveProperty('register')

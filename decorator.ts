@@ -19,10 +19,13 @@
 // region imports
 import Tools from 'clientnode'
 import PropertyTypes, {string} from 'clientnode/property-types'
-import {Mapping, ValueOf} from 'clientnode/type'
 
 import Web from './Web'
-import {NormalizedAttributesReflectionConfiguration} from './type'
+import {
+    NormalizedAttributesReflectionConfiguration,
+    PropertiesConfiguration,
+    PropertyConfiguration
+} from './type'
 // endregion
 /**
  * Generates a decorator based on given configuration.
@@ -43,9 +46,9 @@ export function property(
     options:{
         alias?:string
         readAttribute?:boolean
-        type?:string|ValueOf<typeof PropertyTypes>
+        type?:PropertyConfiguration
         update?:boolean
-        writeAttribute?:boolean|string|ValueOf<typeof PropertyTypes>
+        writeAttribute?:boolean|PropertyConfiguration
     } = {}
 ):PropertyDecorator {
     options = {readAttribute: true, type: string, ...options}
@@ -117,7 +120,7 @@ export function property(
                     self.propertiesToReflectAsAttributes, name
                 )
             ) {
-                let result:string|ValueOf<typeof PropertyTypes>|undefined
+                let result:PropertyConfiguration|undefined
                 if (typeof options.writeAttribute === 'boolean') {
                     if (
                         options.writeAttribute === true &&
@@ -126,8 +129,8 @@ export function property(
                             self.propertyTypes, name
                         )
                     )
-                        result = self.propertyTypes[name] as
-                            string|ValueOf<typeof PropertyTypes>
+                        result =
+                            self.propertyTypes[name] as PropertyConfiguration
                 } else
                     result = options.writeAttribute
 
@@ -152,9 +155,8 @@ export function property(
                             'object'
                     )
                         (
-                            self.propertiesToReflectAsAttributes as Mapping<
-                                string|ValueOf<typeof PropertyTypes>
-                            >
+                            self.propertiesToReflectAsAttributes as
+                                PropertiesConfiguration
                         )[name] = result
                 }
             }

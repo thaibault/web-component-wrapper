@@ -18,9 +18,7 @@
 // region imports
 import PropertyTypes from 'clientnode/property-types'
 import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
-import {
-    ComponentType as ReactComponentType, ReactElement, WeakValidationMap
-} from 'react'
+import {ComponentType as ReactComponentType, ReactElement} from 'react'
 
 import Web from './Web'
 // endregion
@@ -56,10 +54,15 @@ export type EventToPropertyMapping<
     P extends Array<unknown> = Array<unknown>
 > = Mapping<true|EventMapper<E, I, P>>
 
+export type PropertyConfiguration = string|ValueOf<typeof PropertyTypes>
+export type PropertiesConfiguration = Mapping<PropertyConfiguration>
 export type NormalizedAttributesReflectionConfiguration =
-    Map<string, ValueOf<Mapping|WeakValidationMap<unknown>>>
-export type AttributesReflectionConfiguration =
-    Array<string>|NormalizedAttributesReflectionConfiguration
+    Map<string, PropertyConfiguration>
+export type AttributesReflectionConfiguration = (
+    Array<string> |
+    PropertyConfigurations |
+    NormalizedAttributesReflectionConfiguration
+)
 
 export type ScopeDeclaration = Array<string>|Mapping<unknown>
 export type PreCompiledItem = {
@@ -93,7 +96,7 @@ export interface WebComponentConfiguration<
     internalProperties?:InternalProperties
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
-    propTypes?:Mapping|WeakValidationMap<unknown>
+    propTypes?:PropertiesConfiguration
     renderProperties?:Array<string>
 }
 export interface StaticWebComponent extends WebComponentConfiguration {
@@ -104,7 +107,7 @@ export interface StaticWebComponent extends WebComponentConfiguration {
     ___types?:{name?:{name?:string}}
 }
 export type ComponentType<PropertyTypes = Mapping<unknown>> =
-    ReactComponentType<PropertyTypes> &
+    Omit<ReactComponentType<PropertyTypes>, 'propTypes'> &
     StaticWebComponent
 export interface ComponentAdapter<
     Properties = Mapping<unknown>, State = Mapping<unknown>

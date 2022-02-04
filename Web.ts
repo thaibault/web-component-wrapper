@@ -43,10 +43,8 @@ import {
     EvaluationResult,
     Mapping,
     PlainObject,
-    TemplateFunction,
-    ValueOf
+    TemplateFunction
 } from 'clientnode/type'
-import {WeakValidationMap} from 'react'
 
 import property from './decorator'
 import {
@@ -59,6 +57,8 @@ import {
     EventMapping,
     EventToPropertyMapping,
     NormalizedAttributesReflectionConfiguration,
+    PropertiesConfiguration,
+    PropertyConfiguration,
     ScopeDeclaration,
     WebComponentAPI
 } from './type'
@@ -179,7 +179,7 @@ export class Web<
     static controllableProperties:Array<string> = []
     static eventToPropertyMapping:EventToPropertyMapping|null = {}
     static propertyAliases:Mapping = {}
-    static propertyTypes:Mapping|WeakValidationMap<Mapping<unknown>> = {
+    static propertyTypes:PropertiesConfiguration = {
         onClick: func
     }
     static propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
@@ -1064,17 +1064,12 @@ export class Web<
         if (Array.isArray(value)) {
             const givenValue:Array<string> = value
             const newValue:NormalizedAttributesReflectionConfiguration =
-                new Map<string, ValueOf<Mapping|WeakValidationMap<unknown>>>()
+                new Map<string, PropertyConfiguration>()
             for (const name of givenValue)
                 if (Object.prototype.hasOwnProperty.call(
                     Web.propertyTypes, name
                 ))
-                    newValue.set(
-                        name,
-                        (Web.propertyTypes as Mapping)[name] as
-                            unknown as
-                            ValueOf<Mapping|WeakValidationMap<unknown>>
-                    )
+                    newValue.set(name, Web.propertyTypes[name])
 
             return newValue
         }
@@ -1148,10 +1143,8 @@ export class Web<
                 !Object.prototype.hasOwnProperty.call(
                     this.internalProperties, name
                 ) &&
-                (
-                    [func, 'function'] as
-                        Array<ValueOf<typeof this.self.propertyTypes>>
-                ).includes(type) &&
+                ([func, 'function'] as Array<PropertyConfiguration>)
+                    .includes(type) &&
                 !this.self.renderProperties.includes(name)
             ) {
                 this.outputEventNames.add(name)
@@ -1386,8 +1379,7 @@ export class Web<
             const attributeName:string = Tools.stringCamelCaseToDelimited(name)
             if (this.self._propertiesToReflectAsAttributes!.has(name))
                 switch (
-                    this.self._propertiesToReflectAsAttributes!.get(name) as
-                        ValueOf<Mapping|WeakValidationMap<unknown>>
+                    this.self._propertiesToReflectAsAttributes!.get(name)
                 ) {
                 case boolean:
                 case 'boolean':
@@ -1677,9 +1669,8 @@ export class Web<
         if (Object.prototype.hasOwnProperty.call(
             this.self.propertyTypes, name
         )) {
-            const type:string|ValueOf<typeof PropertyTypes> =
-                this.self.propertyTypes[name] as
-                    string|ValueOf<typeof PropertyTypes>
+            const type:PropertyConfiguration =
+                this.self.propertyTypes[name] PropertyConfiguration
 
             if (preEvaluate) {
                 if (value) {
