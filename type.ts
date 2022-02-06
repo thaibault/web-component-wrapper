@@ -59,6 +59,7 @@ export type PropertiesConfiguration = Mapping<PropertyConfiguration>
 export type NormalizedAttributesReflectionConfiguration =
     Map<string, PropertyConfiguration>
 export type AttributesReflectionConfiguration = (
+    string |
     Array<string> |
     PropertiesConfiguration |
     NormalizedAttributesReflectionConfiguration
