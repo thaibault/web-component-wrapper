@@ -16,7 +16,7 @@
     endregion
 */
 // region imports
-import PropertyTypes from 'clientnode/property-types'
+import PropertyTypes, {ValidationMap} from 'clientnode/property-types'
 import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
 import {ComponentType as ReactComponentType, ReactElement} from 'react'
 
@@ -55,7 +55,8 @@ export type EventToPropertyMapping<
 > = Mapping<true|EventMapper<E, I, P>>
 
 export type PropertyConfiguration = string|ValueOf<typeof PropertyTypes>
-export type PropertiesConfiguration = Mapping<PropertyConfiguration>
+export type PropertiesConfiguration =
+    Mapping<PropertyConfiguration> & ValidationMap<PropertyConfiguration>
 export type NormalizedAttributesReflectionConfiguration =
     Map<string, PropertyConfiguration>
 export type AttributesReflectionConfiguration = (

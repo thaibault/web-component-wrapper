@@ -18,7 +18,7 @@
 */
 // region imports
 import Tools from 'clientnode'
-import {Mapping} from 'clientnode/type'
+import {Mapping, ValueOf} from 'clientnode/type'
 
 import ReactWebImport, {api as reactWebAPIImport} from './React'
 import WebImport, {api as webAPIImport} from './Web'
@@ -157,8 +157,10 @@ export const wrapAsWebComponent = <
             AttributesReflectionConfiguration
         ) = propertiesToReflectAsAttributes
         static propertyTypes:PropertiesConfiguration = {
-            ...ReactWeb.propertyTypes,
-            ...propertyTypes
+            ...ReactWeb.propertyTypes as Mapping<ValueOf<
+                PropertiesConfiguration
+            >>,
+            ...propertyTypes as Mapping<ValueOf<PropertiesConfiguration>>
         }
         static renderProperties:Array<string> =
             configuration.renderProperties ??
