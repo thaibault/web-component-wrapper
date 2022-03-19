@@ -1146,7 +1146,7 @@ export class Web<
                     this.internalProperties, name
                 ) &&
                 ([func, 'function'] as Array<PropertyConfiguration>)
-                    .includes(type) &&
+                    .includes(type as PropertyConfiguration) &&
                 !this.self.renderProperties.includes(name)
             ) {
                 this.outputEventNames.add(name)

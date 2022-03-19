@@ -19,6 +19,7 @@
 // region imports
 import Tools from 'clientnode'
 import {string} from 'clientnode/property-types'
+import {Mapping, ValueOf} from 'clientnode/type'
 
 import Web from './Web'
 import {PropertiesConfiguration, PropertyConfiguration} from './type'
@@ -85,7 +86,9 @@ export function property(
         if (options.type) {
             if (!Object.prototype.hasOwnProperty.call(self, 'propertyTypes'))
                 self.propertyTypes = self.propertyTypes ?
-                    {...self.propertyTypes} :
+                    {...self.propertyTypes as
+                        Mapping<ValueOf<PropertiesConfiguration>>
+                    } :
                     {}
 
             if (

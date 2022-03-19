@@ -16,7 +16,7 @@
 // region imports
 import Tools from 'clientnode'
 import {func} from 'clientnode/property-types'
-import {Mapping} from 'clientnode/type'
+import {Mapping, ValueOf} from 'clientnode/type'
 import {createElement, FunctionComponent, ReactElement} from 'react'
 
 import wrapAsWebComponent from './index'
@@ -80,7 +80,9 @@ describe('React', ():void => {
         > extends React<TElement, ExternalProperties, InternalProperties> {
             static content:ComponentType = component as ComponentType
             static propertyTypes:PropertiesConfiguration = {
-                ...Web.propertyTypes,
+                ...Web.propertyTypes as Mapping<ValueOf<
+                    PropertiesConfiguration
+                >>,
                 onEvent: func
             }
 
