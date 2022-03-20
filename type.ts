@@ -55,8 +55,10 @@ export type EventToPropertyMapping<
 > = Mapping<true|EventMapper<E, I, P>>
 
 export type PropertyConfiguration = string|ValueOf<typeof PropertyTypes>
-export type PropertiesConfiguration =
-    Mapping<PropertyConfiguration> & ValidationMap<PropertyConfiguration>
+export type ValidationMapping = ValidationMap<ValueOf<typeof PropertyTypes>>
+export type PropertiesValidationMap =
+    Mapping<ValueOf<typeof PropertyTypes>> & ValidationMapping
+export type PropertiesConfiguration = Mapping|PropertiesValidationMap
 export type NormalizedAttributesReflectionConfiguration =
     Map<string, PropertyConfiguration>
 export type AttributesReflectionConfiguration = (
