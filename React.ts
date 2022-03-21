@@ -389,7 +389,7 @@ export class ReactWeb<
         if (!(domNode as HTMLElement).getAttributeNames)
             return ():null => null
         // region native elements and wrapped react components
-        // / region prepare type and static properties
+        /// region prepare type and static properties
         let staticProperties:PreCompiledInternalProperties
         let target:ComponentType|string
 
@@ -421,8 +421,8 @@ export class ReactWeb<
             staticProperties = {key} as PreCompiledInternalProperties
             target = (domNode as HTMLElement).tagName.toLowerCase()
         }
-        // / endregion
-        // / region pre-compile dynamic properties
+        /// endregion
+        /// region pre-compile dynamic properties
         let knownScopeNames:Array<string> = Object.keys(scope)
         const compiledProperties:Mapping<PreCompiledItem> = {}
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
@@ -544,16 +544,16 @@ export class ReactWeb<
             else
                 (staticProperties as Mapping<unknown>)[name] = value
         }
-        // / endregion
-        // / region pre-compiled nested nodes of native elements
+        /// endregion
+        /// region pre-compiled nested nodes of native elements
         if (!isComponent) {
             const childNodes:Array<Node> = Array.from(domNode.childNodes)
             if (childNodes.length)
                 (staticProperties.children as ReactRenderItemsFactory) =
                     this.preCompileDomNodes(childNodes, scope)
         }
-        // / endregion
-        // / region create evaluable render function
+        /// endregion
+        /// region create evaluable render function
         return (runtimeScope:Mapping<unknown>):ReactElement => {
             // region prepare scope
             runtimeScope = {...scope, ...runtimeScope}
@@ -614,7 +614,7 @@ export class ReactWeb<
             // endregion
             return createElement(target as ReactComponentType, properties)
         }
-        // / endregion
+        /// endregion
         // endregion
     }
     /**

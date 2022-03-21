@@ -553,8 +553,8 @@ export class Web<
     }
     // endregion
     // region helper
-    // / region utility
-    // // region dom nodes
+    /// region utility
+    //// region dom nodes
     /**
      * Binds properties and event handler to given dom node.
      * @param domNode - Node to start traversing from.
@@ -1003,7 +1003,7 @@ export class Web<
 
         return result
     }
-    // // endregion
+    //// endregion
     /**
      * Determines initial root wich initializes rendering digest.
      * @returns Nothing.
@@ -1079,8 +1079,8 @@ export class Web<
         return Tools.convertPlainObjectToMap(value) as
             NormalizedAttributesReflectionConfiguration
     }
-    // / endregion
-    // / region events
+    /// endregion
+    /// region events
     /**
      * Attaches event handler to keep in sync with nested components properties
      * states.
@@ -1186,8 +1186,8 @@ export class Web<
             new CustomEvent(name, {detail: {parameters}})
         )
     }
-    // / endregion
-    // / region slots
+    /// endregion
+    /// region slots
     /**
      * Renders component given slot contents into given dom node. If expected
      * slots are not given but a fallback is specified they will be loaded into
@@ -1321,8 +1321,8 @@ export class Web<
         else
             this.slots.default = []
     }
-    // / endregion
-    // / region properties
+    /// endregion
+    /// region properties
     /**
      * Determines if given property name exists in wrapped component state.
      * @param name - Property name to check if exists in state.
@@ -1883,8 +1883,8 @@ export class Web<
                 }
         }
     }
-    // / endregion
-    // / region render
+    /// endregion
+    /// region render
     /**
      * Determines new scope object with useful default set of environment
      * values.
@@ -1974,7 +1974,7 @@ export class Web<
             this.root.firstChild, this.scope, this.self.renderSlots
         )
     }
-    // / endregion
+    /// endregion
     // endregion
 }
 export const api:WebComponentAPI<typeof Web> = {
