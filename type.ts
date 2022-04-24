@@ -82,8 +82,9 @@ export type ReactRenderItemsFactory =
     Array<ReactRenderItemFactory>|ReactRenderItemFactory
 
 export type ReactRenderBaseItem = ReactElement|string|null
-export type ReactRenderItem = ((..._parameters:Array<unknown>) =>
-    ReactRenderBaseItem)|ReactRenderBaseItem
+export type ReactRenderItem =
+    ((..._parameters:Array<unknown>) => ReactRenderBaseItem) |
+    ReactRenderBaseItem
 export type ReactRenderItems = Array<ReactRenderItem>|ReactRenderItem
 
 export interface WebComponentConfiguration<

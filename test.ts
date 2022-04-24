@@ -109,8 +109,10 @@ describe('React', ():void => {
         document.body.appendChild(react)
 
         expect(react).toHaveProperty('root', react)
+        expect(react).toHaveProperty('reactRoot')
 
         expect(triggerOnEvent).not.toBeDefined()
+        await Tools.timeout()
         await Tools.timeout()
         expect(triggerOnEvent).toBeDefined()
 
