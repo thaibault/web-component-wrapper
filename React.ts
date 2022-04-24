@@ -33,7 +33,7 @@ import React, {
     Ref,
     useImperativeHandle
 } from 'react'
-import {render, unmountComponentAtNode} from 'react-dom'
+import {createRoot, Root as ReactRoot} from 'react-dom/client'
 
 import Web from './Web'
 import {
@@ -106,6 +106,7 @@ export class ReactWeb<
         {children?:ReactRenderItemsFactory}
     ) = {}
     preparedSlots:Mapping<ReactRenderItems> & {children?:ReactRenderItems} = {}
+    reactRoot:null|ReactRoot = null
     rootReactInstance:null|ReactWeb = null
 
     readonly self:typeof ReactWeb = ReactWeb
@@ -136,7 +137,7 @@ export class ReactWeb<
      * @returns Nothing.
      */
     disconnectedCallback():void {
-        unmountComponentAtNode(this.root)
+        this.reactRoot?.unmount()
 
         super.disconnectedCallback()
     }
@@ -194,13 +195,15 @@ export class ReactWeb<
             }
         }
 
-        render(
+        if (!this.reactRoot)
+            this.reactRoot = createRoot(this.root)
+
+        this.reactRoot.render(
             createElement<InternalProperties>(
                 this.self.content as
                     ReactComponentType<InternalProperties>,
                 this.internalProperties
-            ),
-            this.root
+            )
         )
 
         /*
@@ -314,7 +317,10 @@ export class ReactWeb<
                             renderResult.push(renderItem(...parameters))
                     }
 
-                    return createElement(Fragment, {children: renderResult})
+                    return createElement(
+                        Fragment,
+                        {children: renderResult as Array<ReactRenderBaseItem>}
+                    )
                 }) as ReactRenderItem
 
         return result
@@ -610,7 +616,7 @@ export class ReactWeb<
                 properties.children = this.evaluatePreCompiledDomNodes(
                     properties.children as ReactRenderItemsFactory,
                     runtimeScope
-                )
+                ) as Array<ReactRenderBaseItem>
             // endregion
             return createElement(target as ReactComponentType, properties)
         }
@@ -792,7 +798,9 @@ export class ReactWeb<
      * @returns Nothing.
      */
     prepareProperties(properties:InternalProperties):void {
-        Tools.extend(properties, this.preparedSlots)
+        Tools.extend(
+            properties, this.preparedSlots as Partial<InternalProperties>
+        )
 
         this.self.removeKnownUnwantedPropertyKeys(this.self, properties)
 
