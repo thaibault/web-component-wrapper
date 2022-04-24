@@ -112,6 +112,7 @@ describe('React', ():void => {
 
         expect(triggerOnEvent).not.toBeDefined()
         await Tools.timeout()
+        // TODO
         expect(triggerOnEvent).toBeDefined()
 
         expect(react).not.toHaveProperty('eventHappened')
