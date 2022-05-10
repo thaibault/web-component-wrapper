@@ -67,7 +67,6 @@
     "@babel/eslint-parser": "*",
     "@types/ejs": "*",
     "@types/html-minifier": "*",
-    "@types/jest": "*",
     "@types/jsdom": "*",
     "@types/node": "*",
     "@types/react": "*",
