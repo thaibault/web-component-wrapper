@@ -14,6 +14,7 @@
     endregion
 */
 // region imports
+import {describe, expect, jest, test} from '@jest/globals'
 import Tools from 'clientnode'
 import {func} from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
