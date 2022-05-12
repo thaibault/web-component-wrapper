@@ -44,8 +44,8 @@
   "scripts": {
     "build": "yarn build:types; yarn build:plain",
     "build:export": "yarn build:types; yarn build:export:plain",
-    "build:export:plain": "weboptimizer build '{__reference__: \"target:export\"}'",
-    "build:plain": "weboptimizer build && yarn build:next",
+    "build:export:plain": "weboptimizer build '{__reference__: \"target:export\"}';  yarn build:next",
+    "build:plain": "weboptimizer build; yarn build:next",
     "build:next": "weboptimizer build '{__reference__: \"target:next\"}'",
     "build:types": "weboptimizer build:types",
     "check": "yarn check:types; yarn lint",
