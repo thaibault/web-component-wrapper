@@ -213,7 +213,9 @@ export class ReactWeb<
         if (this.instance?.current)
             this.reflectInstanceProperties()
         else
-            void Tools.timeout(this.reflectInstanceProperties)
+            void Tools.timeout(():void => {
+                void Tools.timeout(this.reflectInstanceProperties)
+            })
     }
     // endregion
     // region property handling
