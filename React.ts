@@ -200,7 +200,7 @@ export class ReactWeb<
             this.reactRoot = createRoot(this.root)
 
         flushSync(():void =>
-            this.reactRoot.render(
+            this.reactRoot!.render(
                 createElement<InternalProperties>(
                     this.self.content as
                         ReactComponentType<InternalProperties>,

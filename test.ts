@@ -16,7 +16,7 @@
 // region imports
 import {describe, expect, jest, test} from '@jest/globals'
 import Tools from 'clientnode'
-import {func} from 'clientnode/property-types'
+import {func, string} from 'clientnode/property-types'
 import {Mapping, ValueOf} from 'clientnode/type'
 import {createElement, FunctionComponent, ReactElement} from 'react'
 
@@ -63,13 +63,17 @@ describe('Web', ():void => {
 describe('React', ():void => {
     test('constructor', async ():Promise<void> => {
         let triggerOnEvent:(() => void)|undefined
+        let componentProperty = 'initial'
 
-        const component:FunctionComponent<{onEvent:() => void}> =
-            ({onEvent}):ReactElement => {
-                triggerOnEvent = onEvent
+        const component:FunctionComponent<{
+            property:string
+            onEvent?:() => void
+        }> = ({onEvent, property = componentProperty}):ReactElement => {
+            triggerOnEvent = onEvent
+            componentProperty = property
 
-                return createElement('div')
-            }
+            return createElement('div', {className: property})
+        }
 
         /**
          * Mock test class.
@@ -80,11 +84,15 @@ describe('React', ():void => {
             InternalProperties extends Mapping<unknown> = Mapping<unknown>
         > extends React<TElement, ExternalProperties, InternalProperties> {
             static content:ComponentType = component as ComponentType
+
             static propertyTypes:PropertiesConfiguration = {
                 ...Web.propertyTypes as Mapping<ValueOf<
                     PropertiesConfiguration
                 >>,
-                onEvent: func
+
+                onEvent: func,
+
+                property: string
             }
 
             static _name = 'Test'
@@ -96,8 +104,9 @@ describe('React', ():void => {
         expect(TestReact).toHaveProperty('observedAttributes')
 
         customElements.define('test-react', TestReact)
-        const react:TestReact =
-            document.createElement('test-react') as TestReact
+        const react:(TestReact & {property:string}) =
+            document.createElement('test-react') as
+                TestReact & {property:string}
 
         expect(react).not.toHaveProperty('clicked')
         react.setAttribute('bind-on-click', 'this.clicked = true')
@@ -113,7 +122,6 @@ describe('React', ():void => {
         expect(react).toHaveProperty('reactRoot')
 
         expect(triggerOnEvent).not.toBeDefined()
-        await Tools.timeout()
         await Tools.timeout()
         expect(triggerOnEvent).toBeDefined()
 
@@ -136,6 +144,15 @@ describe('React', ():void => {
         expect(clickCallback).not.toHaveBeenCalled()
         react.click()
         expect(clickCallback).toHaveBeenCalled()
+
+        expect(componentProperty).toStrictEqual('initial')
+        expect(document.querySelector('div')!.className)
+            .toStrictEqual('initial')
+
+        react.property = 'test'
+        await Tools.timeout()
+        expect(react).toHaveProperty('property', 'test')
+        expect(document.querySelector('div')!.className).toStrictEqual('test')
     })
 })
 // endregion
