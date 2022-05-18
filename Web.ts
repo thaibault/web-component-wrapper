@@ -1525,6 +1525,7 @@ export class Web<
                 this.batchedUpdateRunning = true
                 void Tools.timeout(():void => {
                     this.batchedUpdateRunning = false
+
                     this.render(reason)
                 })
             }
