@@ -33,6 +33,7 @@ import React, {
     Ref,
     useImperativeHandle
 } from 'react'
+import {flushSync} from 'react-dom'
 import {createRoot, Root as ReactRoot} from 'react-dom/client'
 
 import Web from './Web'
@@ -198,11 +199,13 @@ export class ReactWeb<
         if (!this.reactRoot)
             this.reactRoot = createRoot(this.root)
 
-        this.reactRoot.render(
-            createElement<InternalProperties>(
-                this.self.content as
-                    ReactComponentType<InternalProperties>,
-                this.internalProperties
+        flushSync(():void =>
+            this.reactRoot.render(
+                createElement<InternalProperties>(
+                    this.self.content as
+                        ReactComponentType<InternalProperties>,
+                    this.internalProperties
+                )
             )
         )
 
@@ -213,9 +216,7 @@ export class ReactWeb<
         if (this.instance?.current)
             this.reflectInstanceProperties()
         else
-            void Tools.timeout(():void => {
-                void Tools.timeout(this.reflectInstanceProperties)
-            })
+            void Tools.timeout(this.reflectInstanceProperties)
     }
     // endregion
     // region property handling
