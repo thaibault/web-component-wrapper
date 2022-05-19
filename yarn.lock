@@ -1515,9 +1515,9 @@
   integrity sha512-YATxVxgRqNH6nHEIsvg6k2Boc1JHI9ZbH5iWFFv/MTkchz3b1ieGDa5T0a9RznNdI0KhVbdbWSN+KWWrQZRxTw==
 
 "@types/node@*":
-  version "17.0.34"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.34.tgz#3b0b6a50ff797280b8d000c6281d229f9c538cef"
-  integrity sha512-XImEz7XwTvDBtzlTnm8YvMqGW/ErMWBsKZ+hMTvnDIjGCKxwK5Xpc+c/oQjOauwq8M4OS11hEkpjX8rrI/eEgA==
+  version "17.0.35"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.35.tgz#635b7586086d51fb40de0a2ec9d1014a5283ba4a"
+  integrity sha512-vu1SrqBjbbZ3J6vwY17jBs8Sr/BKA+/a/WtjRG+whKg1iuLFOosq872EXS0eXWILdO36DHQQeku/ZcL6hz2fpg==
 
 "@types/parse5@*":
   version "6.0.3"
@@ -3548,9 +3548,9 @@ doctrine@^3.0.0:
     esutils "^2.0.2"
 
 documentation-website@*:
-  version "1.0.273"
-  resolved "https://registry.yarnpkg.com/documentation-website/-/documentation-website-1.0.273.tgz#d48f0062c3bcd1cf1c8ff35b52e3a036f66cde96"
-  integrity sha512-+oK0RcY3VZMLjUcdyYy52BFlMaAMRaP2tw049aVRvgFpGZ2fDzzi6mn/BMEsDFU7vb6gx2xKKnmGVled8zB/uA==
+  version "1.0.274"
+  resolved "https://registry.yarnpkg.com/documentation-website/-/documentation-website-1.0.274.tgz#74b8d81fee0a80cd819806f84cca5e0ca406439d"
+  integrity sha512-9yHwXLb4oeb+SZEqGneln5hHPWw5SqRSmCo5KcwnrBPJDQ8QOwnnt2CxUrL76J68Vcu/LeRL4lO5NXw3lWeA2A==
   dependencies:
     "@types/webpack" "https://registry.yarnpkg.com/@favware/skip-dependency/-/skip-dependency-1.1.1.tgz"
 
