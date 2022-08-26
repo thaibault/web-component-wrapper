@@ -1659,8 +1659,8 @@ export class Web<
             attributeName.substring(1) :
             attributeName
 
-        let name:string = Tools.stringDelimitedToCamelCase(
-            effectiveAttributeName)
+        let name:string =
+            Tools.stringDelimitedToCamelCase(effectiveAttributeName)
         const alias:null|string = this.getPropertyAlias(name)
         if (
             alias &&
