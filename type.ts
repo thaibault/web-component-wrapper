@@ -122,7 +122,7 @@ export interface ComponentAdapter<
 }
 export type WebComponentAPI<WebComponent extends typeof Web = typeof Web> = {
     component:WebComponent
-    register:(_tagName?:string) => void
+    register:(tagName?:string) => void
 }
 // endregion
 // region vim modline
