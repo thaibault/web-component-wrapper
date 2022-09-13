@@ -120,8 +120,8 @@ export interface ComponentAdapter<
     properties?:Properties
     state?:State
 }
-export type WebComponentAPI<WebComponent extends typeof Web = typeof Web> = {
-    component:WebComponent
+export type WebComponentAPI<Type extends typeof Web = typeof Web> = {
+    component:Type
     register:(tagName?:string) => void
 }
 // endregion
