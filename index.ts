@@ -55,7 +55,12 @@ export const wrapAsWebComponent = <
         configuration:WebComponentConfiguration<
             ExternalProperties, InternalProperties, EventParameters
         > = {}
-    ):WebComponentAPI<typeof ReactWeb> => {
+    ):WebComponentAPI<
+        Type,
+        ExternalProperties,
+        InternalProperties,
+        typeof ReactWeb<Type, ExternalProperties, InternalProperties>
+    > => {
     // Determine class / function name.
     const name:string =
         component._name ||
@@ -117,7 +122,7 @@ export const wrapAsWebComponent = <
      * Runtime generated web component.
      */
     class ConcreteComponent<
-        TElement = HTMLElement,
+        TElement = Type,
         ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
         InternalProperties extends Mapping<unknown> = Mapping<unknown>
     > extends ReactWeb<TElement, ExternalProperties, InternalProperties> {
@@ -178,8 +183,15 @@ export const wrapAsWebComponent = <
         ) as InternalProperties
     }
 
-    const webComponentAPI:WebComponentAPI<typeof ConcreteComponent> = {
-        component: ConcreteComponent,
+    const webComponentAPI:WebComponentAPI<
+        Type,
+        ExternalProperties,
+        InternalProperties,
+        typeof ReactWeb<Type, ExternalProperties, InternalProperties>
+    > = {
+        component: ConcreteComponent as typeof ReactWeb<
+            Type, ExternalProperties, InternalProperties
+        >,
         register: (
             tagName:string = Tools.stringCamelCaseToDelimited(name)
         ):void => customElements.define(tagName, ConcreteComponent)

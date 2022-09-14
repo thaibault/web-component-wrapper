@@ -18,7 +18,9 @@
 // region imports
 import PropertyTypes, {ValidationMap} from 'clientnode/property-types'
 import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
-import {ComponentType as ReactComponentType, ReactElement} from 'react'
+import React, {
+    ComponentType as ReactComponentType, HTMLAttributes, ReactElement
+} from 'react'
 
 import Web from './Web'
 // endregion
@@ -74,6 +76,17 @@ export type PreCompiledItem = {
     templateFunction:TemplateFunction
 }
 
+export type ReactComponentBaseProperties<TElement = HTMLElement> =
+    Mapping<unknown> &
+    {
+        children?:Array<React.ReactNode>|React.ReactNode
+        dangerouslySetInnerHTML?:HTMLAttributes<TElement>[
+            'dangerouslySetInnerHTML'
+        ]
+        key?:string
+        ref?:null|{current?:ComponentAdapter}
+    }
+
 export type ReactRenderBaseItemFactory = (_scope:Mapping<unknown>) =>
     ReactRenderBaseItem
 export type ReactRenderItemFactory = (_scope:Mapping<unknown>) =>
@@ -120,7 +133,13 @@ export interface ComponentAdapter<
     properties?:Properties
     state?:State
 }
-export type WebComponentAPI<Type extends typeof Web = typeof Web> = {
+export type WebComponentAPI<
+    TElement = HTMLElement,
+    ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    InternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    Type extends typeof Web<TElement, ExternalProperties, InternalProperties> =
+        typeof Web<TElement, ExternalProperties, InternalProperties>
+> = {
     component:Type
     register:(tagName?:string) => void
 }

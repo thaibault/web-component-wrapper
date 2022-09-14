@@ -22,7 +22,6 @@ import {func, NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
 import {Mapping, TemplateFunction} from 'clientnode/type'
 import React, {
     Attributes,
-    HTMLAttributes,
     ComponentType as ReactComponentType,
     createElement,
     createRef,
@@ -43,6 +42,7 @@ import {
 
     PreCompiledItem,
 
+    ReactComponentBaseProperties,
     PropertyConfiguration,
 
     ReactRenderBaseItemFactory,
@@ -87,14 +87,8 @@ import {
 export class ReactWeb<
     TElement = HTMLElement,
     ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
-    InternalProperties extends Mapping<unknown> & {
-        children?:Array<React.ReactNode>|React.ReactNode
-        dangerouslySetInnerHTML?:HTMLAttributes<TElement>[
-            'dangerouslySetInnerHTML'
-        ]
-        key?:string
-        ref?:null|{current?:ComponentAdapter}
-    } = Mapping<unknown>
+    InternalProperties extends ReactComponentBaseProperties<TElement> =
+        Mapping<unknown>
 > extends Web<TElement, ExternalProperties, InternalProperties> {
     static attachWebComponentAdapterIfNotExists = true
     static content:ComponentType|string = 'div'
@@ -881,7 +875,12 @@ export class ReactWeb<
     }
     // endregion
 }
-export const api:WebComponentAPI<typeof ReactWeb> = {
+export const api:WebComponentAPI<
+    HTMLElement,
+    Mapping<unknown>,
+    ReactComponentBaseProperties,
+    typeof ReactWeb
+> = {
     component: ReactWeb,
     register: (
         tagName:string = Tools.stringCamelCaseToDelimited(ReactWeb._name)
