@@ -1979,7 +1979,9 @@ export class Web<
     /// endregion
     // endregion
 }
-export const api:WebComponentAPI<typeof Web> = {
+export const api:WebComponentAPI<
+    HTMLElement, Mapping<unknown>, Mapping<unknown>, typeof Web
+> = {
     component: Web,
     register: (
         tagName:string = Tools.stringCamelCaseToDelimited(Web._name)
