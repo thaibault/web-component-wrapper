@@ -117,9 +117,16 @@ export interface WebComponentConfiguration<
     propTypes?:PropertiesConfiguration
     renderProperties?:Array<string>
 }
-export interface StaticWebComponent extends WebComponentConfiguration {
+export interface StaticWebComponent<
+    ComponentType = unknown,
+    ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    InternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    EventParameters extends Array<unknown> = Array<unknown>
+> extends WebComponentConfiguration<
+    ExternalProperties, InternalProperties, EventParameters
+> {
     webComponentAdapterWrapped?:string
-    wrapped?:unknown
+    wrapped?:ComponentType
 
     _name?:string
     ___types?:{name?:{name?:string}}
