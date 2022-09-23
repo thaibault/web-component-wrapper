@@ -1584,7 +1584,7 @@ export class Web<
                 ExternalProperties, InternalProperties
             > = (
                 wrappedMapping &&
-                Object.prototype.hasOwnProperty.call(wrappedMapping, 'then') &&
+                'then' in wrappedMapping &&
                 Tools.isFunction((wrappedMapping as {then:unknown}).then)
             ) ?
                 await (wrappedMapping as Promise<EventMapping<
