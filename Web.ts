@@ -1113,12 +1113,16 @@ export class Web<
                 this.internalProperties, name
             )) {
                 result = true
+
                 this.outputEventNames.add(name)
+
                 this.setInternalPropertyValue(
                     name,
-                    (...parameters:Array<unknown>):void => {
+                    async (...parameters:Array<unknown>):Promise<void> => {
                         const result:Mapping<unknown>|null =
-                            this.reflectEventToProperties(name, parameters)
+                            await this.reflectEventToProperties(
+                                name, parameters
+                            )
 
                         if (result)
                             parameters[0] = result
@@ -1156,7 +1160,9 @@ export class Web<
                     name,
                     (...parameters:Array<unknown>):void => {
                         if (reflectProperties)
-                            this.reflectEventToProperties(name, parameters)
+                            void this.reflectEventToProperties(
+                                name, parameters
+                            )
 
                         this.forwardEvent(name, parameters)
                     }
@@ -1541,9 +1547,9 @@ export class Web<
      *
      * @returns Mapped properties or null if nothing could be mapped.
      */
-    reflectEventToProperties(
+    async reflectEventToProperties(
         name:string, parameters:Array<unknown>
-    ):Partial<ExternalProperties>|null {
+    ):Promise<Partial<ExternalProperties>|null> {
         /*
             NOTE: We enforce to update components state immediately after an
             event occurs since batching usually does not make sense here. An
@@ -1557,6 +1563,8 @@ export class Web<
 
         let result:Partial<ExternalProperties>|null = null
 
+        let handled = false
+        // region check if there exists an explicit mapper
         if (
             this.self.eventToPropertyMapping &&
             Object.prototype.hasOwnProperty.call(
@@ -1564,21 +1572,42 @@ export class Web<
             ) &&
             Tools.isFunction(this.self.eventToPropertyMapping[name])
         ) {
-            const mapping:EventMapping<
-                ExternalProperties, InternalProperties
-            > = (
+            const wrappedMapping:(
+                EventMapping<ExternalProperties, InternalProperties> |
+                Promise<EventMapping<ExternalProperties, InternalProperties>>
+            ) = (
                 this.self.eventToPropertyMapping[name] as
                     EventMapper<ExternalProperties, InternalProperties>
             )(...parameters, this)
+
+            const mapping:EventMapping<
+                ExternalProperties, InternalProperties
+            > = (
+                wrappedMapping &&
+                Object.prototype.hasOwnProperty.call(wrappedMapping, 'then') &&
+                Tools.isFunction((wrappedMapping as {then:unknown}).then)
+            ) ?
+                await (wrappedMapping as Promise<EventMapping<
+                    ExternalProperties, InternalProperties
+                >>) :
+                wrappedMapping as
+                    EventMapping<ExternalProperties, InternalProperties>
+
+            handled = true
             if (Array.isArray(mapping)) {
                 result = mapping[0]
                 this.reflectProperties(result)
                 Tools.extend(true, this.internalProperties, mapping[1])
-            } else if (mapping !== null && typeof mapping === 'object') {
+            } else if (mapping === null)
+                handled = false
+            else if (typeof mapping === 'object') {
                 result = mapping
                 this.reflectProperties(mapping)
             }
-        } else if (
+        }
+        // endregion
+        if (
+            !handled &&
             parameters.length > 0 &&
             parameters[0] !== null &&
             typeof parameters[0] === 'object'
@@ -1736,7 +1765,7 @@ export class Web<
                         name,
                         (...parameters:Array<unknown>):unknown => {
                             if (this.outputEventNames.has(name))
-                                this.reflectEventToProperties(
+                                void this.reflectEventToProperties(
                                     name, parameters
                                 )
 
