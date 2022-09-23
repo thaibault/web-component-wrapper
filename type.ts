@@ -42,6 +42,7 @@ export type EventMapping<
     ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
     InternalProperties extends Mapping<unknown> = Mapping<unknown>
 > = (
+    null |
     [Partial<ExternalProperties>, Partial<InternalProperties>] |
     Partial<ExternalProperties>
 )
@@ -49,7 +50,7 @@ export type EventMapper<
     E extends Mapping<unknown> = Mapping<unknown>,
     I extends Mapping<unknown> = Mapping<unknown>,
     P extends Array<unknown> = Array<unknown>
-> = (..._parameters:P) => EventMapping<E, I>
+> = (...parameters:P) => EventMapping<E, I> | Promise<EventMapping<E, I>>
 export type EventToPropertyMapping<
     E extends Mapping<unknown> = Mapping<unknown>,
     I extends Mapping<unknown> = Mapping<unknown>,
