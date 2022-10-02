@@ -191,7 +191,7 @@ export class ReactWeb<
         }
 
         if (!this.reactRoot)
-            this.reactRoot = createRoot(this.root)
+            this.reactRoot = createRoot(this.root, {identifierPrefix: 'TODO'})
 
         flushSync(():void =>
             this.reactRoot!.render(
