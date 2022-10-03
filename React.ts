@@ -203,6 +203,7 @@ export class ReactWeb<
                         this.externalProperties.name
                     )
                 }
+            )
 
         flushSync(():void =>
             this.reactRoot!.render(
