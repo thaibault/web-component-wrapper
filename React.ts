@@ -201,8 +201,8 @@ export class ReactWeb<
                         this.name ||
                         this.internalProperties.name ||
                         this.externalProperties.name
-                    }
-                )
+                    )
+                }
 
         flushSync(():void =>
             this.reactRoot!.render(
