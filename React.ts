@@ -191,7 +191,18 @@ export class ReactWeb<
         }
 
         if (!this.reactRoot)
-            this.reactRoot = createRoot(this.root, {identifierPrefix: 'TODO'})
+            this.reactRoot = createRoot(
+                this.root,
+                {
+                    identifierPrefix: (
+                        this.id ||
+                        this.internalProperties.id ||
+                        this.externalProperties.id ||
+                        this.name ||
+                        this.internalProperties.name ||
+                        this.externalProperties.name
+                    }
+                )
 
         flushSync(():void =>
             this.reactRoot!.render(
