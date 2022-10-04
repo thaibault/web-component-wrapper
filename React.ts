@@ -194,11 +194,11 @@ export class ReactWeb<
             this.reactRoot = createRoot(
                 this.root,
                 {
-                    identifierPrefix: (
+                    identifierPrefix: String(
                         this.id ||
                         this.internalProperties.id ||
                         this.externalProperties.id ||
-                        this.name ||
+                        (this as unknown as {name?:number|string}).name ||
                         this.internalProperties.name ||
                         this.externalProperties.name
                     )
