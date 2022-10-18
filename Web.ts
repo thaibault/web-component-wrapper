@@ -64,6 +64,14 @@ import {
     WebComponentAPI
 } from './type'
 // endregion
+/*
+    NOTE: We mock HTMLElement to be able to load this class and derived one
+    into node environments.
+*/
+export const GenericHTMLElement:typeof HTMLElement =
+    (typeof HTMLElement === 'undefined') ?
+        (class HTMLElement {}) as unknown as typeof HTMLElement :
+        HTMLElement
 /**
  * Generic web component to render a content against instance specific values.
  * @property static:applyRootBinding - If determined itself as root declarative
@@ -163,7 +171,7 @@ export class Web<
     TElement = HTMLElement,
     ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
     InternalProperties extends Mapping<unknown> = Mapping<unknown>
-> extends HTMLElement {
+> extends GenericHTMLElement {
     // region properties
     static applyRootBinding = true
     static content:unknown =
