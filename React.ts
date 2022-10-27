@@ -132,9 +132,7 @@ export class ReactWeb<
      * @returns Nothing.
      */
     disconnectedCallback():void {
-        console.log('Unmount ', this.name)
-
-        this.reactRoot?.unmount()
+        // TODO avoid error in web-input-material this.reactRoot?.unmount()
 
         super.disconnectedCallback()
     }
