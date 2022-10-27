@@ -127,11 +127,13 @@ export class ReactWeb<
         super.connectedCallback()
     }
     /**
-     * Triggered when this component is unmounted into the document. Event
+     * Triggered when this component is unmounted from the document. Event
      * handlers and state will be removed.
      * @returns Nothing.
      */
     disconnectedCallback():void {
+        console.log('Unmount ', this.name)
+
         this.reactRoot?.unmount()
 
         super.disconnectedCallback()
