@@ -1640,9 +1640,11 @@ export class Web<
                     )) {
                         const currentValue:unknown =
                             (
-                                (parameters[0] as Event).currentTarget &&
+                                (parameters[0] as unknown as Event)
+                                    .currentTarget &&
                                 Object.prototype.hasOwnProperty.call(
                                     (parameters[0] as
+                                        unknown as
                                         {currentTarget:Mapping<unknown>}
                                     ).currentTarget,
                                     name
@@ -1653,6 +1655,7 @@ export class Web<
                                     target instance.
                                 */
                                 (parameters[0] as
+                                    unknown as
                                     {currentTarget:Mapping<unknown>}
                                 ).currentTarget[name] :
                                 /*
