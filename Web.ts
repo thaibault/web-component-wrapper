@@ -1898,7 +1898,7 @@ export class Web<
                         if (evaluated.error) {
                             console.warn(
                                 'Error occurred during processing given ' +
-                                `attribute configuration "${attributeName}":` +
+                                `attribute configuration "${attributeName}":`,
                                 evaluated.error
                             )
 
