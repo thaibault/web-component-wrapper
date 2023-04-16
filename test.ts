@@ -21,7 +21,7 @@ import {Mapping, ValueOf} from 'clientnode/type'
 import {createElement, FunctionComponent, ReactElement} from 'react'
 
 import wrapAsWebComponent from './index'
-import React from './React'
+import ReactWeb from './ReactWeb'
 import Web from './Web'
 import {ComponentType, PropertiesConfiguration, WebComponentAPI} from './type'
 // endregion
@@ -59,8 +59,8 @@ describe('Web', ():void => {
     })
 })
 // endregion
-// region React
-describe('React', ():void => {
+// region ReactWeb
+describe('ReactWeb', ():void => {
     test('constructor', async ():Promise<void> => {
         let triggerOnEvent:(() => void)|undefined
         let componentProperty = 'initial'
@@ -78,11 +78,11 @@ describe('React', ():void => {
         /**
          * Mock test class.
          */
-        class TestReact<
+        class TestReactWeb<
             TElement = HTMLElement,
             ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
             InternalProperties extends Mapping<unknown> = Mapping<unknown>
-        > extends React<TElement, ExternalProperties, InternalProperties> {
+        > extends ReactWeb<TElement, ExternalProperties, InternalProperties> {
             static content:ComponentType = component as ComponentType
 
             static propertyTypes:PropertiesConfiguration = {
@@ -97,16 +97,16 @@ describe('React', ():void => {
 
             static _name = 'Test'
 
-            readonly self:typeof TestReact = TestReact
+            readonly self:typeof TestReactWeb = TestReactWeb
         }
 
-        expect(TestReact).toHaveProperty('content')
-        expect(TestReact).toHaveProperty('observedAttributes')
+        expect(TestReactWeb).toHaveProperty('content')
+        expect(TestReactWeb).toHaveProperty('observedAttributes')
 
-        customElements.define('test-react', TestReact)
-        const react:(TestReact & {property:string}) =
+        customElements.define('test-react', TestReactWeb)
+        const react:(TestReactWeb & {property:string}) =
             document.createElement('test-react') as
-                TestReact & {property:string}
+                TestReactWeb & {property:string}
 
         expect(react).not.toHaveProperty('clicked')
         react.setAttribute('bind-on-click', 'this.clicked = true')
@@ -159,7 +159,7 @@ describe('React', ():void => {
 // region index
 describe('index', ():void => {
     test('wrapAsWebComponent', ():void => {
-        const componentAPI:WebComponentAPI<typeof React> =
+        const componentAPI:WebComponentAPI<typeof ReactWeb> =
             wrapAsWebComponent<FunctionComponent<unknown>>(
                 ():ReactElement => createElement('div'),
                 'TestComponent',

@@ -31,9 +31,9 @@
     "index.js",
     "indexNext.js",
     "polyfill.html.ejs",
-    "React.d.ts",
-    "React.js",
-    "ReactNext.js",
+    "ReactWeb.d.ts",
+    "ReactWeb.js",
+    "ReactWebNext.js",
     "Web.d.ts",
     "Web.js",
     "WebNext.js",
@@ -185,7 +185,7 @@
       },
       "injection": {
         "entry": {
-          "__evaluate__": "{decoratorNext: './decorator.ts', indexNext: './index.ts', ReactNext: './React.ts', WebNext: './Web.ts'}"
+          "__evaluate__": "{decoratorNext: './decorator.ts', indexNext: './index.ts', ReactWebNext: './ReactWeb.ts', WebNext: './Web.ts'}"
         }
       }
     }
