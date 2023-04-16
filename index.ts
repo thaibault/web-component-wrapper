@@ -20,7 +20,7 @@
 import Tools from 'clientnode'
 import {Mapping} from 'clientnode/type'
 
-import ReactWebImport, {api as reactWebAPIImport} from './React'
+import ReactWebImport, {api as reactWebAPIImport} from './ReactWeb'
 import WebImport, {api as webAPIImport} from './Web'
 import {
     AttributesReflectionConfiguration,
