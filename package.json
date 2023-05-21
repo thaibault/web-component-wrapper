@@ -1,6 +1,6 @@
 {
   "name": "web-component-wrapper",
-  "version": "0.0.449",
+  "version": "0.0.450",
   "description": "Generic web-component base class and framework specific wrapper.",
   "keywords": [
     "component",
