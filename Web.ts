@@ -327,8 +327,7 @@ export class Web<
     connectedCallback():void {
         // NOTE: Hack to support IE 11 here.
         try {
-            // eslint-disable-next-line @typescript-eslint/no-extra-semi
-            ;(this as {isConnected:boolean}).isConnected = true
+            (this as {isConnected:boolean}).isConnected = true
         } catch (error) {
             // Ignore error.
         }
@@ -365,8 +364,7 @@ export class Web<
     disconnectedCallback():void {
         // NOTE: Hack to support IE 11 here.
         try {
-            // eslint-disable-next-line @typescript-eslint/no-extra-semi
-            ;(this as {isConnected:boolean}).isConnected = false
+            (this as {isConnected:boolean}).isConnected = false
         } catch (error) {
             // Ignore error.
         }
@@ -469,8 +467,7 @@ export class Web<
      * @returns Nothing.
      */
     setExternalPropertyValue(name:string, value:unknown):void {
-        // eslint-disable-next-line @typescript-eslint/no-extra-semi
-        ;(this.externalProperties as Mapping<unknown>)[name] = value
+        (this.externalProperties as Mapping<unknown>)[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
         if (alias)
@@ -484,8 +481,7 @@ export class Web<
      * @returns Nothing.
      */
     setInternalPropertyValue(name:string, value:unknown):void {
-        // eslint-disable-next-line @typescript-eslint/no-extra-semi
-        ;(this.internalProperties as Mapping<unknown>)[name] = value
+        (this.internalProperties as Mapping<unknown>)[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
         if (alias)
@@ -1032,7 +1028,9 @@ export class Web<
                     shadow root.
                 */
                 currentElement.parentNode === null &&
+                /* eslint-disable @typescript-eslint/no-base-to-string */
                 currentElement.toString() === '[object ShadowRoot]'
+                /* eslint-enable @typescript-eslint/no-base-to-string */
             )
                 if (this.rootInstance === this) {
                     this.parent = currentElement as Web
