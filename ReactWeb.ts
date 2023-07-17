@@ -372,7 +372,7 @@ export class ReactWeb<
 
             return (scope:Mapping<unknown>):ReactRenderItem =>
                 (...parameters:Array<unknown>):ReactRenderBaseItem => {
-                    const firstArgument:null|unknown = parameters.length > 0 ?
+                    const firstArgument:unknown = parameters.length > 0 ?
                         parameters[0] :
                         null
 
@@ -412,8 +412,7 @@ export class ReactWeb<
         const isComponent:boolean = this.self.isReactComponent(domNode)
         if (isComponent) {
             // region pre-compile nested render context
-            // eslint-disable-next-line @typescript-eslint/no-extra-semi
-            ;(domNode as ReactWeb).determineRenderScope()
+            (domNode as ReactWeb).determineRenderScope()
 
             if (Object.keys(this.compiledSlots).length === 0)
                 (domNode as ReactWeb).preCompileSlots()
@@ -612,8 +611,7 @@ export class ReactWeb<
                 delete properties.textContent
             } else if (isComponent) {
                 // region evaluate nested render contexts
-                // eslint-disable-next-line @typescript-eslint/no-extra-semi
-                ;(domNode as ReactWeb).evaluateSlots({
+                (domNode as ReactWeb).evaluateSlots({
                     ...properties, ...runtimeScope, parent: domNode
                 })
                 ;(domNode as ReactWeb).prepareProperties(properties)
