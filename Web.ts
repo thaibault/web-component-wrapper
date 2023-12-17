@@ -1720,7 +1720,7 @@ export class Web<
 
                     if (result.error) {
                         console.warn(
-                            `Faild to process pre-evaluation attribute "` +
+                            `Failed to process pre-evaluation attribute "` +
                             `${attributeName}": ${result.error}. Will be set` +
                             ' to "undefined".'
                         )
@@ -1989,7 +1989,7 @@ export class Web<
             `\`${this.self.content as string}\``, this.scope
         )
         if (evaluated.error) {
-            console.warn(`Faild to process template: ${evaluated.error}`)
+            console.warn(`Failed to process template: ${evaluated.error}`)
 
             return
         }
