@@ -284,11 +284,11 @@ export class Web<
      */
     attributeChangedCallback(
         name:string, oldValue:string, newValue:string
-    ):void {
+    ) {
         if (this.ignoreAttributeUpdateObservations || oldValue === newValue)
             return
 
-        this.updateAttribute(name, newValue)
+        this.onUpdateAttribute(name, newValue)
     }
     /**
      * Updates given attribute representation.
@@ -298,7 +298,7 @@ export class Web<
      *
      * @returns Nothing.
      */
-    updateAttribute(name:string, newValue:string):void {
+    onUpdateAttribute(name:string, newValue:string) {
         this.evaluateStringOrNullAndSetAsProperty(name, newValue)
 
         if (this.batchAttributeUpdates) {
@@ -308,7 +308,7 @@ export class Web<
                 this.batchedAttributeUpdateRunning = true
                 this.batchedUpdateRunning = true
 
-                void Tools.timeout(():void => {
+                void Tools.timeout(() => {
                     this.batchedAttributeUpdateRunning = false
                     this.batchedUpdateRunning = false
 
@@ -324,7 +324,7 @@ export class Web<
      * and enqueues first rendering.
      * @returns Nothing.
      */
-    connectedCallback():void {
+    connectedCallback() {
         // NOTE: Hack to support IE 11 here.
         try {
             (this as {isConnected:boolean}).isConnected = true
@@ -361,7 +361,7 @@ export class Web<
     /**
      * Frees some memory.
      */
-    disconnectedCallback():void {
+    disconnectedCallback() {
         // NOTE: Hack to support IE 11 here.
         try {
             (this as {isConnected:boolean}).isConnected = false
@@ -401,7 +401,7 @@ export class Web<
                 {
                     configurable: true,
                     get: ():unknown => this.getPropertyValue(propertyName),
-                    set: (value:unknown):void => {
+                    set: (value:unknown) => {
                         this.setPropertyValue(propertyName, value)
 
                         this.triggerPropertySpecificRendering(
@@ -466,7 +466,7 @@ export class Web<
      *
      * @returns Nothing.
      */
-    setExternalPropertyValue(name:string, value:unknown):void {
+    setExternalPropertyValue(name:string, value:unknown) {
         (this.externalProperties as Mapping<unknown>)[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
@@ -480,7 +480,7 @@ export class Web<
      *
      * @returns Nothing.
      */
-    setInternalPropertyValue(name:string, value:unknown):void {
+    setInternalPropertyValue(name:string, value:unknown) {
         (this.internalProperties as Mapping<unknown>)[name] = value
 
         const alias:null|string = this.getPropertyAlias(name)
@@ -495,7 +495,7 @@ export class Web<
      *
      * @returns Nothing.
      */
-    setPropertyValue(name:string, value:unknown):void {
+    setPropertyValue(name:string, value:unknown) {
         this.reflectProperties({[name]: value} as ExternalProperties)
         this.setInternalPropertyValue(name, value)
     }
@@ -519,7 +519,7 @@ export class Web<
                     if (value !== undefined && this.isStateProperty(name)) {
                         this.render('preStatePropertyChanged')
 
-                        Tools.timeout(():void => {
+                        Tools.timeout(() => {
                             this.setInternalPropertyValue(name, undefined)
 
                             this.batchedPropertyUpdateRunning = false
@@ -687,7 +687,7 @@ export class Web<
                         }
 
                         domNode.addEventListener(name, handler)
-                        eventMap.set(name, ():void => {
+                        eventMap.set(name, () => {
                             domNode.removeEventListener(name, handler)
 
                             eventMap.delete(name)
@@ -711,7 +711,7 @@ export class Web<
      */
     applyBindings(
         domNode:Node|null, scope:Mapping<unknown>, renderSlots = true
-    ):void {
+    ) {
         while (domNode) {
             if (
                 (domNode as HTMLElement).attributes?.length &&
@@ -976,7 +976,7 @@ export class Web<
      */
     static replaceDomNodes(
         domNode:HTMLElement, children:Array<Node>|Node
-    ):void {
+    ) {
         for (const child of ([] as Array<Node>).concat(children).reverse())
             if (!(
                 Web.trimSlots &&
@@ -1010,17 +1010,18 @@ export class Web<
     }
     //// endregion
     /**
-     * Determines initial root wich initializes rendering digest.
+     * Determines initial root which initializes rendering digest.
      * @returns Nothing.
      */
-    determineRootBinding():void {
+    determineRootBinding() {
         /*
             If this component is the root component trigger event handler by
             its own in global context.
         */
+
         let currentElement:Node|null = this.parentNode
         while (currentElement) {
-            if (
+            const isComponent = (
                 currentElement instanceof Web ||
                 currentElement.nodeName?.includes('-') ||
                 /*
@@ -1030,8 +1031,9 @@ export class Web<
                 currentElement.parentNode === null &&
                 /* eslint-disable @typescript-eslint/no-base-to-string */
                 currentElement.toString() === '[object ShadowRoot]'
-                /* eslint-enable @typescript-eslint/no-base-to-string */
             )
+
+            if (isComponent)
                 if (this.rootInstance === this) {
                     this.parent = currentElement as Web
                     this.rootInstance = currentElement as Web
@@ -1093,7 +1095,7 @@ export class Web<
      * states.
      * @returns Nothing.
      */
-    attachEventHandler():void {
+    attachEventHandler() {
         if (this.self.eventToPropertyMapping === null)
             return
 
@@ -1147,9 +1149,7 @@ export class Web<
      *
      * @returns Nothing.
      */
-    attachImplicitDefinedOutputEventHandler(
-        reflectProperties = true
-    ):void {
+    attachImplicitDefinedOutputEventHandler(reflectProperties = true) {
         // Determine all event handler to inject
         for (const [name, type] of Object.entries(this.self.propertyTypes))
             if (
@@ -1164,7 +1164,7 @@ export class Web<
 
                 this.setInternalPropertyValue(
                     name,
-                    (...parameters:Array<unknown>):void => {
+                    (...parameters:Array<unknown>) => {
                         if (reflectProperties)
                             void this.reflectEventToProperties(
                                 name, parameters
@@ -1180,7 +1180,7 @@ export class Web<
      * changes.
      * @returns Nothing.
      */
-    triggerOutputEvents():void {
+    triggerOutputEvents() {
         for (const name of this.outputEventNames)
             this.forwardEvent(name, [this.externalProperties])
     }
@@ -1360,7 +1360,7 @@ export class Web<
      * Generates an alias to name and the other way around mapping if not
      * exists.
      */
-    generateAliasIndex():void {
+    generateAliasIndex() {
         if (!this.self._propertyAliasIndex) {
             this.self._propertyAliasIndex = {...this.self.propertyAliases}
             // Align alias mapping for better performance while mapping them.
@@ -1488,8 +1488,8 @@ export class Web<
 
         /*
             NOTE: Do not reflect properties which are hold in state. These
-            values are only set once when they are explicitly set (see
-            "setPropertyValue").
+            values are only set once when they are explicitly set
+            (see "setPropertyValue").
         */
         if (
             this.instance?.current?.state &&
@@ -1525,25 +1525,6 @@ export class Web<
         for (const name of this.self.controllableProperties)
             if (Object.prototype.hasOwnProperty.call(properties, name))
                 this.setInternalPropertyValue(name, properties[name])
-    }
-    /**
-     * Triggers a new rendering cycle by respecting batch configuration.
-     * @param reason - A description why rendering should be triggered.
-     *
-     * @returns Nothing.
-     */
-    triggerRender(reason:string):void {
-        if (this.batchUpdates) {
-            if (!this.batchedUpdateRunning) {
-                this.batchedUpdateRunning = true
-                void Tools.timeout(():void => {
-                    this.batchedUpdateRunning = false
-
-                    this.render(reason)
-                })
-            }
-        } else
-            this.render(reason)
     }
     /**
      * Reflect given event handler call with given parameter back to current
@@ -1926,31 +1907,30 @@ export class Web<
     /// endregion
     /// region render
     /**
-     * Determines new scope object with useful default set of environment
-     * values.
-     * @param scope - To apply to generated scope.
+     * Triggers a new rendering cycle by respecting batch configuration.
+     * @param reason - A description why rendering should be triggered.
      *
-     * @returns Generated scope.
+     * @returns Nothing.
      */
-    determineRenderScope(scope:Mapping<unknown> = {}):void {
-        this.scope = {
-            ...(this.parent?.scope || {}),
-            ...this.scope,
-            ...this.internalProperties,
-            parent: this.parent,
-            root: this.rootInstance,
-            self: this,
-            [Tools.stringLowerCase(this.self._name) || 'instance']: this,
-            ...scope
-        }
-        this.scope.scope = this.scope
+    triggerRender(reason:string) {
+        if (this.batchUpdates) {
+            if (!this.batchedUpdateRunning) {
+                this.batchedUpdateRunning = true
+                void Tools.timeout(() => {
+                    this.batchedUpdateRunning = false
+
+                    this.render(reason)
+                })
+            }
+        } else
+            this.render(reason)
     }
     /**
      * Creates shadow root if not created yet and assigns to current root
      * property.
      * @returns Nothing.
      */
-    applyShadowRootIfNotExisting():void {
+    applyShadowRootIfNotExisting() {
         if (this.self.shadowDOM && this.root === this)
             this.root = (
                 (!('attachShadow' in this) && 'ShadyDOM' in window) ?
@@ -1969,6 +1949,26 @@ export class Web<
                     this.self.shadowDOM :
                     {mode: 'open'}
             )
+    }
+    /**
+     * Determines new scope object with useful default set of environment
+     * values.
+     * @param scope - To apply to generated scope.
+     *
+     * @returns Generated scope.
+     */
+    determineRenderScope(scope:Mapping<unknown> = {}) {
+        this.scope = {
+            ...(this.parent?.scope || {}),
+            ...this.scope,
+            ...this.internalProperties,
+            parent: this.parent,
+            root: this.rootInstance,
+            self: this,
+            [Tools.stringLowerCase(this.self._name) || 'instance']: this,
+            ...scope
+        }
+        this.scope.scope = this.scope
     }
     /**
      * Method which does the rendering job. Should be called when ever state

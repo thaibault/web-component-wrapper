@@ -115,7 +115,7 @@ export class ReactWeb<
      * handlers will be attached and final render proceed.
      * @returns Nothing.
      */
-    connectedCallback():void {
+    connectedCallback() {
         this.applyComponentWrapper()
 
         // NOTE: Can be overwritten during optional root determining.
@@ -132,7 +132,7 @@ export class ReactWeb<
      * handlers and state will be removed.
      * @returns Nothing.
      */
-    disconnectedCallback():void {
+    disconnectedCallback() {
         // TODO avoid error in web-input-material this.reactRoot?.unmount()
 
         super.disconnectedCallback()
@@ -143,7 +143,7 @@ export class ReactWeb<
      *
      * @returns Nothing.
      */
-    reflectExternalProperties(properties:Partial<ExternalProperties>):void {
+    reflectExternalProperties(properties:Partial<ExternalProperties>) {
         if (this.isRoot)
             super.reflectExternalProperties(properties)
     }
@@ -253,7 +253,7 @@ export class ReactWeb<
      *
      * @returns Nothing.
      */
-    setPropertyValue(name:string, value:unknown):void {
+    setPropertyValue(name:string, value:unknown) {
         this.reflectProperties(
             {[name]: Tools.copy(value, 1)} as
                 unknown as
@@ -268,7 +268,7 @@ export class ReactWeb<
      *
      * @returns Nothing.
      */
-    setInternalPropertyValue(name:string, value:unknown):void {
+    setInternalPropertyValue(name:string, value:unknown) {
         if (value === null)
             value = NullSymbol
         else if (value === undefined)
@@ -419,11 +419,10 @@ export class ReactWeb<
             // endregion
             /*
                 NOTE: Nested components are already instantiated and connected
-                so use their initialized properties.
+                so use their initialized properties. We need to merge them when
+                actual rendering the nested component.
             */
-            staticProperties =
-                (domNode as ReactWeb).internalProperties as
-                    PreCompiledInternalProperties
+            staticProperties = {} as PreCompiledInternalProperties
 
             if (
                 key &&
@@ -611,14 +610,24 @@ export class ReactWeb<
                 delete properties.textContent
             } else if (isComponent) {
                 // region evaluate nested render contexts
-                (domNode as ReactWeb).evaluateSlots({
+                Tools.extend(
+                    properties,
+                    (domNode as ReactWeb).internalProperties as
+                        PreCompiledInternalProperties
+                )
+                ;(domNode as ReactWeb).evaluateSlots({
                     ...properties, ...runtimeScope, parent: domNode
                 })
                 ;(domNode as ReactWeb).prepareProperties(properties)
-                // NOTE: Components introduces a new inherited scope.
-                runtimeScope = {
-                    ...properties, ...runtimeScope, parent: domNode
-                }
+
+                /*
+                    NOTE: Components introduces a new inherited scope by their
+                    own.
+
+                    runtimeScope = {
+                        ...properties, ...runtimeScope, parent: domNode
+                    }
+                */
                 // endregion
             } else if (properties.children)
                 properties.children = this.evaluatePreCompiledDomNodes(
@@ -662,7 +671,7 @@ export class ReactWeb<
      * Pre compiles and caches determined slots.
      * @returns Nothing.
      */
-    preCompileSlots():void {
+    preCompileSlots() {
         for (const name in this.slots)
             if (
                 Object.prototype.hasOwnProperty.call(this.slots, name) &&
@@ -692,7 +701,7 @@ export class ReactWeb<
      *
      * @returns Nothing.
      */
-    evaluateSlots(scope:Mapping<unknown>):void {
+    evaluateSlots(scope:Mapping<unknown>) {
         this.preparedSlots = {}
 
         for (const name in this.compiledSlots)
@@ -733,7 +742,7 @@ export class ReactWeb<
      * digests.
      * @returns Nothing.
      */
-    determineRootBinding():void {
+    determineRootBinding() {
         super.determineRootBinding()
 
         let currentElement:Node|null = this.parentNode
@@ -805,7 +814,7 @@ export class ReactWeb<
      *
      * @returns Nothing.
      */
-    prepareProperties(properties:InternalProperties):void {
+    prepareProperties(properties:InternalProperties) {
         Tools.extend(
             properties, this.preparedSlots as Partial<InternalProperties>
         )
@@ -826,7 +835,7 @@ export class ReactWeb<
      * properties.
      * @returns Nothing.
      */
-    reflectInstanceProperties = ():void => {
+    reflectInstanceProperties = () => {
         if (
             this.instance?.current &&
             (
