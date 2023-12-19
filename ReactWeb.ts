@@ -406,7 +406,7 @@ export class ReactWeb<
             return ():null => null
         // region native elements and wrapped react components
         /// region prepare type and static properties
-        let staticProperties:PreCompiledInternalProperties
+        const staticProperties = {} as PreCompiledInternalProperties
         let target:ComponentType|string
 
         const isComponent:boolean = this.self.isReactComponent(domNode)
@@ -422,7 +422,6 @@ export class ReactWeb<
                 so use their initialized properties. We need to merge them when
                 actual rendering the nested component.
             */
-            staticProperties = {} as PreCompiledInternalProperties
 
             if (
                 key &&
@@ -432,7 +431,7 @@ export class ReactWeb<
 
             target = (domNode.constructor as typeof ReactWeb).content
         } else {
-            staticProperties = {key} as PreCompiledInternalProperties
+            staticProperties.key = key
             target = (domNode as HTMLElement).tagName.toLowerCase()
         }
         /// endregion
@@ -555,7 +554,14 @@ export class ReactWeb<
                 // NOTE: "''" marks a property set like in JSX "{...props}".
                 compiledProperties[extend ? '' : name] =
                     value as PreCompiledItem
-            else
+            else if (!isComponent)
+                /*
+                    NOTE: Properties of components are evaluated already by
+                    them self and set as "internalProperties". Those properties
+                    which need to be evaluated against the parent scope should
+                    be marked via the "bind-property-" prefix.
+                    That's why they are omitted here.
+                */
                 (staticProperties as Mapping<unknown>)[name] = value
         }
         /// endregion
@@ -610,24 +616,23 @@ export class ReactWeb<
                 delete properties.textContent
             } else if (isComponent) {
                 // region evaluate nested render contexts
-                Tools.extend(
-                    properties,
-                    (domNode as ReactWeb).internalProperties as
-                        PreCompiledInternalProperties
-                )
-                ;(domNode as ReactWeb).evaluateSlots({
-                    ...properties, ...runtimeScope, parent: domNode
-                })
-                ;(domNode as ReactWeb).prepareProperties(properties)
-
                 /*
-                    NOTE: Components introduces a new inherited scope by their
-                    own.
-
-                    runtimeScope = {
-                        ...properties, ...runtimeScope, parent: domNode
-                    }
+                    NOTE: Properties of components are evaluated already by
+                    them self and set as "internalProperties". Those properties
+                    which need to be evaluated against the parent scope should
+                    be marked via the "bind-property-" prefix.
                 */
+                properties = {
+                    ...(domNode as ReactWeb).internalProperties as
+                        PreCompiledInternalProperties,
+                    ...properties
+                }
+                runtimeScope = {
+                    ...properties, ...runtimeScope, parent: domNode
+                }
+
+                ;(domNode as ReactWeb).evaluateSlots(runtimeScope)
+                ;(domNode as ReactWeb).prepareProperties(properties)
                 // endregion
             } else if (properties.children)
                 properties.children = this.evaluatePreCompiledDomNodes(
