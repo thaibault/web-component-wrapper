@@ -1607,7 +1607,7 @@ export class Web<
             let newProperties:ExternalProperties =
                 parameters[0] as ExternalProperties
             if (
-                'persist' in parameters[0]! &&
+                'persist' in parameters[0] &&
                 Tools.isFunction(
                     (parameters[0] as {persist:() => void}).persist
                 )
