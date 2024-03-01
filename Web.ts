@@ -292,7 +292,6 @@ export class Web<
     }
     /**
      * Updates given attribute representation.
-     * NOTE: Does not update attribute, property or event bindings yet.
      * @param name - Attribute name which was updates.
      * @param newValue - New updated value.
      *

@@ -133,7 +133,8 @@ export class ReactWeb<
      * @returns Nothing.
      */
     disconnectedCallback() {
-        // TODO avoid error in web-input-material this.reactRoot?.unmount()
+        // TODO Triggers error in "web-input-material"
+        // this.reactRoot?.unmount()
 
         super.disconnectedCallback()
     }
