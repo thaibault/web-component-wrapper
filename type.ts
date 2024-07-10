@@ -16,8 +16,8 @@
     endregion
 */
 // region imports
-import PropertyTypes, {ValidationMap} from 'clientnode/property-types'
-import {Mapping, TemplateFunction, ValueOf} from 'clientnode/type'
+import {Mapping, TemplateFunction, ValueOf} from 'clientnode'
+import PropertyTypes, {ValidationMap} from 'clientnode/dist/property-types'
 import React, {
     ComponentType as ReactComponentType, HTMLAttributes, ReactElement
 } from 'react'
@@ -151,8 +151,4 @@ export type WebComponentAPI<
     component:Type
     register:(tagName?:string) => void
 }
-// endregion
-// region vim modline
-// vim: set tabstop=4 shiftwidth=4 expandtab:
-// vim: foldmethod=marker foldmarker=region,endregion:
 // endregion

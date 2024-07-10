@@ -17,7 +17,27 @@
     endregion
 */
 // region imports
-import Tools from 'clientnode'
+import {
+    camelCaseToDelimited,
+    compile,
+    CompilationResult,
+    convertPlainObjectToMap,
+    copy,
+    delimitedToCamelCase,
+    evaluate,
+    EvaluationResult,
+    extend,
+    isFunction,
+    lowerCase,
+    Mapping,
+    NOOP,
+    PlainObject,
+    represent,
+    TemplateFunction,
+    timeout,
+    unique,
+    UTILITY_SCOPE
+} from 'clientnode'
 import {
     any,
     array,
@@ -37,16 +57,8 @@ import {
     shape,
     string,
     symbol
-} from 'clientnode/property-types'
-import {
-    CompilationResult,
-    EvaluationResult,
-    Mapping,
-    PlainObject,
-    TemplateFunction
-} from 'clientnode/type'
+} from 'clientnode/dist/property-types'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 import property from './decorator'
 import {
     AttributesReflectionConfiguration,
@@ -74,51 +86,41 @@ export const GenericHTMLElement:typeof HTMLElement =
         HTMLElement
 /**
  * Generic web component to render a content against instance specific values.
- * @property static:applyRootBinding - If determined itself as root declarative
- * event and property bindings will be applied to itself.
- * @property static:content - Content to render when changes happened.
- * @property static:determineRootBinding - If checked this component determines
- * if it is a root component (not wrapped by another web-component).
- *
- * @property static:shadowDOM - Configures if a shadow dom should be used
- * during web-component instantiation. Can hold initialize configuration.
- *
- * @property static:observedAttributes - Attribute names to observe for
- * changes.
- *
- * @property static:controllableProperties - A list of controllable property
- * names.
- * @property static:eventToPropertyMapping - Explicitly defined output events
- * (a mapping of event names to a potential parameter to properties
- * transformer).
- * @property static:propertyAliases - A mapping of property names to be treated
- * as equal.
- * @property static:propertyTypes - Configuration defining how to convert
- * attributes into properties and reflect property changes back to attributes.
- * @property static:propertiesToReflectAsAttributes - An item, list or mapping
- * of properties to reflect as attributes.
- * @property static:renderProperties - List of known render properties.
- *
- * @property static:cloneSlots - Indicates whether to clone slot nots before
+ * @property applyRootBinding - If determined itself as root declarative event
+ * and property bindings will be applied to itself.
+ * @property content - Content to render when changes happened.
+ * @property determineRootBinding - If checked this component determines if it
+ * is a root component (not wrapped by another web-component).
+ * @property shadowDOM - Configures if a shadow dom should be used during
+ * web-component instantiation. Can hold initialize configuration.
+ * @property observedAttributes - Attribute names to observe for changes.
+ * @property controllableProperties - A list of controllable property names.
+ * @property eventToPropertyMapping - Explicitly defined output events (a
+ * mapping of event names to a potential parameter to properties transformer).
+ * @property propertyAliases - A mapping of property names to be treated as
+ * equal.
+ * @property propertyTypes - Configuration defining how to convert attributes
+ * into properties and reflect property changes back to attributes.
+ * @property propertiesToReflectAsAttributes - An item, list or mapping of
+ * properties to reflect as attributes.
+ * @property renderProperties - List of known render properties.
+ * @property cloneSlots - Indicates whether to clone slot nots before
  * transcluding them. If a slot should be used multiple times (for example when
  * it works as a template node) they should be copied to avoid unexpected
  * mutations.
- * @property static:evaluateSlots - Indicates whether to evaluate slot content
- * when before rendering them.
- * @property static:renderSlots - Indicates whether determined slots should be
+ * @property evaluateSlots - Indicates whether to evaluate slot content when
+ * before rendering them.
+ * @property renderSlots - Indicates whether determined slots should be
  * rendered into root node.
- * @property static:trimSlots - Ignore empty text nodes while applying slots.
- *
- * @property static:renderUnsafe - Defines default render behavior.
- *
- * @property static:_name - Name to access instance evaluated content or used
- * to derive default component name. Also useful for logging.
- * @property static:_propertyAliasIndex - Internal alias index to quickly match
+ * @property trimSlots - Ignore empty text nodes while applying slots.
+ * @property renderUnsafe - Defines default render behavior.
+ * @property _name - Name to access instance evaluated content or used
+ * to derive default component name. This is also useful for logging.
+ * @property _propertyAliasIndex - Internal alias index to quickly match
  * properties in both directions.
- * @property static:_propertiesToReflectAsAttributes - A mapping of property
- * names to set as attributes when they are set/updated. Uses a map to hold
- * order and determine if a property exists in constant runtime.
- *
+ * @property _propertiesToReflectAsAttributes - A mapping of property names to
+ * set as attributes when they are set/updated. Uses a map to hold order and
+ * determine if a property exists in constant runtime.
  * @property batchAttributeUpdates - Indicates whether to directly update dom
  * after each attribute mutation or to wait and batch mutations after current
  * queue has been finished.
@@ -127,44 +129,34 @@ export const GenericHTMLElement:typeof HTMLElement =
  * queue has been finished.
  * @property batchUpdates - Indicates whether to directly perform a
  * re-rendering after changes on properties have been made.
- *
  * @property batchedAttributeUpdateRunning - A boolean indicator to identify if
  * an attribute update is currently batched.
  * @property batchedPropertyUpdateRunning - A boolean indicator to identify if
- * an property update is currently batched.
+ * a property update is currently batched.
  * @property batchedUpdateRunning - Indicates whether a batched render update
  * is currently running.
- *
  * @property parent - Parent component instance.
  * @property rootInstance - Root component instance.
  * @property scope - Render scope.
- *
  * @property domNodeEventBindings - Holds a mapping from nodes with registered
  * event handlers mapped to their de-registration function.
  * @property domNodeTemplateCache - Caches template compilation results.
- *
  * @property externalProperties - Holds currently evaluated or seen properties.
  * @property ignoreAttributeUpdateObservations - Indicates whether attribute
  * updates should be considered (usually only needed internally).
  * @property internalProperties - Holds currently evaluated properties which
  * are owned by this instance and should always be delegated.
- *
  * @property outputEventNames - Set of determined output event names.
- *
  * @property instance - Wrapped component instance.
- * @property isRoot - Indicates whether their is exists another web derived
+ * @property isRoot - Indicates whether their exists another web derived
  * component up the tree or not.
- *
  * @property root - Hosting dom node.
- *
  * @property runDomConnectionAndRenderingInSameEventQueue - Indicates whether
  * we should render initial dom immediately after the component is connected to
  * dom. Deactivating this allows wrapped components to detect their parents
  * since their parent connected callback will be called before the children's
  * render method.
- *
  * @property self - Back-reference to this class.
- *
  * @property slots - Grabbed slots which where present in the connecting phase.
  */
 export class Web<
@@ -218,7 +210,7 @@ export class Web<
 
     parent:null|Web = null
     rootInstance:null|Web = null
-    scope:Mapping<unknown> = {Tools}
+    scope:Mapping<unknown> = {...UTILITY_SCOPE}
 
     domNodeEventBindings:Map<Node, EventCallbackMapping> = new Map()
     domNodeTemplateCache:CompiledDomNodeTemplate = new Map()
@@ -279,8 +271,6 @@ export class Web<
      * @param name - Attribute name which was updates.
      * @param oldValue - Old attribute value.
      * @param newValue - New updated value.
-     *
-     * @returns Nothing.
      */
     attributeChangedCallback(
         name:string, oldValue:string, newValue:string
@@ -294,8 +284,6 @@ export class Web<
      * Updates given attribute representation.
      * @param name - Attribute name which was updates.
      * @param newValue - New updated value.
-     *
-     * @returns Nothing.
      */
     onUpdateAttribute(name:string, newValue:string) {
         this.evaluateStringOrNullAndSetAsProperty(name, newValue)
@@ -307,7 +295,7 @@ export class Web<
                 this.batchedAttributeUpdateRunning = true
                 this.batchedUpdateRunning = true
 
-                void Tools.timeout(() => {
+                void timeout(() => {
                     this.batchedAttributeUpdateRunning = false
                     this.batchedUpdateRunning = false
 
@@ -321,7 +309,6 @@ export class Web<
      * Triggered when this component is mounted into the document.
      * Attaches event handler, grabs given slots, reflects external properties
      * and enqueues first rendering.
-     * @returns Nothing.
      */
     connectedCallback() {
         // NOTE: Hack to support IE 11 here.
@@ -355,7 +342,7 @@ export class Web<
 
         this.runDomConnectionAndRenderingInSameEventQueue ?
             this.render('connected') :
-            void Tools.timeout(():void => this.render('connected'))
+            void timeout(():void => this.render('connected'))
     }
     /**
      * Frees some memory.
@@ -379,10 +366,9 @@ export class Web<
     /**
      * Registers needed getter and setter to get notified about changes and
      * reflect them.
-     * @returns Nothing.
      */
     defineGetterAndSetterInterface():void {
-        const allPropertyNames:Array<string> = Tools.arrayUnique<string>(
+        const allPropertyNames:Array<string> = unique<string>(
             Object.keys(this.self.propertyTypes)
                 .concat(Object.keys(this.self._propertyAliasIndex!))
         )
@@ -415,7 +401,6 @@ export class Web<
      * Creates an index to match alias source and target against each other on
      * constant runtime.
      * @param name - Name to search an alternate name for.
-     *
      * @returns Found alias or "null".
      */
     getPropertyAlias(name:string):null|string {
@@ -430,7 +415,6 @@ export class Web<
      * Generic property getter. Forwards properties from the "properties"
      * field.
      * @param name - Property name to retrieve.
-     *
      * @returns Retrieved property value.
      */
     getPropertyValue(name:string):unknown {
@@ -462,8 +446,6 @@ export class Web<
      * External property setter. Respects configured aliases.
      * @param name - Property name to write.
      * @param value - New value to write.
-     *
-     * @returns Nothing.
      */
     setExternalPropertyValue(name:string, value:unknown) {
         (this.externalProperties as Mapping<unknown>)[name] = value
@@ -476,8 +458,6 @@ export class Web<
      * Internal property setter. Respects configured aliases.
      * @param name - Property name to write.
      * @param value - New value to write.
-     *
-     * @returns Nothing.
      */
     setInternalPropertyValue(name:string, value:unknown) {
         (this.internalProperties as Mapping<unknown>)[name] = value
@@ -491,8 +471,6 @@ export class Web<
      * external property representations.
      * @param name - Property name to write.
      * @param value - New value to write.
-     *
-     * @returns Nothing.
      */
     setPropertyValue(name:string, value:unknown) {
         this.reflectProperties({[name]: value} as ExternalProperties)
@@ -503,8 +481,6 @@ export class Web<
      * connection.
      * @param name - Property name to write.
      * @param value - New value to write.
-     *
-     * @returns Nothing.
      */
     triggerPropertySpecificRendering(name:string, value:unknown):void {
         if (this.batchPropertyUpdates) {
@@ -514,11 +490,11 @@ export class Web<
                 this.batchedPropertyUpdateRunning = true
                 this.batchedUpdateRunning = true
 
-                void Tools.timeout(():void => {
+                void timeout(():void => {
                     if (value !== undefined && this.isStateProperty(name)) {
                         this.render('preStatePropertyChanged')
 
-                        Tools.timeout(() => {
+                        timeout(() => {
                             this.setInternalPropertyValue(name, undefined)
 
                             this.batchedPropertyUpdateRunning = false
@@ -528,7 +504,7 @@ export class Web<
 
                             this.triggerOutputEvents()
                         })
-                            .then(Tools.noop, Tools.noop)
+                            .then(NOOP, NOOP)
                     } else {
                         this.batchedPropertyUpdateRunning = false
                         this.batchedUpdateRunning = false
@@ -563,8 +539,6 @@ export class Web<
      * Binds properties and event handler to given dom node.
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
-     *
-     * @returns Nothing.
      */
     applyBinding(domNode:Node, scope:Mapping<unknown>):void {
         if (!(domNode as HTMLElement).getAttributeNames)
@@ -590,7 +564,7 @@ export class Web<
                     name.startsWith('property-')
                 ) {
                     const evaluated:EvaluationResult =
-                        Tools.stringEvaluate(value, scope, false, domNode)
+                        evaluate(value, scope, false, domNode)
 
                     if (evaluated.error) {
                         console.warn(
@@ -612,7 +586,7 @@ export class Web<
                             NOTE: Cast to "textContent" to have a writable
                             property here.
                         */
-                        domNode[Tools.stringDelimitedToCamelCase(
+                        domNode[delimitedToCamelCase(
                             name.substring('property-'.length)
                         ) as 'textContent'] = evaluated.result
                 } else if (name.startsWith('on-')) {
@@ -625,9 +599,7 @@ export class Web<
                     const eventMap:EventCallbackMapping =
                         this.domNodeEventBindings.get(domNode)!
 
-                    name = Tools.stringDelimitedToCamelCase(
-                        name.substring('on-'.length)
-                    )
+                    name = delimitedToCamelCase(name.substring('on-'.length))
 
                     if (eventMap.has(name))
                         eventMap.get(name)!()
@@ -638,7 +610,7 @@ export class Web<
                         usually be called more than it would be re-rendered.
                     */
                     const compilation:CompilationResult =
-                        Tools.stringCompile(value, scope, true)
+                        compile(value, scope, true)
 
                     if (compilation.error)
                         console.warn(
@@ -660,7 +632,7 @@ export class Web<
                             try {
                                 templateFunction(
                                     /*
-                                        NOTE: We want to be ensure to have same
+                                        NOTE: We want to be sure to have same
                                         ordering as we have for the scope names
                                         and to call internal registered getter
                                         by retrieving values. So simple using
@@ -680,7 +652,7 @@ export class Web<
                                     `Given expression "${value}" could not ` +
                                     'be evaluated with given scope names "' +
                                     `${compilation.scopeNames.join('", "')}"` +
-                                    `: ${Tools.represent(error)}`
+                                    `: ${represent(error)}`
                                 )
                             }
                         }
@@ -705,8 +677,6 @@ export class Web<
      * @param scope - Scope to render property value again.
      * @param renderSlots - Indicates whether to render nested elements of
      * slots (determined by an existing corresponding attribute).
-     *
-     * @returns Nothing.
      */
     applyBindings(
         domNode:Node|null, scope:Mapping<unknown>, renderSlots = true
@@ -744,7 +714,6 @@ export class Web<
      * recompiling.
      * @param options.unsafe - Indicates if full html generation should be
      * allowed.
-     *
      * @returns Map of compiled templates.
      */
     compileDomNodeTemplate<NodeType extends Node = Node>(
@@ -784,7 +753,7 @@ export class Web<
 
             if (this.self.hasCode(template)) {
                 const result:CompilationResult =
-                    Tools.stringCompile(`\`${template}\``, scope)
+                    compile(`\`${template}\``, scope)
 
                 options.map!.set(
                     domNode,
@@ -815,7 +784,7 @@ export class Web<
 
             if (template) {
                 const result:CompilationResult =
-                    Tools.stringCompile(`\`${template}\``, scope)
+                    compile(`\`${template}\``, scope)
 
                 options.map!.set(
                     domNode,
@@ -869,7 +838,6 @@ export class Web<
      * recompiling.
      * @param options.unsafe - Indicates if full html generation should be
      * allowed.
-     *
      * @returns Map of compiled templates.
      */
     evaluateDomNodeTemplate<NodeType extends Node = Node>(
@@ -970,8 +938,6 @@ export class Web<
      * Replaces given dom node with given nodes.
      * @param domNode - Node to replace its children.
      * @param children - Element or array of elements to set as children.
-     *
-     * @returns Nothing.
      */
     static replaceDomNodes(
         domNode:HTMLElement, children:Array<Node>|Node
@@ -991,7 +957,6 @@ export class Web<
     /**
      * Moves content of given dom node one level up and removes given node.
      * @param domNode - Node to unwrap.
-     *
      * @returns List of unwrapped nodes.
      */
     static unwrapDomNode(domNode:HTMLElement):Array<ChildNode> {
@@ -1010,7 +975,6 @@ export class Web<
     //// endregion
     /**
      * Determines initial root which initializes rendering digest.
-     * @returns Nothing.
      */
     determineRootBinding() {
         /*
@@ -1028,7 +992,6 @@ export class Web<
                     shadow root.
                 */
                 currentElement.parentNode === null &&
-                /* eslint-disable @typescript-eslint/no-base-to-string */
                 currentElement.toString() === '[object ShadowRoot]'
             )
 
@@ -1047,7 +1010,6 @@ export class Web<
     /**
      * Checks if given content hast code (to compile and render).
      * @param content - Potential string with code inside.
-     *
      * @returns A boolean indicating whether given content has code.
      */
     static hasCode(content:unknown):boolean {
@@ -1062,7 +1024,6 @@ export class Web<
     /**
      * Converts given list, item or map to a map (with ordering).
      * @param value - Attribute reflection configuration.
-     *
      * @returns Generated map.
      */
     static normalizePropertyTypeList(
@@ -1084,7 +1045,7 @@ export class Web<
             return newValue
         }
 
-        return Tools.convertPlainObjectToMap(value) as
+        return convertPlainObjectToMap(value) as
             NormalizedAttributesReflectionConfiguration
     }
     /// endregion
@@ -1092,7 +1053,6 @@ export class Web<
     /**
      * Attaches event handler to keep in sync with nested components properties
      * states.
-     * @returns Nothing.
      */
     attachEventHandler() {
         if (this.self.eventToPropertyMapping === null)
@@ -1145,8 +1105,6 @@ export class Web<
      * external property states.
      * @param reflectProperties - Indicates whether implicitly determined
      * properties should be reflected.
-     *
-     * @returns Nothing.
      */
     attachImplicitDefinedOutputEventHandler(reflectProperties = true) {
         // Determine all event handler to inject
@@ -1177,7 +1135,6 @@ export class Web<
     /**
      * Triggers all identified events to communicate internal property / state
      * changes.
-     * @returns Nothing.
      */
     triggerOutputEvents() {
         for (const name of this.outputEventNames)
@@ -1187,12 +1144,13 @@ export class Web<
      * Forwards given event as native web event.
      * @param name - Event name.
      * @param parameters - Event parameters.
-     *
-     * @returns Nothing.
+     * @returns False if event is cancelable, and at least one of the event
+     * handlers which received event called "Event.preventDefault()",
+     * otherwise true will be returned.
      */
     forwardEvent(name:string, parameters:Array<unknown>):boolean {
         if (name.length > 'onX'.length && name.startsWith('on'))
-            name = Tools.stringLowerCase(name.substring(2))
+            name = lowerCase(name.substring(2))
 
         return this.dispatchEvent(
             new CustomEvent(name, {detail: {parameters}})
@@ -1206,8 +1164,6 @@ export class Web<
      * internal slot mapping.
      * @param targetDomNode - Target dom node to render slots into.
      * @param scope - Environment to render slots again if specified.
-     *
-     * @returns Nothing.
      */
     applySlots(targetDomNode:HTMLElement, scope:Mapping<unknown>):void {
         for (const domNode of Array.from(
@@ -1247,7 +1203,6 @@ export class Web<
     /**
      * Determines slot content from given node.
      * @param slot - Node to grab slot content from.
-     *
      * @returns Determined slot.
      */
     grabSlotContent(slot:Node):Node {
@@ -1293,7 +1248,6 @@ export class Web<
     }
     /**
      * Saves given slots.
-     * @returns Nothing.
      */
     grabGivenSlots():void {
         this.slots = {}
@@ -1338,7 +1292,6 @@ export class Web<
     /**
      * Determines if given property name exists in wrapped component state.
      * @param name - Property name to check if exists in state.
-     *
      * @returns Boolean result.
      */
     isStateProperty(name:string):boolean {
@@ -1375,12 +1328,10 @@ export class Web<
     /**
      * Reflects wrapped component state back to web-component's attributes.
      * @param properties - Properties to update in reflected attribute state.
-     *
-     * @returns Nothing.
      */
     reflectExternalProperties(properties:Partial<ExternalProperties>):void {
         /*
-            NOTE: We can avoid an additional attribute parsing for this
+            NOTE: We can avoid an additional attribute parsing for
             reflections.
         */
         this.ignoreAttributeUpdateObservations = true
@@ -1390,7 +1341,7 @@ export class Web<
             if (!this.isConnected)
                 continue
 
-            const attributeName:string = Tools.stringCamelCaseToDelimited(name)
+            const attributeName:string = camelCaseToDelimited(name)
             if (this.self._propertiesToReflectAsAttributes.has(name))
                 switch (
                     this.self._propertiesToReflectAsAttributes.get(name)
@@ -1456,7 +1407,7 @@ export class Web<
                 case symbol:
                 default:
                     if (value) {
-                        const representation:string = Tools.represent(value)
+                        const representation:string = represent(value)
                         if (
                             representation &&
                             this.getAttribute(attributeName) !== representation
@@ -1479,8 +1430,6 @@ export class Web<
      * Reflects wrapped component state back to web-component's attributes and
      * properties.
      * @param properties - Properties to update in reflected property state.
-     *
-     * @returns Nothing.
      */
     reflectProperties(properties:Partial<ExternalProperties>):void {
         this.reflectExternalProperties(properties)
@@ -1530,7 +1479,6 @@ export class Web<
      * properties state.
      * @param name - Event name.
      * @param parameters - List of parameter to given event handler call.
-     *
      * @returns Mapped properties or null if nothing could be mapped.
      */
     async reflectEventToProperties(
@@ -1556,7 +1504,7 @@ export class Web<
             Object.prototype.hasOwnProperty.call(
                 this.self.eventToPropertyMapping, name
             ) &&
-            Tools.isFunction(this.self.eventToPropertyMapping[name])
+            isFunction(this.self.eventToPropertyMapping[name])
         ) {
             const wrappedMapping:(
                 EventMapping<ExternalProperties, InternalProperties> |
@@ -1571,7 +1519,7 @@ export class Web<
             > = (
                 wrappedMapping &&
                 'then' in wrappedMapping &&
-                Tools.isFunction((wrappedMapping as {then:unknown}).then)
+                isFunction((wrappedMapping as {then:unknown}).then)
             ) ?
                 await (wrappedMapping as Promise<EventMapping<
                     ExternalProperties, InternalProperties
@@ -1583,7 +1531,7 @@ export class Web<
             if (Array.isArray(mapping)) {
                 result = mapping[0]
                 this.reflectProperties(result)
-                Tools.extend(true, this.internalProperties, mapping[1])
+                extend(true, this.internalProperties, mapping[1])
             } else if (mapping === null)
                 handled = false
             else if (typeof mapping === 'object') {
@@ -1599,7 +1547,7 @@ export class Web<
             typeof parameters[0] === 'object'
         ) {
             /*
-                Identified as some how throw data back event (no synthetic
+                Identified as somehow throw data back event (no synthetic
                 event; derived from a user triggered one) when following
                 condition does not hold.
             */
@@ -1607,9 +1555,7 @@ export class Web<
                 parameters[0] as ExternalProperties
             if (
                 'persist' in parameters[0] &&
-                Tools.isFunction(
-                    (parameters[0] as {persist:() => void}).persist
-                )
+                isFunction((parameters[0] as {persist:() => void}).persist)
             ) {
                 newProperties = {} as ExternalProperties
                 for (const propertyName of Object.keys(this.self.propertyTypes))
@@ -1666,8 +1612,6 @@ export class Web<
      * registers in properties mapping object.
      * @param attributeName - Name of given value.
      * @param value - Value to evaluate.
-     *
-     * @returns Nothing.
      */
     evaluateStringOrNullAndSetAsProperty(
         attributeName:string, value:null|string
@@ -1677,8 +1621,7 @@ export class Web<
             attributeName.substring(1) :
             attributeName
 
-        let name:string =
-            Tools.stringDelimitedToCamelCase(effectiveAttributeName)
+        let name:string = delimitedToCamelCase(effectiveAttributeName)
         const alias:null|string = this.getPropertyAlias(name)
         if (
             alias &&
@@ -1695,8 +1638,13 @@ export class Web<
 
             if (preEvaluate) {
                 if (value) {
-                    const result:EvaluationResult =
-                        Tools.stringEvaluate(value, {Tools}, false, this)
+                    const result:EvaluationResult = evaluate(
+                        value,
+                        {...UTILITY_SCOPE},
+                        false,
+                        true,
+                        this
+                    )
 
                     if (result.error) {
                         console.warn(
@@ -1739,7 +1687,7 @@ export class Web<
 
                     if (value) {
                         const result:CompilationResult =
-                            Tools.stringCompile(value, scopeNames)
+                            compile(value, scopeNames)
                         error = result.error
                         templateFunction = result.templateFunction
 
@@ -1778,7 +1726,7 @@ export class Web<
                                         `${attributeName}" with expression "` +
                                         `${value!}" and scope variables "` +
                                         `${scopeNames.join('", "')}" set to ` +
-                                        `"${Tools.represent(parameters)}": ` +
+                                        `"${represent(parameters)}": ` +
                                         `${error as string}. Set property ` +
                                         `to "undedefined".`
                                     )
@@ -1805,7 +1753,7 @@ export class Web<
                             console.warn(
                                 'Error occurred during parsing given json ' +
                                 `attribute "${attributeName}": ` +
-                                Tools.represent(error)
+                                represent(error)
                             )
 
                             break
@@ -1815,9 +1763,7 @@ export class Web<
                             each other.
                         */
                         this.setInternalPropertyValue(name, evaluated)
-                        this.setExternalPropertyValue(
-                            name, Tools.copy(evaluated, 1)
-                        )
+                        this.setExternalPropertyValue(name, copy(evaluated, 1))
                     } else {
                         this.setInternalPropertyValue(name, null)
                         this.setExternalPropertyValue(name, null)
@@ -1872,7 +1818,7 @@ export class Web<
                 default: {
                     if (value) {
                         const evaluated:EvaluationResult =
-                            Tools.stringEvaluate(value, {}, false, this)
+                            evaluate(value, {}, false, this)
                         if (evaluated.error) {
                             console.warn(
                                 'Error occurred during processing given ' +
@@ -1888,7 +1834,7 @@ export class Web<
                         */
                         this.setInternalPropertyValue(name, evaluated.result)
                         this.setExternalPropertyValue(
-                            name, Tools.copy(evaluated.result, 1)
+                            name, copy(evaluated.result, 1)
                         )
                     } else if (this.hasAttribute(attributeName)) {
                         this.setInternalPropertyValue(name, true)
@@ -1908,14 +1854,12 @@ export class Web<
     /**
      * Triggers a new rendering cycle by respecting batch configuration.
      * @param reason - A description why rendering should be triggered.
-     *
-     * @returns Nothing.
      */
     triggerRender(reason:string) {
         if (this.batchUpdates) {
             if (!this.batchedUpdateRunning) {
                 this.batchedUpdateRunning = true
-                void Tools.timeout(() => {
+                void timeout(() => {
                     this.batchedUpdateRunning = false
 
                     this.render(reason)
@@ -1927,7 +1871,6 @@ export class Web<
     /**
      * Creates shadow root if not created yet and assigns to current root
      * property.
-     * @returns Nothing.
      */
     applyShadowRootIfNotExisting() {
         if (this.self.shadowDOM && this.root === this)
@@ -1953,7 +1896,6 @@ export class Web<
      * Determines new scope object with useful default set of environment
      * values.
      * @param scope - To apply to generated scope.
-     *
      * @returns Generated scope.
      */
     determineRenderScope(scope:Mapping<unknown> = {}) {
@@ -1964,7 +1906,7 @@ export class Web<
             parent: this.parent,
             root: this.rootInstance,
             self: this,
-            [Tools.stringLowerCase(this.self._name) || 'instance']: this,
+            [lowerCase(this.self._name) || 'instance']: this,
             ...scope
         }
         this.scope.scope = this.scope
@@ -1973,8 +1915,6 @@ export class Web<
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
-     *
-     * @returns Nothing.
      */
     render(reason = 'unknown'):void {
         this.determineRenderScope()
@@ -1984,7 +1924,7 @@ export class Web<
         )))
             return
 
-        const evaluated:EvaluationResult = Tools.stringEvaluate(
+        const evaluated:EvaluationResult = evaluate(
             `\`${this.self.content as string}\``, this.scope
         )
         if (evaluated.error) {
@@ -2020,12 +1960,7 @@ export const api:WebComponentAPI<
     HTMLElement, Mapping<unknown>, Mapping<unknown>, typeof Web
 > = {
     component: Web,
-    register: (
-        tagName:string = Tools.stringCamelCaseToDelimited(Web._name)
-    ):void => customElements.define(tagName, Web)
+    register: (tagName:string = camelCaseToDelimited(Web._name)):void =>
+        customElements.define(tagName, Web)
 }
 export default Web
-// region vim modline
-// vim: set tabstop=4 shiftwidth=4 expandtab:
-// vim: foldmethod=marker foldmarker=region,endregion:
-// endregion

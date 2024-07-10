@@ -15,9 +15,8 @@
 */
 // region imports
 import {describe, expect, jest, test} from '@jest/globals'
-import Tools from 'clientnode'
-import {func, string} from 'clientnode/property-types'
-import {Mapping, ValueOf} from 'clientnode/type'
+import {Mapping, timeout, ValueOf} from 'clientnode'
+import {func, string} from 'clientnode/dist/property-types'
 import {createElement, FunctionComponent, ReactElement} from 'react'
 
 import wrapAsWebComponent from './index'
@@ -122,7 +121,7 @@ describe('ReactWeb', ():void => {
         expect(react).toHaveProperty('reactRoot')
 
         expect(triggerOnEvent).not.toBeDefined()
-        await Tools.timeout()
+        await timeout()
         expect(triggerOnEvent).toBeDefined()
 
         expect(react).not.toHaveProperty('eventHappened')
@@ -150,7 +149,7 @@ describe('ReactWeb', ():void => {
             .toStrictEqual('initial')
 
         react.property = 'test'
-        await Tools.timeout()
+        await timeout()
         expect(react).toHaveProperty('property', 'test')
         expect(document.querySelector('div')!.className).toStrictEqual('test')
     })
@@ -184,7 +183,3 @@ describe('index', ():void => {
     })
 })
 //  endregion
-// region vim modline
-// vim: set tabstop=4 shiftwidth=4 expandtab:
-// vim: foldmethod=marker foldmarker=region,endregion:
-// endregion
