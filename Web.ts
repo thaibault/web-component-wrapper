@@ -564,7 +564,7 @@ export class Web<
                     name.startsWith('property-')
                 ) {
                     const evaluated:EvaluationResult =
-                        evaluate(value, scope, false, domNode)
+                        evaluate(value, scope, false, true, domNode)
 
                     if (evaluated.error) {
                         console.warn(
@@ -604,13 +604,19 @@ export class Web<
                     if (eventMap.has(name))
                         eventMap.get(name)!()
 
-                    scope = {event: undefined, parameters: undefined, ...scope}
+                    scope = {
+                        console,
+                        event: undefined,
+                        parameters: undefined,
+                        ...scope
+                    }
                     /*
                         NOTE: We pre-compile event listener since they should
                         usually be called more than it would be re-rendered.
                     */
-                    const compilation:CompilationResult =
-                        compile(value, scope, true)
+                    const compilation:CompilationResult = compile(
+                        value, scope, true, true, domNode
+                    )
 
                     if (compilation.error)
                         console.warn(
@@ -620,9 +626,6 @@ export class Web<
                             compilation.error
                         )
                     else {
-                        const templateFunction:TemplateFunction =
-                            compilation.templateFunction.bind(domNode)
-
                         const handler:EventListener = (
                             ...parameters:Array<unknown>
                         ):void => {
@@ -630,7 +633,7 @@ export class Web<
                             scope.parameters = parameters
 
                             try {
-                                templateFunction(
+                                compilation.templateFunction(
                                     /*
                                         NOTE: We want to be sure to have same
                                         ordering as we have for the scope names
@@ -1639,11 +1642,7 @@ export class Web<
             if (preEvaluate) {
                 if (value) {
                     const result:EvaluationResult = evaluate(
-                        value,
-                        {...UTILITY_SCOPE},
-                        false,
-                        true,
-                        this
+                        value, {...UTILITY_SCOPE}, false, true, this
                     )
 
                     if (result.error) {
@@ -1674,6 +1673,10 @@ export class Web<
                     let error:null|string = null
                     let templateFunction:TemplateFunction
 
+                    const utilityScopeName =
+                        Object.keys(UTILITY_SCOPE) as
+                        (keyof typeof UTILITY_SCOPE)[]
+
                     const scopeNames:Array<string> = [
                         'data',
                         'event',
@@ -1682,7 +1685,7 @@ export class Web<
                         'options',
                         'scope',
                         'parameters',
-                        'Tools'
+                        ...utilityScopeName
                     ]
 
                     if (value) {
@@ -1718,7 +1721,9 @@ export class Web<
                                         parameters[0],
                                         parameters[0],
                                         parameters,
-                                        Tools
+                                        ...utilityScopeName.map((name) =>
+                                            UTILITY_SCOPE[name]
+                                        )
                                     )
                                 } catch (error) {
                                     console.warn(
@@ -1728,7 +1733,7 @@ export class Web<
                                         `${scopeNames.join('", "')}" set to ` +
                                         `"${represent(parameters)}": ` +
                                         `${error as string}. Set property ` +
-                                        `to "undedefined".`
+                                        `to "undefined".`
                                     )
                                 }
 
@@ -1817,8 +1822,9 @@ export class Web<
                 case symbol:
                 default: {
                     if (value) {
-                        const evaluated:EvaluationResult =
-                            evaluate(value, {}, false, this)
+                        const evaluated:EvaluationResult = evaluate(
+                            value, {}, false, true, this
+                        )
                         if (evaluated.error) {
                             console.warn(
                                 'Error occurred during processing given ' +
@@ -1896,7 +1902,6 @@ export class Web<
      * Determines new scope object with useful default set of environment
      * values.
      * @param scope - To apply to generated scope.
-     * @returns Generated scope.
      */
     determineRenderScope(scope:Mapping<unknown> = {}) {
         this.scope = {
@@ -1938,7 +1943,7 @@ export class Web<
         /*
             NOTE: We first render into an intermediate render target and apply
             slot content until we finally publish everything to document. This
-            avoid painting twice and internet explorer bugs with empty node
+            avoids painting twice and internetexplorer bugs with empty node
             after first overwriting content of "this.root".
         */
         const renderTargetDomNode:HTMLDivElement =

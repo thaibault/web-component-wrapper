@@ -39,6 +39,7 @@ describe('Web', ():void => {
         const web:WebTest = document.createElement('test-web') as WebTest
 
         expect(web).not.toHaveProperty('clicked')
+
         web.setAttribute('bind-on-click', 'this.clicked = true')
         expect(web).not.toHaveProperty('clicked')
 

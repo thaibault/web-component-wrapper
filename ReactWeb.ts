@@ -17,9 +17,20 @@
     endregion
 */
 // region imports
-import Tools from 'clientnode'
-import {func, NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
-import {Mapping, TemplateFunction} from 'clientnode/type'
+import {
+    camelCaseToDelimited,
+    compile,
+    copy,
+    delimitedToCamelCase,
+    extend,
+    Mapping,
+    represent,
+    TemplateFunction,
+    timeout
+} from 'clientnode'
+import {
+    func, NullSymbol, UndefinedSymbol
+} from 'clientnode/dist/property-types'
 import React, {
     Attributes,
     ComponentType as ReactComponentType,
@@ -71,15 +82,13 @@ import {
 */
 /**
  * Adapter for exposing a react component as web-component.
- * @property static:attachWebComponentAdapterIfNotExists - Indicates whether to
- * wrap with a reference wrapper to get updated about internal state changes.
- * @property static:content - React component to wrap.
- * @property static:react - React namespace.
- *
+ * @property attachWebComponentAdapterIfNotExists - Indicates whether to wrap
+ * with a reference wrapper to get updated about internal state changes.
+ * @property content - React component to wrap.
+ * @property react - React namespace.
  * @property compiledSlots - Cache of yet pre-compiled slot elements.
  * @property preparedSlots - Cache of yet evaluated slot react elements.
  * @property rootReactInstance - Saves determined root react instance.
- *
  * @property self - Back-reference to this class.
  * @property wrapMemorizingWrapper - Determines whether to wrap component with
  * reacts memorizing wrapper to cache component render results.
@@ -113,7 +122,6 @@ export class ReactWeb<
     /**
      * Triggered when this component is mounted into the document. Event
      * handlers will be attached and final render proceed.
-     * @returns Nothing.
      */
     connectedCallback() {
         this.applyComponentWrapper()
@@ -130,7 +138,6 @@ export class ReactWeb<
     /**
      * Triggered when this component is unmounted from the document. Event
      * handlers and state will be removed.
-     * @returns Nothing.
      */
     disconnectedCallback() {
         // TODO Triggers error in "web-input-material"
@@ -141,8 +148,6 @@ export class ReactWeb<
     /**
      * Reflects wrapped component state back to web-component's attributes.
      * @param properties - Properties to update in reflected attribute state.
-     *
-     * @returns Nothing.
      */
     reflectExternalProperties(properties:Partial<ExternalProperties>) {
         if (this.isRoot)
@@ -152,8 +157,6 @@ export class ReactWeb<
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
-     *
-     * @returns Nothing.
      */
     render(reason = 'unknown'):void {
         /*
@@ -224,7 +227,7 @@ export class ReactWeb<
         if (this.instance?.current)
             this.reflectInstanceProperties()
         else
-            void Tools.timeout(this.reflectInstanceProperties)
+            void timeout(this.reflectInstanceProperties)
     }
     // endregion
     // region property handling
@@ -232,7 +235,7 @@ export class ReactWeb<
      * Generic property setter. Forwards field writes into internal and
      * external property representations.
      *
-     * In general it is a bad idea to write properties which shadow state
+     * In general, it is a bad idea to write properties which shadow state
      * properties (move to a controlled component instance) and re-set the
      * property to "undefined" later to lose control.
      *
@@ -251,23 +254,17 @@ export class ReactWeb<
      * 4. Further state changes should be communicated back via output events.
      * @param name - Property name to write.
      * @param value - New value to write.
-     *
-     * @returns Nothing.
      */
     setPropertyValue(name:string, value:unknown) {
         this.reflectProperties(
-            {[name]: Tools.copy(value, 1)} as
-                unknown as
-                Partial<ExternalProperties>
+            {[name]: copy(value, 1)} as unknown as Partial<ExternalProperties>
         )
-        this.setInternalPropertyValue(name, Tools.copy(value, 1))
+        this.setInternalPropertyValue(name, copy(value, 1))
     }
     /**
      * Internal property setter. Respects configured aliases.
      * @param name - Property name to write.
      * @param value - New value to write.
-     *
-     * @returns Nothing.
      */
     setInternalPropertyValue(name:string, value:unknown) {
         if (value === null)
@@ -281,14 +278,13 @@ export class ReactWeb<
     // region handle slots
     /**
      * Converts given html dom nodes into a compiled function to generate a
-     * react element or a react element list.
+     * react-element or a react-element list.
      * @param domNodes - Nodes to convert.
-     * @param scope - Additional scope to render sub components against.
+     * @param scope - Additional scope to render subcomponents against.
      * Necessary to bound needed environment variables into compiled context.
      * @param isFunction - Indicates whether given render result should be
      * provided as function (render property) with bound parameters environment
      * variable name.
-     *
      * @returns Transformed react elements.
      */
     preCompileDomNodes(
@@ -337,13 +333,12 @@ export class ReactWeb<
         return result
     }
     /**
-     * Converts given html dom node into a react element.
+     * Converts given html dom node into a react-element.
      * @param domNode - Node to convert.
-     * @param scope - Additional scope to render sub components against.
+     * @param scope - Additional scope to render subcomponents against.
      * @param isFunction - Indicates whether given nodes should be provided as
      * function (render property).
      * @param key - Optional key to add to component properties.
-     *
      * @returns Transformed react element.
      */
     preCompileDomNode(
@@ -404,7 +399,7 @@ export class ReactWeb<
         }
         // endregion
         if (!(domNode as HTMLElement).getAttributeNames)
-            return ():null => null
+            return () => null
         // region native elements and wrapped react components
         /// region prepare type and static properties
         const staticProperties = {} as PreCompiledInternalProperties
@@ -461,7 +456,7 @@ export class ReactWeb<
                 name === 'properties'
             ) {
                 const {error, originalScopeNames, templateFunction} =
-                    Tools.stringCompile(value as string, knownScopeNames)
+                    compile(value as string, knownScopeNames)
 
                 if (error) {
                     console.warn(
@@ -485,7 +480,7 @@ export class ReactWeb<
                     templateFunction: templateFunction.bind(this)
                 }
             } else if (name.startsWith('on-')) {
-                name = Tools.stringDelimitedToCamelCase(name)
+                name = delimitedToCamelCase(name)
 
                 if (!Object.prototype.hasOwnProperty.call(scope, 'event'))
                     knownScopeNames = [...knownScopeNames, 'event']
@@ -497,7 +492,7 @@ export class ReactWeb<
                 */
                 const {
                     error, originalScopeNames, scopeNames, templateFunction
-                } = Tools.stringCompile(value as string, knownScopeNames, true)
+                } = compile(value as string, knownScopeNames, true)
 
                 if (error) {
                     console.warn(
@@ -537,8 +532,7 @@ export class ReactWeb<
                             domNode,
                             `Given expression "${value as string}" could ` +
                             'not be evaluated with given scope names "' +
-                            `${scopeNames.join('", "')}": ` +
-                            Tools.represent(error)
+                            `${scopeNames.join('", "')}": ${represent(error)}`
                         )
                     }
                 }
@@ -549,7 +543,7 @@ export class ReactWeb<
             if (Object.prototype.hasOwnProperty.call(mapping, name))
                 name = mapping[name]
 
-            name = Tools.stringDelimitedToCamelCase(name)
+            name = delimitedToCamelCase(name)
 
             if ((value as PreCompiledItem)?.originalScopeNames)
                 // NOTE: "''" marks a property set like in JSX "{...props}".
@@ -651,7 +645,6 @@ export class ReactWeb<
      * react element list.
      * @param nodes - Pre-compiled nodes.
      * @param scope - Additional scope to render sub components against.
-     *
      * @returns Transformed react elements.
      */
     evaluatePreCompiledDomNodes(
@@ -675,7 +668,6 @@ export class ReactWeb<
     }
     /**
      * Pre compiles and caches determined slots.
-     * @returns Nothing.
      */
     preCompileSlots() {
         for (const name in this.slots)
@@ -704,8 +696,6 @@ export class ReactWeb<
     /**
      * Evaluates pre compiled slots.
      * @param scope - To render again.
-     *
-     * @returns Nothing.
      */
     evaluateSlots(scope:Mapping<unknown>) {
         this.preparedSlots = {}
@@ -727,9 +717,8 @@ export class ReactWeb<
     // endregion
     // region helper
     /**
-     * Determines if given element type is a react wrapped component.
+     * Determines if given element type is a react-wrapped component.
      * @param domNode - Node to determine from.
-     *
      * @returns Boolean indicator.
      */
     static isReactComponent(domNode:Node):boolean {
@@ -746,7 +735,6 @@ export class ReactWeb<
     /**
      * Determines initial root and react root who initializes their rendering
      * digests.
-     * @returns Nothing.
      */
     determineRootBinding() {
         super.determineRootBinding()
@@ -764,7 +752,6 @@ export class ReactWeb<
     /**
      * Applies missing forward ref and or memorizing wrapper to current react
      * component.
-     * @returns Nothing.
      */
     applyComponentWrapper():void {
         if (typeof this.self.content === 'string' || this.isWrapped)
@@ -817,13 +804,9 @@ export class ReactWeb<
      * Creates a reference for being recognized of reacts internal state
      * updates.
      * @param properties - Properties to prepare.
-     *
-     * @returns Nothing.
      */
     prepareProperties(properties:InternalProperties) {
-        Tools.extend(
-            properties, this.preparedSlots as Partial<InternalProperties>
-        )
+        extend(properties, this.preparedSlots as Partial<InternalProperties>)
 
         this.self.removeKnownUnwantedPropertyKeys(this.self, properties)
 
@@ -839,7 +822,6 @@ export class ReactWeb<
     /**
      * Updates current component instance and reflects newly determined
      * properties.
-     * @returns Nothing.
      */
     reflectInstanceProperties = () => {
         if (
@@ -858,8 +840,6 @@ export class ReactWeb<
      * properties object (usually added by dev-tools).
      * @param target - ReactElement where properties belong to.
      * @param properties - Properties object to trim.
-     *
-     * @returns Nothing.
      */
     static removeKnownUnwantedPropertyKeys(
         target:typeof ReactWeb, properties:Mapping<unknown>
@@ -908,12 +888,7 @@ export const api:WebComponentAPI<
     typeof ReactWeb
 > = {
     component: ReactWeb,
-    register: (
-        tagName:string = Tools.stringCamelCaseToDelimited(ReactWeb._name)
-    ):void => customElements.define(tagName, ReactWeb)
+    register: (tagName:string = camelCaseToDelimited(ReactWeb._name)):void =>
+        customElements.define(tagName, ReactWeb)
 }
 export default ReactWeb
-// region vim modline
-// vim: set tabstop=4 shiftwidth=4 expandtab:
-// vim: foldmethod=marker foldmarker=region,endregion:
-// endregion
