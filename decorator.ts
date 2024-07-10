@@ -17,8 +17,8 @@
     endregion
 */
 // region imports
-import Tools from 'clientnode'
-import {string} from 'clientnode/property-types'
+import {camelCaseToDelimited, copy} from 'clientnode'
+import {string} from 'clientnode/dist/property-types'
 
 import Web from './Web'
 import {PropertiesConfiguration, PropertyConfiguration} from './type'
@@ -35,7 +35,6 @@ import {PropertiesConfiguration, PropertyConfiguration} from './type'
  * configurations.
  * @param options.writeAttribute - Indicates whether to sync attribute
  * representation back into dom.
- *
  * @returns Generated decorator.
  */
 export function property(
@@ -56,8 +55,6 @@ export function property(
      * "hasOwnProperty" for existence in this decorator.
      * @param target - Instance to apply given property to.
      * @param name - Field name to apply.
-     *
-     * @returns Modified given property.
      */
     return function(target:object, name:string|symbol):void {
         if (typeof name !== 'string')
@@ -77,7 +74,7 @@ export function property(
                     [...self.observedAttributes] :
                     []
 
-            const attributeName:string = Tools.stringCamelCaseToDelimited(name)
+            const attributeName:string = camelCaseToDelimited(name)
             if (!self.observedAttributes.includes(attributeName))
                 self.observedAttributes.push(attributeName)
         }
@@ -102,7 +99,7 @@ export function property(
             ))
                 self.propertiesToReflectAsAttributes =
                     self.propertiesToReflectAsAttributes ?
-                        Tools.copy(self.propertiesToReflectAsAttributes) :
+                        copy(self.propertiesToReflectAsAttributes) :
                         []
 
             if (
@@ -170,7 +167,3 @@ export function property(
     }
 }
 export default property
-// region vim modline
-// vim: set tabstop=4 shiftwidth=4 expandtab:
-// vim: foldmethod=marker foldmarker=region,endregion:
-// endregion

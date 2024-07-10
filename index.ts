@@ -17,8 +17,7 @@
     endregion
 */
 // region imports
-import Tools from 'clientnode'
-import {Mapping} from 'clientnode/type'
+import {camelCaseToDelimited, Mapping, unique} from 'clientnode'
 
 import ReactWebImport, {api as reactWebAPIImport} from './ReactWeb'
 import WebImport, {api as webAPIImport} from './Web'
@@ -41,7 +40,6 @@ export const Web = WebImport
  * @param nameHint - A name to set as property in runtime generated web
  * component class.
  * @param configuration - Additional web component configurations.
- *
  * @returns Generated object to register and retrieve generated web component.
  */
 export const wrapAsWebComponent = <
@@ -77,7 +75,7 @@ export const wrapAsWebComponent = <
     const propertyTypes:PropertiesConfiguration = component.propTypes || {}
     const propertyAliases:Mapping =
         configuration.propertyAliases || component.propertyAliases || {}
-    const allPropertyNames:Array<string> = Tools.arrayUnique<string>(
+    const allPropertyNames:Array<string> = unique<string>(
         Object.keys(propertyTypes)
             .concat(Object.keys(propertyAliases))
             .concat(Object.values(propertyAliases))
@@ -116,7 +114,7 @@ export const wrapAsWebComponent = <
 
     const attributeNames:Array<string> =
         allPropertyNames.map((name:string):string =>
-            Tools.stringCamelCaseToDelimited(name)
+            camelCaseToDelimited(name)
         )
     /**
      * Runtime generated web component.
@@ -192,16 +190,11 @@ export const wrapAsWebComponent = <
         component: ConcreteComponent as typeof ReactWeb<
             Type, ExternalProperties, InternalProperties
         >,
-        register: (
-            tagName:string = Tools.stringCamelCaseToDelimited(name)
-        ):void => customElements.define(tagName, ConcreteComponent)
+        register: (tagName:string = camelCaseToDelimited(name)):void =>
+            customElements.define(tagName, ConcreteComponent)
     }
 
     return webComponentAPI
 }
 
 export default wrapAsWebComponent
-// region vim modline
-// vim: set tabstop=4 shiftwidth=4 expandtab:
-// vim: foldmethod=marker foldmarker=region,endregion:
-// endregion
