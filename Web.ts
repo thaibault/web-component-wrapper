@@ -1675,7 +1675,7 @@ export class Web<
 
                     const utilityScopeName =
                         Object.keys(UTILITY_SCOPE) as
-                        (keyof typeof UTILITY_SCOPE)[]
+                        Array<keyof typeof UTILITY_SCOPE>
 
                     const scopeNames:Array<string> = [
                         'data',
