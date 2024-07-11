@@ -36,7 +36,9 @@ import {
     TemplateFunction,
     timeout,
     unique,
-    UTILITY_SCOPE
+    UTILITY_SCOPE,
+    UTILITY_SCOPE_NAMES,
+    UTILITY_SCOPE_VALUES
 } from 'clientnode'
 import {
     any,
@@ -1673,9 +1675,7 @@ export class Web<
                     let error:null|string = null
                     let templateFunction:TemplateFunction
 
-                    const utilityScopeName =
-                        Object.keys(UTILITY_SCOPE) as
-                        Array<keyof typeof UTILITY_SCOPE>
+                    const utilityScopeName = UTILITY_SCOPE_NAMES
 
                     const scopeNames:Array<string> = [
                         'data',
@@ -1721,9 +1721,7 @@ export class Web<
                                         parameters[0],
                                         parameters[0],
                                         parameters,
-                                        ...utilityScopeName.map((name) =>
-                                            UTILITY_SCOPE[name]
-                                        )
+                                        ...UTILITY_SCOPE_VALUES
                                     )
                                 } catch (error) {
                                     console.warn(
