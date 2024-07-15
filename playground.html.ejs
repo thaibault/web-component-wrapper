@@ -24,13 +24,17 @@
         <!--region script-->
         <script>
             window.onload = function() {
-                const Tools = webComponentWrapper.clientnode.Tools
+                const {
+                    camelCaseToDelimited,
+                    MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION,
+                    represent
+                } = webComponentWrapper.clientnode
 
                 // region prepare web-component
                 const Web = webComponentWrapper.index.Web
 
                 Web.content =
-                    Tools.maximalSupportedInternetExplorerVersion === 0 ?
+                    MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION.value === 0 ?
                         ('<div class="wrapper">' +
                             "Example Properties\${id ? (' for ' + id) : ''}:" +
                             '<ul>' +
@@ -40,7 +44,7 @@
                                             "'<li>' +" +
                                                 'name +' +
                                                 "': ' +" +
-                                                'Tools.represent(self.externalProperties[name]) +' +
+                                                'object.represent(self.externalProperties[name]) +' +
                                             "'</li>'" +
                                         ')' +
                                     '})' +
@@ -72,10 +76,10 @@
 
                 Web.observedAttributes = Object.keys(Web.propertyTypes)
                     .map(function(name) {
-                        return Tools.stringCamelCaseToDelimited(name)
+                        return camelCaseToDelimited(name)
                     })
                 Web.shadowDOM =
-                    Tools.maximalSupportedInternetExplorerVersion === 0 ?
+                    MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION.value === 0 ?
                         {mode: 'closed'} :
                         null
 
@@ -118,10 +122,10 @@
                                             ),
                                             props.exampleRenderPropFunction ?
                                                 props.exampleRenderPropFunction(
-                                                    Tools.represent(props[name]),
+                                                    represent(props[name]),
                                                     1
                                                 ) :
-                                                Tools.represent(props[name])
+                                                represent(props[name])
                                         ]
                                     )
                                 })
