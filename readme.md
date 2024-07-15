@@ -48,8 +48,3 @@ Data can be communicated back via:
 A Web-Component-Wrapper component forwards (transformed) given properties into
 a wrapped react component via `props` and reads data via provided callbacks
 as part of `props` or as part of reacts `ref` object.
-
-<!-- region modline
-vim: set tabstop=4 shiftwidth=4 expandtab:
-vim: foldmethod=marker foldmarker=region,endregion:
-endregion -->
