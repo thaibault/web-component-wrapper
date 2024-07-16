@@ -210,7 +210,7 @@ export class ReactWeb<
                 }
             )
 
-        flushSync(():void =>
+        flushSync(() => {
             this.reactRoot!.render(
                 createElement<InternalProperties>(
                     this.self.content as
@@ -218,7 +218,7 @@ export class ReactWeb<
                     this.internalProperties
                 )
             )
-        )
+        })
 
         /*
             NOTE: Update current instance if we have a newly created one
