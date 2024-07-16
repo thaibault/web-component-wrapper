@@ -106,8 +106,8 @@ export const GenericHTMLElement:typeof HTMLElement =
  * @property propertiesToReflectAsAttributes - An item, list or mapping of
  * properties to reflect as attributes.
  * @property renderProperties - List of known render properties.
- * @property cloneSlots - Indicates whether to clone slot nots before
- * transcluding them. If a slot should be used multiple times (for example when
+ * @property cloneSlots - Indicates whether to clone slot before to transclude
+ * content into them. If a slot should be used multiple times (for example when
  * it works as a template node) they should be copied to avoid unexpected
  * mutations.
  * @property evaluateSlots - Indicates whether to evaluate slot content when
@@ -1492,7 +1492,7 @@ export class Web<
         /*
             NOTE: We enforce to update components state immediately after an
             event occurs since batching usually does not make sense here. An
-            event is ran an its own context.
+            event runs within its own context.
             On the other hand it can be necessary to immediately reflect a
             property change to the components internal state to avoid
             contradicting internal render cycles.
@@ -1675,8 +1675,6 @@ export class Web<
                     let error:null|string = null
                     let templateFunction:TemplateFunction
 
-                    const utilityScopeName = UTILITY_SCOPE_NAMES
-
                     const scopeNames:Array<string> = [
                         'data',
                         'event',
@@ -1685,7 +1683,7 @@ export class Web<
                         'options',
                         'scope',
                         'parameters',
-                        ...utilityScopeName
+                        ...UTILITY_SCOPE_NAMES
                     ]
 
                     if (value) {
