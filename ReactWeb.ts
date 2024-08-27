@@ -211,7 +211,7 @@ export class ReactWeb<
             )
 
         flushSync(() => {
-            this.reactRoot!.render(
+            this.reactRoot?.render(
                 createElement<InternalProperties>(
                     this.self.content as
                         ReactComponentType<InternalProperties>,
@@ -303,7 +303,7 @@ export class ReactWeb<
         let index = 1
         const result:Array<ReactRenderItemFactory> = []
         for (const node of domNodes) {
-            const element:ReactRenderItemFactory = this.preCompileDomNode(
+            const element = this.preCompileDomNode(
                 node, scope, isFunction, index.toString()
             )
 

@@ -100,10 +100,7 @@ export const wrapAsWebComponent = <
                 propertiesToReflectAsAttributes.set(
                     name, ReactWeb.propertyTypes[name]
                 )
-        else if (
-            propertiesToReflectAsAttributes !== null &&
-            typeof propertiesToReflectAsAttributes === 'object'
-        )
+        else if (typeof propertiesToReflectAsAttributes === 'object')
             for (
                 const name of ReactWeb.propertiesToReflectAsAttributes as
                     Array<string>
@@ -190,8 +187,9 @@ export const wrapAsWebComponent = <
         component: ConcreteComponent as typeof ReactWeb<
             Type, ExternalProperties, InternalProperties
         >,
-        register: (tagName:string = camelCaseToDelimited(name)):void =>
+        register: (tagName:string = camelCaseToDelimited(name)) => {
             customElements.define(tagName, ConcreteComponent)
+        }
     }
 
     return webComponentAPI

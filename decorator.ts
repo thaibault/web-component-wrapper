@@ -62,8 +62,8 @@ export function property(
 
         type TargetType = typeof target & typeof Web
 
-        const self:TargetType =
-            (target as unknown as {self:TargetType}).self ||
+        const self:Partial<TargetType> =
+            (target as unknown as {self?:TargetType}).self ||
             (target as unknown as {constructor:TargetType}).constructor
 
         if (options.readAttribute) {
@@ -75,7 +75,10 @@ export function property(
                     []
 
             const attributeName:string = camelCaseToDelimited(name)
-            if (!self.observedAttributes.includes(attributeName))
+            if (
+                self.observedAttributes &&
+                !self.observedAttributes.includes(attributeName)
+            )
                 self.observedAttributes.push(attributeName)
         }
 
@@ -87,8 +90,11 @@ export function property(
                     {}
 
             if (
-                options.update ||
-                !Object.prototype.hasOwnProperty.call(self, name)
+                self.propertyTypes &&
+                (
+                    options.update ||
+                    !Object.prototype.hasOwnProperty.call(self, name)
+                )
             )
                 self.propertyTypes[name] = options.type as string
         }
@@ -108,7 +114,6 @@ export function property(
                 !self.propertiesToReflectAsAttributes.has(name) ||
                 Array.isArray(self.propertiesToReflectAsAttributes) &&
                 !self.propertiesToReflectAsAttributes.includes(name) ||
-                self.propertiesToReflectAsAttributes !== null &&
                 typeof self.propertiesToReflectAsAttributes === 'object' &&
                 !Object.prototype.hasOwnProperty.call(
                     self.propertiesToReflectAsAttributes, name
@@ -117,7 +122,15 @@ export function property(
                 let result:PropertyConfiguration|undefined
                 if (typeof options.writeAttribute === 'boolean') {
                     if (
-                        options.writeAttribute === true &&
+                        /*
+                            eslint-disable
+                            @typescript-eslint/no-unnecessary-condition
+                        */
+                        options.writeAttribute &&
+                        /*
+                            eslint-enable
+                            @typescript-eslint/no-unnecessary-condition
+                        */
                         self.propertyTypes &&
                         Object.prototype.hasOwnProperty.call(
                             self.propertyTypes, name
@@ -131,7 +144,7 @@ export function property(
                     if (Array.isArray(self.propertiesToReflectAsAttributes))
                         if (options.writeAttribute === true)
                             self.propertiesToReflectAsAttributes.push(name)
-                        else
+                        else if (self.normalizePropertyTypeList)
                             self.propertiesToReflectAsAttributes =
                                 self.normalizePropertyTypeList(
                                     self.propertiesToReflectAsAttributes
@@ -140,7 +153,6 @@ export function property(
                     if (self.propertiesToReflectAsAttributes instanceof Map)
                         self.propertiesToReflectAsAttributes.set(name, result)
                     if (
-                        self.propertiesToReflectAsAttributes !== null &&
                         typeof self.propertiesToReflectAsAttributes ===
                             'object'
                     )
@@ -159,8 +171,11 @@ export function property(
                     {}
 
             if (
-                options.update ||
-                !Object.prototype.hasOwnProperty.call(self, name)
+                self.propertyAliases &&
+                (
+                    options.update ||
+                    !Object.prototype.hasOwnProperty.call(self, name)
+                )
             )
                 self.propertyAliases[name] = options.alias
         }

@@ -109,9 +109,12 @@ export interface WebComponentConfiguration<
     attachWebComponentAdapterIfNotExists?:boolean
 
     controllableProperties?:Array<string>
-    eventToPropertyMapping?:EventToPropertyMapping<
-        ExternalProperties, InternalProperties, EventParameters
-    >
+    eventToPropertyMapping?:(
+        EventToPropertyMapping<
+            ExternalProperties, InternalProperties, EventParameters
+        > |
+        null
+    )
     internalProperties?:InternalProperties
     propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
     propertyAliases?:Mapping
