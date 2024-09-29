@@ -25,8 +25,8 @@ import Web from './Web'
 import {ComponentType, PropertiesConfiguration, WebComponentAPI} from './type'
 // endregion
 // region Web
-describe('Web', ():void => {
-    test('constructor', ():void => {
+describe('Web', (): void => {
+    test('constructor', (): void => {
         /**
          * Mock Test class.
          */
@@ -36,7 +36,7 @@ describe('Web', ():void => {
         expect(WebTest).toHaveProperty('observedAttributes')
 
         customElements.define('test-web', WebTest)
-        const web:WebTest = document.createElement('test-web') as WebTest
+        const web: WebTest = document.createElement('test-web') as WebTest
 
         expect(web).not.toHaveProperty('clicked')
 
@@ -60,15 +60,15 @@ describe('Web', ():void => {
 })
 // endregion
 // region ReactWeb
-describe('ReactWeb', ():void => {
-    test('constructor', async ():Promise<void> => {
-        let triggerOnEvent:(() => void)|undefined
+describe('ReactWeb', (): void => {
+    test('constructor', async (): Promise<void> => {
+        let triggerOnEvent: (() => void)|undefined
         let componentProperty = 'initial'
 
-        const component:FunctionComponent<{
-            property:string
-            onEvent?:() => void
-        }> = ({onEvent, property = componentProperty}):ReactElement => {
+        const component: FunctionComponent<{
+            property: string
+            onEvent?: () => void
+        }> = ({onEvent, property = componentProperty}): ReactElement => {
             triggerOnEvent = onEvent
             componentProperty = property
 
@@ -83,9 +83,9 @@ describe('ReactWeb', ():void => {
             ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
             InternalProperties extends Mapping<unknown> = Mapping<unknown>
         > extends ReactWeb<TElement, ExternalProperties, InternalProperties> {
-            static content:ComponentType = component as ComponentType
+            static content = component as ComponentType
 
-            static propertyTypes:PropertiesConfiguration = {
+            static propertyTypes: PropertiesConfiguration = {
                 ...Web.propertyTypes as Mapping<ValueOf<
                     PropertiesConfiguration
                 >>,
@@ -97,16 +97,16 @@ describe('ReactWeb', ():void => {
 
             static _name = 'Test'
 
-            readonly self:typeof TestReactWeb = TestReactWeb
+            readonly self = TestReactWeb
         }
 
         expect(TestReactWeb).toHaveProperty('content')
         expect(TestReactWeb).toHaveProperty('observedAttributes')
 
         customElements.define('test-react', TestReactWeb)
-        const react:(TestReactWeb & {property:string}) =
+        const react: (TestReactWeb & {property: string}) =
             document.createElement('test-react') as
-                TestReactWeb & {property:string}
+                TestReactWeb & {property: string}
 
         expect(react).not.toHaveProperty('clicked')
         react.setAttribute('bind-on-click', 'this.clicked = true')
@@ -126,13 +126,15 @@ describe('ReactWeb', ():void => {
         expect(triggerOnEvent).toBeDefined()
 
         expect(react).not.toHaveProperty('eventHappened')
-        triggerOnEvent!()
+        if (triggerOnEvent)
+            triggerOnEvent()
         expect(react).toHaveProperty('eventHappened', true)
 
         const eventCallback = jest.fn()
         react.addEventListener('event', eventCallback)
         expect(eventCallback).not.toHaveBeenCalled()
-        triggerOnEvent!()
+        if (triggerOnEvent)
+            triggerOnEvent()
         expect(eventCallback).toHaveBeenCalled()
 
         expect(react).not.toHaveProperty('clicked')
@@ -146,22 +148,22 @@ describe('ReactWeb', ():void => {
         expect(clickCallback).toHaveBeenCalled()
 
         expect(componentProperty).toStrictEqual('initial')
-        expect(document.querySelector('div')!.className)
+        expect(document.querySelector('div')?.className)
             .toStrictEqual('initial')
 
         react.property = 'test'
         await timeout()
         expect(react).toHaveProperty('property', 'test')
-        expect(document.querySelector('div')!.className).toStrictEqual('test')
+        expect(document.querySelector('div')?.className).toStrictEqual('test')
     })
 })
 // endregion
 // region index
-describe('index', ():void => {
-    test('wrapAsWebComponent', ():void => {
-        const componentAPI:WebComponentAPI<typeof ReactWeb> =
+describe('index', (): void => {
+    test('wrapAsWebComponent', (): void => {
+        const componentAPI: WebComponentAPI<typeof ReactWeb> =
             wrapAsWebComponent<FunctionComponent<unknown>>(
-                ():ReactElement => createElement('div'),
+                (): ReactElement => createElement('div'),
                 'TestComponent',
                 {
                     eventToPropertyMapping: {},
