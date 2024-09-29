@@ -101,22 +101,23 @@ export class ReactWeb<
         Mapping<unknown>
 > extends Web<TElement, ExternalProperties, InternalProperties> {
     static attachWebComponentAdapterIfNotExists = true
-    static content:ComponentType|string = 'div'
-    static react:typeof React = React
+    static content: ComponentType|string = 'div'
+    static react: typeof React = React
 
     static _name = 'ReactWebComponent'
 
-    compiledSlots:(
+    compiledSlots: (
         Mapping<ReactRenderItemsFactory> &
-        {children?:ReactRenderItemsFactory}
+        {children?: ReactRenderItemsFactory}
     ) = {}
-    preparedSlots:Mapping<ReactRenderItems> & {children?:ReactRenderItems} = {}
-    reactRoot:null|ReactRoot = null
-    rootReactInstance:null|ReactWeb = null
+    preparedSlots: Mapping<ReactRenderItems> & {children?: ReactRenderItems} =
+        {}
+    reactRoot: null|ReactRoot = null
+    rootReactInstance: null|ReactWeb = null
 
-    readonly self:typeof ReactWeb = ReactWeb
+    readonly self: typeof ReactWeb = ReactWeb
 
-    wrapMemorizingWrapper:boolean|null = null
+    wrapMemorizingWrapper: boolean|null = null
     isWrapped = false
     // region live-cycle
     /**
@@ -149,7 +150,7 @@ export class ReactWeb<
      * Reflects wrapped component state back to web-component's attributes.
      * @param properties - Properties to update in reflected attribute state.
      */
-    reflectExternalProperties(properties:Partial<ExternalProperties>) {
+    reflectExternalProperties(properties: Partial<ExternalProperties>) {
         if (this.isRoot)
             super.reflectExternalProperties(properties)
     }
@@ -158,7 +159,7 @@ export class ReactWeb<
      * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
      */
-    render(reason = 'unknown'):void {
+    render(reason = 'unknown'): void {
         /*
             NOTE: We prevent a nested react component from self rendering since
             they will be rendered by highest react parent.
@@ -187,9 +188,9 @@ export class ReactWeb<
                 render result (only necessary when having a dedicated rendering
                 target like shadow root).
             */
-            let domNode:ChildNode|null = this.firstChild
+            let domNode: ChildNode|null = this.firstChild
             while (domNode) {
-                const nextDomNode:ChildNode|null = domNode.nextSibling
+                const nextDomNode: ChildNode|null = domNode.nextSibling
                 this.removeChild(domNode)
                 domNode = nextDomNode
             }
@@ -203,7 +204,7 @@ export class ReactWeb<
                         this.id ||
                         this.internalProperties.id ||
                         this.externalProperties.id ||
-                        (this as unknown as {name?:number|string}).name ||
+                        (this as unknown as {name?: number|string}).name ||
                         this.internalProperties.name ||
                         this.externalProperties.name
                     )
@@ -255,7 +256,7 @@ export class ReactWeb<
      * @param name - Property name to write.
      * @param value - New value to write.
      */
-    setPropertyValue(name:string, value:unknown) {
+    setPropertyValue(name: string, value: unknown) {
         this.reflectProperties(
             {[name]: copy(value, 1)} as unknown as Partial<ExternalProperties>
         )
@@ -266,7 +267,7 @@ export class ReactWeb<
      * @param name - Property name to write.
      * @param value - New value to write.
      */
-    setInternalPropertyValue(name:string, value:unknown) {
+    setInternalPropertyValue(name: string, value: unknown) {
         if (value === null)
             value = NullSymbol
         else if (value === undefined)
@@ -288,10 +289,10 @@ export class ReactWeb<
      * @returns Transformed react elements.
      */
     preCompileDomNodes(
-        domNodes:Array<Node>, scope:Mapping<unknown> = {}, isFunction = false
-    ):ReactRenderItemsFactory {
+        domNodes: Array<Node>, scope: Mapping<unknown> = {}, isFunction = false
+    ): ReactRenderItemsFactory {
         // NOTE: We ignore empty text nodes (like reacts jsx does).
-        domNodes = domNodes.filter((domNode:Node):boolean => (
+        domNodes = domNodes.filter((domNode: Node): boolean => (
             domNode.nodeType !== Node.TEXT_NODE ||
             typeof domNode.nodeValue === 'string' &&
             domNode.nodeValue.trim() !== ''
@@ -301,25 +302,23 @@ export class ReactWeb<
             return this.preCompileDomNode(domNodes[0], scope, isFunction)
 
         let index = 1
-        const result:Array<ReactRenderItemFactory> = []
+        const result: Array<ReactRenderItemFactory> = []
         for (const node of domNodes) {
             const element = this.preCompileDomNode(
                 node, scope, isFunction, index.toString()
             )
 
-            if (element) {
-                result.push(element)
-                index += 1
-            }
+            result.push(element)
+            index += 1
         }
 
         if (isFunction)
-            return (scope:Mapping<unknown>):ReactRenderItem =>
-                ((...parameters:Array<unknown>):ReactRenderItem => {
-                    const renderResult:Array<ReactRenderItem> = []
+            return (scope: Mapping<unknown>): ReactRenderItem =>
+                ((...parameters: Array<unknown>): ReactRenderItem => {
+                    const renderResult: Array<ReactRenderItem> = []
 
                     for (const factory of result) {
-                        const renderItem:ReactRenderItem = factory(scope)
+                        const renderItem: ReactRenderItem = factory(scope)
                         if (typeof renderItem === 'function')
                             renderResult.push(renderItem(...parameters))
                     }
@@ -342,16 +341,16 @@ export class ReactWeb<
      * @returns Transformed react element.
      */
     preCompileDomNode(
-        domNode:Node,
-        scope:Mapping<unknown> = {},
+        domNode: Node,
+        scope: Mapping<unknown> = {},
         isFunction = false,
-        key?:string
-    ):ReactRenderItemFactory {
+        key?: string
+    ): ReactRenderItemFactory {
         type PreCompiledInternalProperties =
-            InternalProperties & {children?:ReactRenderItemsFactory}
+            InternalProperties & {children?: ReactRenderItemsFactory}
         // region render property
         if (isFunction) {
-            const node:ReactRenderBaseItemFactory = this.preCompileDomNode(
+            const node: ReactRenderBaseItemFactory = this.preCompileDomNode(
                 domNode,
                 {
                     ...scope,
@@ -366,9 +365,9 @@ export class ReactWeb<
                 key
             ) as ReactRenderBaseItemFactory
 
-            return (scope:Mapping<unknown>):ReactRenderItem =>
-                (...parameters:Array<unknown>):ReactRenderBaseItem => {
-                    const firstArgument:unknown = parameters.length > 0 ?
+            return (scope: Mapping<unknown>): ReactRenderItem =>
+                (...parameters: Array<unknown>): ReactRenderBaseItem => {
+                    const firstArgument: unknown = parameters.length > 0 ?
                         parameters[0] :
                         null
 
@@ -386,26 +385,26 @@ export class ReactWeb<
         // endregion
         // region text node
         if (domNode.nodeType === Node.TEXT_NODE) {
-            const value:string =
+            const value: string =
                 typeof domNode.nodeValue === 'string' ?
                     domNode.nodeValue.trim() :
                     ''
 
-            const result:ReactRenderItem = (key && value) ?
+            const result: ReactRenderItem = (key && value) ?
                 createElement(Fragment, {children: value, key}) :
                 value ? value : null
 
-            return ():ReactRenderItem => result
+            return (): ReactRenderItem => result
         }
         // endregion
-        if (!(domNode as HTMLElement).getAttributeNames)
+        if (!(domNode as Partial<HTMLElement>).getAttributeNames)
             return () => null
         // region native elements and wrapped react components
         /// region prepare type and static properties
         const staticProperties = {} as PreCompiledInternalProperties
-        let target:ComponentType|string
+        let target: ComponentType|string
 
-        const isComponent:boolean = this.self.isReactComponent(domNode)
+        const isComponent: boolean = this.self.isReactComponent(domNode)
         if (isComponent) {
             // region pre-compile nested render context
             (domNode as ReactWeb).determineRenderScope()
@@ -432,11 +431,11 @@ export class ReactWeb<
         }
         /// endregion
         /// region pre-compile dynamic properties
-        let knownScopeNames:Array<string> = Object.keys(scope)
-        const compiledProperties:Mapping<PreCompiledItem> = {}
+        let knownScopeNames: Array<string> = Object.keys(scope)
+        const compiledProperties: Mapping<PreCompiledItem> = {}
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
         )) {
-            let value:unknown =
+            let value: unknown =
                 (domNode as HTMLElement).getAttribute(attributeName)
 
             if (value === null)
@@ -504,10 +503,10 @@ export class ReactWeb<
                     continue
                 }
 
-                const eventHandler:TemplateFunction =
+                const eventHandler: TemplateFunction =
                     templateFunction.bind(this)
 
-                value = (...parameters:Array<unknown>):void => {
+                value = (...parameters: Array<unknown>): void => {
                     scope.event = parameters[0]
                     scope.parameters = parameters
 
@@ -522,7 +521,7 @@ export class ReactWeb<
                                 here.
                             */
                             ...originalScopeNames.map(
-                                (name:string):unknown => scope[name]
+                                (name: string): unknown => scope[name]
                             )
                         )
                     } catch (error) {
@@ -539,13 +538,13 @@ export class ReactWeb<
             } else
                 name = attributeName
 
-            const mapping:Mapping = {class: 'className', for: 'htmlFor'}
+            const mapping: Mapping = {class: 'className', for: 'htmlFor'}
             if (Object.prototype.hasOwnProperty.call(mapping, name))
                 name = mapping[name]
 
             name = delimitedToCamelCase(name)
 
-            if ((value as PreCompiledItem)?.originalScopeNames)
+            if ((value as PreCompiledItem|null)?.originalScopeNames)
                 // NOTE: "''" marks a property set like in JSX "{...props}".
                 compiledProperties[extend ? '' : name] =
                     value as PreCompiledItem
@@ -562,25 +561,25 @@ export class ReactWeb<
         /// endregion
         /// region pre-compiled nested nodes of native elements
         if (!isComponent) {
-            const childNodes:Array<Node> = Array.from(domNode.childNodes)
+            const childNodes: Array<Node> = Array.from(domNode.childNodes)
             if (childNodes.length)
                 (staticProperties.children as ReactRenderItemsFactory) =
                     this.preCompileDomNodes(childNodes, scope)
         }
         /// endregion
         /// region create evaluable render function
-        return (runtimeScope:Mapping<unknown>):ReactElement => {
+        return (runtimeScope: Mapping<unknown>): ReactElement => {
             // region prepare scope
             runtimeScope = {...scope, ...runtimeScope}
             runtimeScope.scope = runtimeScope
             // endregion
-            let properties:InternalProperties = {...staticProperties}
+            let properties: InternalProperties = {...staticProperties}
             // region evaluate dynamic properties
             for (const [
                 name, {originalScopeNames, templateFunction}
             ] of Object.entries(compiledProperties)) {
-                const value:unknown = templateFunction(
-                    ...originalScopeNames.map((name:string):unknown =>
+                const value: unknown = templateFunction(
+                    ...originalScopeNames.map((name: string): unknown =>
                         runtimeScope[name]
                     )
                 )
@@ -648,17 +647,17 @@ export class ReactWeb<
      * @returns Transformed react elements.
      */
     evaluatePreCompiledDomNodes(
-        nodes:ReactRenderItemsFactory, scope:Mapping<unknown> = {}
-    ):ReactRenderItems {
+        nodes: ReactRenderItemsFactory, scope: Mapping<unknown> = {}
+    ): ReactRenderItems {
         if (!Array.isArray(nodes))
             return nodes(scope)
 
         if (nodes.length === 1)
             return nodes[0](scope)
 
-        const result:Array<ReactRenderItem> = []
+        const result: Array<ReactRenderItem> = []
         for (const node of nodes) {
-            const element:ReactRenderItem = node(scope)
+            const element: ReactRenderItem = node(scope)
 
             if (element)
                 result.push(element)
@@ -679,10 +678,7 @@ export class ReactWeb<
                     this.slots[name],
                     {...this.scope, parent: this},
                     ([func, 'function'] as Array<PropertyConfiguration>)
-                        .includes(
-                            this.self.propertyTypes &&
-                            this.self.propertyTypes[name]
-                        )
+                        .includes(this.self.propertyTypes[name])
                 )
 
         if (this.slots.default && this.slots.default.length > 0)
@@ -690,14 +686,14 @@ export class ReactWeb<
                 this.slots.default,
                 {...this.scope, parent: this},
                 ([func, 'function'] as Array<PropertyConfiguration>)
-                    .includes(this.self.propertyTypes?.children)
+                    .includes(this.self.propertyTypes.children)
             )
     }
     /**
      * Evaluates pre compiled slots.
      * @param scope - To render again.
      */
-    evaluateSlots(scope:Mapping<unknown>) {
+    evaluateSlots(scope: Mapping<unknown>) {
         this.preparedSlots = {}
 
         for (const name in this.compiledSlots)
@@ -721,13 +717,13 @@ export class ReactWeb<
      * @param domNode - Node to determine from.
      * @returns Boolean indicator.
      */
-    static isReactComponent(domNode:Node):boolean {
-        const type:typeof ReactWeb = domNode.constructor as typeof ReactWeb
+    static isReactComponent(domNode: Node): boolean {
+        const type: typeof ReactWeb = domNode.constructor as typeof ReactWeb
 
         return (
             typeof type.content === 'object' &&
             (
-                type.attachWebComponentAdapterIfNotExists === false ||
+                !type.attachWebComponentAdapterIfNotExists ||
                 type.content.webComponentAdapterWrapped === 'react'
             )
         )
@@ -739,7 +735,7 @@ export class ReactWeb<
     determineRootBinding() {
         super.determineRootBinding()
 
-        let currentElement:Node|null = this.parentNode
+        let currentElement: Node|null = this.parentNode
         while (currentElement) {
             if (this.self.isReactComponent(currentElement)) {
                 this.rootReactInstance = currentElement as ReactWeb
@@ -753,14 +749,15 @@ export class ReactWeb<
      * Applies missing forward ref and or memorizing wrapper to current react
      * component.
      */
-    applyComponentWrapper():void {
+    applyComponentWrapper(): void {
         if (typeof this.self.content === 'string' || this.isWrapped)
             return
 
         this.isWrapped = true
 
-        const wrapped:ComponentType =
-            this.self.content.wrapped as ComponentType || this.self.content
+        const wrapped: ComponentType =
+            this.self.content.wrapped as ComponentType|undefined ||
+            this.self.content
 
         if (this.self.content.webComponentAdapterWrapped) {
             if (this.wrapMemorizingWrapper) {
@@ -773,12 +770,12 @@ export class ReactWeb<
                 this.self.content.displayName = this.self._name
 
             this.self.content = forwardRef((
-                properties:Attributes & Mapping<unknown>,
-                reference:Ref<ComponentAdapter<Attributes>>
-            ):ReactElement => {
+                properties: Attributes & Mapping<unknown>,
+                reference: Ref<ComponentAdapter<Attributes>>
+            ): ReactElement => {
                 useImperativeHandle(
                     reference,
-                    ():ComponentAdapter<Attributes> => ({properties})
+                    (): ComponentAdapter<Attributes> => ({properties})
                 )
 
                 return createElement(wrapped as ReactComponentType, properties)
@@ -805,7 +802,7 @@ export class ReactWeb<
      * updates.
      * @param properties - Properties to prepare.
      */
-    prepareProperties(properties:InternalProperties) {
+    prepareProperties(properties: InternalProperties) {
         extend(properties, this.preparedSlots as Partial<InternalProperties>)
 
         this.self.removeKnownUnwantedPropertyKeys(this.self, properties)
@@ -815,7 +812,7 @@ export class ReactWeb<
             parent via properties.
         */
         if (!properties.ref) {
-            this.instance = createRef() as {current?:ComponentAdapter}
+            this.instance = createRef() as {current?: ComponentAdapter}
             properties.ref = this.instance
         }
     }
@@ -827,11 +824,11 @@ export class ReactWeb<
         if (
             this.instance?.current &&
             (
-                this.instance as {current:ComponentAdapter<InternalProperties>}
+                this.instance as {current: ComponentAdapter<InternalProperties>}
             ).current.properties
         )
             this.reflectProperties(
-                (this.instance as {current:ComponentAdapter}).current
+                (this.instance as {current: ComponentAdapter}).current
                     .properties as Partial<ExternalProperties>
             )
     }
@@ -842,8 +839,8 @@ export class ReactWeb<
      * @param properties - Properties object to trim.
      */
     static removeKnownUnwantedPropertyKeys(
-        target:typeof ReactWeb, properties:Mapping<unknown>
-    ):void {
+        target: typeof ReactWeb, properties: Mapping<unknown>
+    ): void {
         if (typeof target.content === 'string')
             return
 
@@ -881,14 +878,15 @@ export class ReactWeb<
     }
     // endregion
 }
-export const api:WebComponentAPI<
+export const api: WebComponentAPI<
     HTMLElement,
     Mapping<unknown>,
     ReactComponentBaseProperties,
     typeof ReactWeb
 > = {
     component: ReactWeb,
-    register: (tagName:string = camelCaseToDelimited(ReactWeb._name)):void =>
+    register: (tagName: string = camelCaseToDelimited(ReactWeb._name)) => {
         customElements.define(tagName, ReactWeb)
+    }
 }
 export default ReactWeb

@@ -48,19 +48,19 @@ export const wrapAsWebComponent = <
     InternalProperties extends Mapping<unknown> = Mapping<unknown>,
     EventParameters extends Array<unknown> = Array<unknown>
 >(
-        component:Type,
+        component: Type,
         nameHint = 'NoName',
-        configuration:WebComponentConfiguration<
+        configuration: WebComponentConfiguration<
             ExternalProperties, InternalProperties, EventParameters
         > = {}
-    ):WebComponentAPI<
+    ): WebComponentAPI<
         Type,
         ExternalProperties,
         InternalProperties,
         typeof ReactWeb<Type, ExternalProperties, InternalProperties>
     > => {
     // Determine class / function name.
-    const name:string =
+    const name: string =
         component._name ||
         // NOTE: Not minifyable save: "component.name ||"
         /*
@@ -72,17 +72,17 @@ export const wrapAsWebComponent = <
 
     if (configuration.propTypes)
         component.propTypes = configuration.propTypes
-    const propertyTypes:PropertiesConfiguration = component.propTypes || {}
-    const propertyAliases:Mapping =
+    const propertyTypes: PropertiesConfiguration = component.propTypes || {}
+    const propertyAliases: Mapping =
         configuration.propertyAliases || component.propertyAliases || {}
-    const allPropertyNames:Array<string> = unique<string>(
+    const allPropertyNames: Array<string> = unique<string>(
         Object.keys(propertyTypes)
             .concat(Object.keys(propertyAliases))
             .concat(Object.values(propertyAliases))
     )
 
     // NOTE: We extend given configuration properties by base class defined.
-    let propertiesToReflectAsAttributes:AttributesReflectionConfiguration =
+    let propertiesToReflectAsAttributes: AttributesReflectionConfiguration =
         configuration.propertiesToReflectAsAttributes ||
         component.propertiesToReflectAsAttributes ||
         []
@@ -109,8 +109,8 @@ export const wrapAsWebComponent = <
                     name
                 ] = ReactWeb.propertyTypes[name] as string
 
-    const attributeNames:Array<string> =
-        allPropertyNames.map((name:string):string =>
+    const attributeNames: Array<string> =
+        allPropertyNames.map((name: string): string =>
             camelCaseToDelimited(name)
         )
     /**
@@ -121,25 +121,27 @@ export const wrapAsWebComponent = <
         ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
         InternalProperties extends Mapping<unknown> = Mapping<unknown>
     > extends ReactWeb<TElement, ExternalProperties, InternalProperties> {
-        static attachWebComponentAdapterIfNotExists:boolean =
+        static attachWebComponentAdapterIfNotExists: boolean =
             typeof configuration.attachWebComponentAdapterIfNotExists ===
                 'boolean' ?
                 configuration.attachWebComponentAdapterIfNotExists :
                 true
 
-        static content:Type = component
+        static content: Type = component
 
-        static readonly observedAttributes:Array<string> =
+        static readonly observedAttributes: Array<string> =
             ReactWeb.observedAttributes
                 .concat(attributeNames)
                 // NOTE: Respect pre-evaluation indicator attributes.
-                .concat(attributeNames.map((name:string):string => `-${name}`))
+                .concat(
+                    attributeNames.map((name: string): string => `-${name}`)
+                )
 
-        static controllableProperties:Array<string> =
+        static controllableProperties: Array<string> =
             component.controllableProperties ||
             configuration.controllableProperties ||
             []
-        static eventToPropertyMapping:EventToPropertyMapping|null = (
+        static eventToPropertyMapping: EventToPropertyMapping|null = (
             configuration.eventToPropertyMapping === null ?
                 configuration.eventToPropertyMapping :
                 configuration.eventToPropertyMapping ?
@@ -150,26 +152,26 @@ export const wrapAsWebComponent = <
                             {...component.eventToPropertyMapping} :
                             {}
         ) as unknown as EventToPropertyMapping|null
-        static propertyAliases:Mapping = {
+        static propertyAliases: Mapping = {
             ...ReactWeb.propertyAliases, ...propertyAliases
         }
-        static propertiesToReflectAsAttributes:(
+        static propertiesToReflectAsAttributes: (
             AttributesReflectionConfiguration
         ) = propertiesToReflectAsAttributes
-        static propertyTypes:PropertiesConfiguration = {
+        static propertyTypes: PropertiesConfiguration = {
             ...ReactWeb.propertyTypes,
             ...propertyTypes
         } as PropertiesConfiguration
-        static renderProperties:Array<string> =
+        static renderProperties: Array<string> =
             configuration.renderProperties ??
             component.renderProperties ??
             ReactWeb.renderProperties
 
-        static _name:string = name
+        static _name: string = name
 
-        readonly self:typeof ConcreteComponent = ConcreteComponent
+        readonly self: typeof ConcreteComponent = ConcreteComponent
 
-        internalProperties:InternalProperties = (
+        internalProperties: InternalProperties = (
             configuration.internalProperties ?
                 {...configuration.internalProperties} :
                 component.internalProperties ?
@@ -178,7 +180,7 @@ export const wrapAsWebComponent = <
         ) as InternalProperties
     }
 
-    const webComponentAPI:WebComponentAPI<
+    const webComponentAPI: WebComponentAPI<
         Type,
         ExternalProperties,
         InternalProperties,
@@ -187,7 +189,7 @@ export const wrapAsWebComponent = <
         component: ConcreteComponent as typeof ReactWeb<
             Type, ExternalProperties, InternalProperties
         >,
-        register: (tagName:string = camelCaseToDelimited(name)) => {
+        register: (tagName: string = camelCaseToDelimited(name)) => {
             customElements.define(tagName, ConcreteComponent)
         }
     }

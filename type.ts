@@ -25,14 +25,14 @@ import React, {
 import Web from './Web'
 // endregion
 // region exports
-export type CompiledDomNodeTemplateItem = {
-    children:Array<CompiledDomNodeTemplate>
+export interface CompiledDomNodeTemplateItem {
+    children: Array<CompiledDomNodeTemplate>
 
-    error:null|string
+    error: null|string
 
-    scopeNames:Array<string>
-    template:string
-    templateFunction:TemplateFunction
+    scopeNames: Array<string>
+    template: string
+    templateFunction: TemplateFunction
 }
 export type CompiledDomNodeTemplate<NodeType = Node> =
     Map<NodeType, CompiledDomNodeTemplateItem>
@@ -50,7 +50,7 @@ export type EventMapper<
     E extends Mapping<unknown> = Mapping<unknown>,
     I extends Mapping<unknown> = Mapping<unknown>,
     P extends Array<unknown> = Array<unknown>
-> = (...parameters:P) => EventMapping<E, I> | Promise<EventMapping<E, I>>
+> = (...parameters: P) => EventMapping<E, I> | Promise<EventMapping<E, I>>
 export type EventToPropertyMapping<
     E extends Mapping<unknown> = Mapping<unknown>,
     I extends Mapping<unknown> = Mapping<unknown>,
@@ -72,32 +72,32 @@ export type AttributesReflectionConfiguration = (
 )
 
 export type ScopeDeclaration = Array<string>|Mapping<unknown>
-export type PreCompiledItem = {
-    originalScopeNames:Array<string>
-    templateFunction:TemplateFunction
+export interface PreCompiledItem {
+    originalScopeNames: Array<string>
+    templateFunction: TemplateFunction
 }
 
 export type ReactComponentBaseProperties<TElement = HTMLElement> =
     Mapping<unknown> &
     {
-        children?:Array<React.ReactNode>|React.ReactNode
-        dangerouslySetInnerHTML?:HTMLAttributes<TElement>[
+        children?: Array<React.ReactNode>|React.ReactNode
+        dangerouslySetInnerHTML?: HTMLAttributes<TElement>[
             'dangerouslySetInnerHTML'
         ]
-        key?:string
-        ref?:null|{current?:ComponentAdapter}
+        key?: string
+        ref?: null|{current?: ComponentAdapter}
     }
 
-export type ReactRenderBaseItemFactory = (_scope:Mapping<unknown>) =>
+export type ReactRenderBaseItemFactory = (scope: Mapping<unknown>) =>
     ReactRenderBaseItem
-export type ReactRenderItemFactory = (_scope:Mapping<unknown>) =>
+export type ReactRenderItemFactory = (scope: Mapping<unknown>) =>
     ReactRenderItem
 export type ReactRenderItemsFactory =
     Array<ReactRenderItemFactory>|ReactRenderItemFactory
 
 export type ReactRenderBaseItem = ReactElement|string|null
 export type ReactRenderItem =
-    ((..._parameters:Array<unknown>) => ReactRenderBaseItem) |
+    ((...parameters: Array<unknown>) => ReactRenderBaseItem) |
     ReactRenderBaseItem
 export type ReactRenderItems = Array<ReactRenderItem>|ReactRenderItem
 
@@ -106,20 +106,20 @@ export interface WebComponentConfiguration<
     InternalProperties extends Mapping<unknown> = Mapping<unknown>,
     EventParameters extends Array<unknown> = Array<unknown>
 > {
-    attachWebComponentAdapterIfNotExists?:boolean
+    attachWebComponentAdapterIfNotExists?: boolean
 
-    controllableProperties?:Array<string>
-    eventToPropertyMapping?:(
+    controllableProperties?: Array<string>
+    eventToPropertyMapping?: (
         EventToPropertyMapping<
             ExternalProperties, InternalProperties, EventParameters
         > |
         null
     )
-    internalProperties?:InternalProperties
-    propertiesToReflectAsAttributes?:AttributesReflectionConfiguration
-    propertyAliases?:Mapping
-    propTypes?:PropertiesConfiguration
-    renderProperties?:Array<string>
+    internalProperties?: InternalProperties
+    propertiesToReflectAsAttributes?: AttributesReflectionConfiguration
+    propertyAliases?: Mapping
+    propTypes?: PropertiesConfiguration
+    renderProperties?: Array<string>
 }
 export interface StaticWebComponent<
     ComponentType = unknown,
@@ -129,11 +129,11 @@ export interface StaticWebComponent<
 > extends WebComponentConfiguration<
     ExternalProperties, InternalProperties, EventParameters
 > {
-    webComponentAdapterWrapped?:string
-    wrapped?:ComponentType
+    webComponentAdapterWrapped?: string
+    wrapped?: ComponentType
 
-    _name?:string
-    ___types?:{name?:{name?:string}}
+    _name?: string
+    ___types?: {name?: {name?: string}}
 }
 export type ComponentType<PropertyTypes = Mapping<unknown>> =
     Omit<ReactComponentType<PropertyTypes>, 'propTypes'> &
@@ -141,17 +141,17 @@ export type ComponentType<PropertyTypes = Mapping<unknown>> =
 export interface ComponentAdapter<
     Properties = Mapping<unknown>, State = Mapping<unknown>
 > {
-    properties?:Properties
-    state?:State
+    properties?: Properties
+    state?: State
 }
-export type WebComponentAPI<
+export interface WebComponentAPI<
     TElement = HTMLElement,
     ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
     InternalProperties extends Mapping<unknown> = Mapping<unknown>,
     Type extends typeof Web<TElement, ExternalProperties, InternalProperties> =
         typeof Web<TElement, ExternalProperties, InternalProperties>
-> = {
-    component:Type
-    register:(tagName?:string) => void
+> {
+    component: Type
+    register: (tagName?: string) => void
 }
 // endregion

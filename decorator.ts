@@ -38,14 +38,14 @@ import {PropertiesConfiguration, PropertyConfiguration} from './type'
  * @returns Generated decorator.
  */
 export function property(
-    options:{
-        alias?:string
-        readAttribute?:boolean
-        type?:PropertyConfiguration
-        update?:boolean
-        writeAttribute?:boolean|PropertyConfiguration
+    options: {
+        alias?: string
+        readAttribute?: boolean
+        type?: PropertyConfiguration
+        update?: boolean
+        writeAttribute?: boolean|PropertyConfiguration
     } = {}
-):PropertyDecorator {
+): PropertyDecorator {
     options = {readAttribute: true, type: string, ...options}
     /**
      * Registers given property to different property / attribute conversion
@@ -56,15 +56,15 @@ export function property(
      * @param target - Instance to apply given property to.
      * @param name - Field name to apply.
      */
-    return function(target:object, name:string|symbol):void {
+    return function(target: object, name: string|symbol): void {
         if (typeof name !== 'string')
             return
 
         type TargetType = typeof target & typeof Web
 
-        const self:Partial<TargetType> =
-            (target as unknown as {self?:TargetType}).self ||
-            (target as unknown as {constructor:TargetType}).constructor
+        const self: Partial<TargetType> =
+            (target as unknown as {self?: TargetType}).self ||
+            (target as unknown as {constructor: TargetType}).constructor
 
         if (options.readAttribute) {
             if (!Object.prototype.hasOwnProperty.call(
@@ -74,7 +74,7 @@ export function property(
                     [...self.observedAttributes] :
                     []
 
-            const attributeName:string = camelCaseToDelimited(name)
+            const attributeName: string = camelCaseToDelimited(name)
             if (
                 self.observedAttributes &&
                 !self.observedAttributes.includes(attributeName)
@@ -119,7 +119,7 @@ export function property(
                     self.propertiesToReflectAsAttributes, name
                 )
             ) {
-                let result:PropertyConfiguration|undefined
+                let result: PropertyConfiguration|undefined
                 if (typeof options.writeAttribute === 'boolean') {
                     if (
                         /*
