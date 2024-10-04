@@ -30,6 +30,7 @@ import {
     isFunction,
     lowerCase,
     Mapping,
+    PositiveEvaluationResult,
     PlainObject,
     represent,
     TemplateFunction,
@@ -593,7 +594,7 @@ export class Web<
                     if (name.startsWith('attribute-'))
                         (domNode as HTMLElement).setAttribute(
                             name.substring('attribute-'.length),
-                            evaluated.result
+                            (evaluated as PositiveEvaluationResult).result
                         )
                     else
                         /*
@@ -602,7 +603,8 @@ export class Web<
                         */
                         domNode[delimitedToCamelCase(
                             name.substring('property-'.length)
-                        ) as 'textContent'] = evaluated.result
+                        ) as 'textContent'] =
+                            (evaluated as PositiveEvaluationResult).result
                 } else if (name.startsWith('on-')) {
                     if (!this.domNodeEventBindings.has(domNode))
                         this.domNodeEventBindings.set(
@@ -1972,7 +1974,8 @@ export class Web<
         */
         const renderTargetDomNode: HTMLDivElement =
             document.createElement('div')
-        renderTargetDomNode.innerHTML = evaluated.result
+        renderTargetDomNode.innerHTML =
+            (evaluated as PositiveEvaluationResult).result
 
         this.applySlots(renderTargetDomNode, {...this.scope, parent: this})
 
