@@ -236,7 +236,7 @@ export class Web<
 
     readonly self = Web
 
-    slots: Mapping<HTMLElement> & {default?: Array<Node>} = {}
+    slots: Mapping<HTMLElement|undefined> & {default?: Array<Node>} = {}
     // endregion
     // region live cycle hooks
     /**
@@ -1209,7 +1209,7 @@ export class Web<
                         .map((domNode: Node): Node =>
                             this.grabSlotContent(domNode)
                         )
-            else if (Object.prototype.hasOwnProperty.call(this.slots, name)) {
+            else if (this.slots[name]) {
                 if (this.self.renderSlots) {
                     if (this.self.evaluateSlots)
                         this.evaluateDomNodeTemplate(this.slots[name], scope)

@@ -670,10 +670,7 @@ export class ReactWeb<
      */
     preCompileSlots() {
         for (const name in this.slots)
-            if (
-                Object.prototype.hasOwnProperty.call(this.slots, name) &&
-                name !== 'default'
-            )
+            if (this.slots[name] && name !== 'default')
                 this.compiledSlots[name] = this.preCompileDomNode(
                     this.slots[name],
                     {...this.scope, parent: this},
