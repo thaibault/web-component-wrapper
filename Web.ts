@@ -305,11 +305,11 @@ export class Web<
                     this.batchedAttributeUpdateRunning = false
                     this.batchedUpdateRunning = false
 
-                    this.render('attributeChanged')
+                    void this.render('attributeChanged')
                 })
             }
         } else
-            this.render('attributeChanged')
+            void this.render('attributeChanged')
     }
     /**
      * Triggered when this component is mounted into the document.
@@ -347,10 +347,10 @@ export class Web<
         this.reflectExternalProperties(this.externalProperties)
 
         if (this.runDomConnectionAndRenderingInSameEventQueue)
-            this.render('connected')
+            void this.render('connected')
         else
             void timeout(() => {
-                this.render('connected')
+                void this.render('connected')
             })
     }
     /**
@@ -508,7 +508,7 @@ export class Web<
 
                 void timeout((): void => {
                     if (value !== undefined && this.isStateProperty(name)) {
-                        this.render('preStatePropertyChanged')
+                        void this.render('preStatePropertyChanged')
 
                         void timeout(() => {
                             this.setInternalPropertyValue(name, undefined)
@@ -516,7 +516,7 @@ export class Web<
                             this.batchedPropertyUpdateRunning = false
                             this.batchedUpdateRunning = false
 
-                            this.render('postStatePropertyChanged')
+                            void this.render('postStatePropertyChanged')
 
                             this.triggerOutputEvents()
                         })
@@ -524,7 +524,7 @@ export class Web<
                         this.batchedPropertyUpdateRunning = false
                         this.batchedUpdateRunning = false
 
-                        this.render('propertyChanged')
+                        void this.render('propertyChanged')
 
                         this.triggerOutputEvents()
                     }
@@ -533,14 +533,14 @@ export class Web<
         } else {
             const isStateProperty: boolean = this.isStateProperty(name)
 
-            this.render(
+            void this.render(
                 isStateProperty ? 'preStatePropertyChanged' : 'propertyChanged'
             )
 
             if (value !== undefined && isStateProperty) {
                 this.setInternalPropertyValue(name, undefined)
 
-                this.render('postStatePropertyChanged')
+                void this.render('postStatePropertyChanged')
             }
 
             this.triggerOutputEvents()
@@ -1886,11 +1886,11 @@ export class Web<
                 void timeout(() => {
                     this.batchedUpdateRunning = false
 
-                    this.render(reason)
+                    void this.render(reason)
                 })
             }
         } else
-            this.render(reason)
+            void this.render(reason)
     }
     /**
      * Creates shadow root if not created yet and assigns to current root
@@ -1946,14 +1946,16 @@ export class Web<
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
+     * @returns A promise resolving when rendering has finished. A promise may
+     * be needed for classes inheriting from this class.
      */
-    render(reason = 'unknown'): void {
+    render(reason = 'unknown'): Promise<void> {
         this.determineRenderScope()
 
         if (!this.dispatchEvent(new CustomEvent(
             'render', {detail: {reason, scope: this.scope}}
         )))
-            return
+            return Promise.resolve()
 
         const evaluated: EvaluationResult = evaluate(
             `\`${this.self.content as string}\``, this.scope
@@ -1961,7 +1963,7 @@ export class Web<
         if (evaluated.error) {
             console.warn(`Failed to process template: ${evaluated.error}`)
 
-            return
+            return Promise.resolve()
         }
 
         this.applyShadowRootIfNotExisting()
@@ -1984,6 +1986,8 @@ export class Web<
         this.applyBindings(
             this.root.firstChild, this.scope, this.self.renderSlots
         )
+
+        return Promise.resolve()
     }
     /// endregion
     // endregion
