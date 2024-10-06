@@ -158,8 +158,10 @@ export class ReactWeb<
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
+     * @returns A promise resolving when rendering has finished. A promise may
+     * be needed for classes inheriting from this class.
      */
-    render(reason = 'unknown'): void {
+    async render(reason = 'unknown'): Promise<void> {
         /*
             NOTE: We prevent a nested react component from self rendering since
             they will be rendered by highest react parent.
@@ -211,14 +213,17 @@ export class ReactWeb<
                 }
             )
 
-        flushSync(() => {
-            this.reactRoot?.render(
-                createElement<InternalProperties>(
-                    this.self.content as
-                        ReactComponentType<InternalProperties>,
-                    this.internalProperties
+        await new Promise<void>((resolve: () => void) => {
+            flushSync(() => {
+                this.reactRoot?.render(
+                    createElement<InternalProperties>(
+                        this.self.content as
+                            ReactComponentType<InternalProperties>,
+                        this.internalProperties
+                    )
                 )
-            )
+                resolve()
+            })
         })
 
         /*
@@ -228,7 +233,7 @@ export class ReactWeb<
         if (this.instance?.current)
             this.reflectInstanceProperties()
         else
-            void timeout(this.reflectInstanceProperties)
+            await timeout(this.reflectInstanceProperties)
     }
     // endregion
     // region property handling
