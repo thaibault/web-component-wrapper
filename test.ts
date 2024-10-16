@@ -62,7 +62,7 @@ describe('Web', (): void => {
 // region ReactWeb
 describe('ReactWeb', (): void => {
     test('constructor', async (): Promise<void> => {
-        let triggerOnEvent: (() => void)|undefined
+        let triggerOnEvent: (() => void) | undefined
         let componentProperty = 'initial'
 
         const component: FunctionComponent<{
