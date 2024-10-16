@@ -101,7 +101,7 @@ export class ReactWeb<
         Mapping<unknown>
 > extends Web<TElement, ExternalProperties, InternalProperties> {
     static attachWebComponentAdapterIfNotExists = true
-    static content: ComponentType|string = 'div'
+    static content: ComponentType | string = 'div'
     static react: typeof React = React
 
     static _name = 'ReactWebComponent'
@@ -112,12 +112,12 @@ export class ReactWeb<
     ) = {}
     preparedSlots: Mapping<ReactRenderItems> & {children?: ReactRenderItems} =
         {}
-    reactRoot: null|ReactRoot = null
-    rootReactInstance: null|ReactWeb = null
+    reactRoot: null | ReactRoot = null
+    rootReactInstance: null | ReactWeb = null
 
     readonly self: typeof ReactWeb = ReactWeb
 
-    wrapMemorizingWrapper: boolean|null = null
+    wrapMemorizingWrapper: boolean | null = null
     isWrapped = false
     // region live-cycle
     /**
@@ -190,9 +190,9 @@ export class ReactWeb<
                 render result (only necessary when having a dedicated rendering
                 target like shadow root).
             */
-            let domNode: ChildNode|null = this.firstChild
+            let domNode: ChildNode | null = this.firstChild
             while (domNode) {
-                const nextDomNode: ChildNode|null = domNode.nextSibling
+                const nextDomNode: ChildNode | null = domNode.nextSibling
                 this.removeChild(domNode)
                 domNode = nextDomNode
             }
@@ -206,7 +206,7 @@ export class ReactWeb<
                         this.id ||
                         this.internalProperties.id ||
                         this.externalProperties.id ||
-                        (this as unknown as {name?: number|string}).name ||
+                        (this as unknown as {name?: number | string}).name ||
                         this.internalProperties.name ||
                         this.externalProperties.name
                     )
@@ -407,7 +407,7 @@ export class ReactWeb<
         // region native elements and wrapped react components
         /// region prepare type and static properties
         const staticProperties = {} as PreCompiledInternalProperties
-        let target: ComponentType|string
+        let target: ComponentType | string
 
         const isComponent: boolean = this.self.isReactComponent(domNode)
         if (isComponent) {
@@ -549,7 +549,7 @@ export class ReactWeb<
 
             name = delimitedToCamelCase(name)
 
-            if ((value as PreCompiledItem|null)?.originalScopeNames)
+            if ((value as PreCompiledItem | null)?.originalScopeNames)
                 // NOTE: "''" marks a property set like in JSX "{...props}".
                 compiledProperties[extend ? '' : name] =
                     value as PreCompiledItem
@@ -737,7 +737,7 @@ export class ReactWeb<
     determineRootBinding() {
         super.determineRootBinding()
 
-        let currentElement: Node|null = this.parentNode
+        let currentElement: Node | null = this.parentNode
         while (currentElement) {
             if (this.self.isReactComponent(currentElement)) {
                 this.rootReactInstance = currentElement as ReactWeb
@@ -758,7 +758,7 @@ export class ReactWeb<
         this.isWrapped = true
 
         const wrapped: ComponentType =
-            this.self.content.wrapped as ComponentType|undefined ||
+            this.self.content.wrapped as ComponentType | undefined ||
             this.self.content
 
         if (this.self.content.webComponentAdapterWrapped) {

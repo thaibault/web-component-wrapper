@@ -28,7 +28,7 @@ import Web from './Web'
 export interface CompiledDomNodeTemplateItem {
     children: Array<CompiledDomNodeTemplate>
 
-    error: null|string
+    error: null | string
 
     scopeNames: Array<string>
     template: string
@@ -55,13 +55,13 @@ export type EventToPropertyMapping<
     E extends Mapping<unknown> = Mapping<unknown>,
     I extends Mapping<unknown> = Mapping<unknown>,
     P extends Array<unknown> = Array<unknown>
-> = Mapping<true|EventMapper<E, I, P>>
+> = Mapping<true | EventMapper<E, I, P>>
 
-export type PropertyConfiguration = string|ValueOf<typeof PropertyTypes>
+export type PropertyConfiguration = string | ValueOf<typeof PropertyTypes>
 export type ValidationMapping = ValidationMap<ValueOf<typeof PropertyTypes>>
 export type PropertiesValidationMap =
     Mapping<ValueOf<typeof PropertyTypes>> & ValidationMapping
-export type PropertiesConfiguration = Mapping|PropertiesValidationMap
+export type PropertiesConfiguration = Mapping | PropertiesValidationMap
 export type NormalizedAttributesReflectionConfiguration =
     Map<string, PropertyConfiguration>
 export type AttributesReflectionConfiguration = (
@@ -71,7 +71,7 @@ export type AttributesReflectionConfiguration = (
     NormalizedAttributesReflectionConfiguration
 )
 
-export type ScopeDeclaration = Array<string>|Mapping<unknown>
+export type ScopeDeclaration = Array<string> | Mapping<unknown>
 export interface PreCompiledItem {
     originalScopeNames: Array<string>
     templateFunction: TemplateFunction
@@ -80,12 +80,12 @@ export interface PreCompiledItem {
 export type ReactComponentBaseProperties<TElement = HTMLElement> =
     Mapping<unknown> &
     {
-        children?: Array<React.ReactNode>|React.ReactNode
+        children?: Array<React.ReactNode> | React.ReactNode
         dangerouslySetInnerHTML?: HTMLAttributes<TElement>[
             'dangerouslySetInnerHTML'
         ]
         key?: string
-        ref?: null|{current?: ComponentAdapter}
+        ref?: null | {current?: ComponentAdapter}
     }
 
 export type ReactRenderBaseItemFactory = (scope: Mapping<unknown>) =>
@@ -93,13 +93,13 @@ export type ReactRenderBaseItemFactory = (scope: Mapping<unknown>) =>
 export type ReactRenderItemFactory = (scope: Mapping<unknown>) =>
     ReactRenderItem
 export type ReactRenderItemsFactory =
-    Array<ReactRenderItemFactory>|ReactRenderItemFactory
+    Array<ReactRenderItemFactory> | ReactRenderItemFactory
 
-export type ReactRenderBaseItem = ReactElement|string|null
+export type ReactRenderBaseItem = ReactElement | string | null
 export type ReactRenderItem =
     ((...parameters: Array<unknown>) => ReactRenderBaseItem) |
     ReactRenderBaseItem
-export type ReactRenderItems = Array<ReactRenderItem>|ReactRenderItem
+export type ReactRenderItems = Array<ReactRenderItem> | ReactRenderItem
 
 export interface WebComponentConfiguration<
     ExternalProperties extends Mapping<unknown> = Mapping<unknown>,

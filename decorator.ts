@@ -43,7 +43,7 @@ export function property(
         readAttribute?: boolean
         type?: PropertyConfiguration
         update?: boolean
-        writeAttribute?: boolean|PropertyConfiguration
+        writeAttribute?: boolean | PropertyConfiguration
     } = {}
 ): PropertyDecorator {
     options = {readAttribute: true, type: string, ...options}
@@ -56,7 +56,7 @@ export function property(
      * @param target - Instance to apply given property to.
      * @param name - Field name to apply.
      */
-    return function(target: object, name: string|symbol): void {
+    return function(target: object, name: string | symbol): void {
         if (typeof name !== 'string')
             return
 
@@ -119,7 +119,7 @@ export function property(
                     self.propertiesToReflectAsAttributes, name
                 )
             ) {
-                let result: PropertyConfiguration|undefined
+                let result: PropertyConfiguration | undefined
                 if (typeof options.writeAttribute === 'boolean') {
                     if (
                         /*
