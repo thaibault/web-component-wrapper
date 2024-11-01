@@ -28,6 +28,7 @@ import {
     EvaluationResult,
     extend,
     isFunction,
+    isObject,
     lowerCase,
     Mapping,
     PositiveEvaluationResult,
@@ -1568,12 +1569,7 @@ export class Web<
             }
         }
         // endregion
-        if (
-            !handled &&
-            parameters.length > 0 &&
-            parameters[0] !== null &&
-            typeof parameters[0] === 'object'
-        ) {
+        if (!handled && parameters.length > 0 && isObject(parameters[0])) {
             /*
                 Identified as somehow throw data back event (no synthetic
                 event; derived from a user triggered one) when following
@@ -1910,18 +1906,7 @@ export class Web<
                     ).ShadyDOM.wrap(this) :
                     this
             ).attachShadow(
-                (
-                    /*
-                        eslint-disable
-                        @typescript-eslint/no-unnecessary-condition
-                    */
-                    this.self.shadowDOM !== null &&
-                    /*
-                        eslint-enable
-                        @typescript-eslint/no-unnecessary-condition
-                    */
-                    typeof this.self.shadowDOM === 'object'
-                ) ?
+                isObject(this.self.shadowDOM) ?
                     this.self.shadowDOM :
                     {mode: 'open'}
             )
