@@ -321,7 +321,7 @@ export class Web<
         // NOTE: Hack to support IE 11 here.
         try {
             (this as {isConnected: boolean}).isConnected = true
-        } catch (_error) {
+        } catch {
             // Ignore error.
         }
 
@@ -361,7 +361,7 @@ export class Web<
         // NOTE: Hack to support IE 11 here.
         try {
             (this as {isConnected: boolean}).isConnected = false
-        } catch (_error) {
+        } catch {
             // Ignore error.
         }
 
