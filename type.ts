@@ -60,7 +60,7 @@ export type EventToPropertyMapping<
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type PropertyType = string | ValueOf<typeof PropertyTypes>
 export type PropertyConfiguration = PropertyType
-export type ValidationMapping = ValidationMap<PropertyType>
+export type ValidationMapping = ValidationMap<ValueOf<typeof PropertyTypes>>
 export type PropertiesValidationMap =
     Mapping<ValueOf<typeof PropertyTypes>> // & ValidationMapping
 export type PropertiesConfiguration = Mapping | PropertiesValidationMap
