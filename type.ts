@@ -57,7 +57,8 @@ export type EventToPropertyMapping<
     P extends Array<unknown> = Array<unknown>
 > = Mapping<true | EventMapper<E, I, P>>
 
-export type PropertyType = string // ValueOf<typeof PropertyTypes>
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+export type PropertyType = string | ValueOf<typeof PropertyTypes>
 export type PropertyConfiguration = PropertyType
 export type ValidationMapping = ValidationMap<PropertyType>
 export type PropertiesValidationMap =

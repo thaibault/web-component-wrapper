@@ -1065,9 +1065,7 @@ export class Web<
                 if (Object.prototype.hasOwnProperty.call(
                     Web.propertyTypes, name
                 ))
-                    newValue.set(
-                        name, Web.propertyTypes[name] as PropertyConfiguration
-                    )
+                    newValue.set(name, Web.propertyTypes[name])
 
             return newValue
         }
@@ -1144,7 +1142,7 @@ export class Web<
                     this.internalProperties, name
                 ) &&
                 ([func, 'function'] as Array<PropertyConfiguration>)
-                    .includes(type as PropertyConfiguration) &&
+                    .includes(type) &&
                 !this.self.renderProperties.includes(name)
             ) {
                 this.outputEventNames.add(name)

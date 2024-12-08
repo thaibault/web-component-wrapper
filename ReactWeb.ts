@@ -678,10 +678,7 @@ export class ReactWeb<
                     this.slots[name],
                     {...this.scope, parent: this},
                     ([func, 'function'] as Array<PropertyConfiguration>)
-                        .includes(
-                            this.self.propertyTypes[name] as
-                                PropertyConfiguration
-                        )
+                        .includes(this.self.propertyTypes[name])
                 )
 
         if (this.slots.default && this.slots.default.length > 0)
@@ -689,10 +686,7 @@ export class ReactWeb<
                 this.slots.default,
                 {...this.scope, parent: this},
                 ([func, 'function'] as Array<PropertyConfiguration>)
-                    .includes(
-                        this.self.propertyTypes.children as
-                            PropertyConfiguration
-                    )
+                    .includes(this.self.propertyTypes.children)
             )
     }
     /**
