@@ -16,7 +16,7 @@
 // region imports
 import {describe, expect, jest, test} from '@jest/globals'
 import {Mapping, timeout, ValueOf} from 'clientnode'
-import {func, string} from 'clientnode/dist/property-types'
+import {func, string} from 'clientnode/property-types'
 import {createElement, FunctionComponent, ReactElement} from 'react'
 
 import wrapAsWebComponent from './index'

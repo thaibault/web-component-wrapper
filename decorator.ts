@@ -18,7 +18,7 @@
 */
 // region imports
 import {camelCaseToDelimited, copy} from 'clientnode'
-import {string} from 'clientnode/dist/property-types'
+import {string} from 'clientnode/property-types'
 
 import Web from './Web'
 import {PropertiesConfiguration, PropertyConfiguration} from './type'
@@ -96,7 +96,7 @@ export function property(
                     !Object.prototype.hasOwnProperty.call(self, name)
                 )
             )
-                self.propertyTypes[name] = options.type as string
+                self.propertyTypes[name] = options.type
         }
 
         if (options.writeAttribute) {

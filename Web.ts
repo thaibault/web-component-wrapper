@@ -48,19 +48,19 @@ import {
     boolean,
     element,
     elementType,
-    instanceOf,
+    exact,
     func,
+    instanceOf,
     node,
     number,
     object,
     objectOf,
     oneOf,
     oneOfType,
-    exact,
     shape,
     string,
     symbol
-} from 'clientnode/dist/property-types'
+} from 'clientnode/property-types'
 
 import property from './decorator'
 import {
@@ -1065,7 +1065,9 @@ export class Web<
                 if (Object.prototype.hasOwnProperty.call(
                     Web.propertyTypes, name
                 ))
-                    newValue.set(name, Web.propertyTypes[name])
+                    newValue.set(
+                        name, Web.propertyTypes[name] as PropertyConfiguration
+                    )
 
             return newValue
         }
