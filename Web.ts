@@ -18,40 +18,22 @@
 */
 // region imports
 import {
-    any,
-    array,
-    arrayOf,
-    boolean,
     camelCaseToDelimited,
     compile,
     CompilationResult,
     convertPlainObjectToMap,
     copy,
     delimitedToCamelCase,
-    element,
-    elementType,
     evaluate,
     EvaluationResult,
-    exact,
     extend,
-    func,
-    instanceOf,
     isFunction,
     isObject,
     lowerCase,
     Mapping,
-    node,
-    number,
-    object,
-    objectOf,
-    oneOf,
-    oneOfType,
     PositiveEvaluationResult,
     PlainObject,
     represent,
-    shape,
-    string,
-    symbol,
     TemplateFunction,
     timeout,
     unique,
@@ -59,6 +41,26 @@ import {
     UTILITY_SCOPE_NAMES,
     UTILITY_SCOPE_VALUES
 } from 'clientnode'
+import {
+    any,
+    array,
+    arrayOf,
+    boolean,
+    element,
+    elementType,
+    exact,
+    func,
+    instanceOf,
+    node,
+    number,
+    object,
+    objectOf,
+    oneOf,
+    oneOfType,
+    shape,
+    string,
+    symbol
+} from 'clientnode/property-types'
 
 import property from './decorator'
 import {
@@ -1063,7 +1065,9 @@ export class Web<
                 if (Object.prototype.hasOwnProperty.call(
                     Web.propertyTypes, name
                 ))
-                    newValue.set(name, Web.propertyTypes[name])
+                    newValue.set(
+                        name, Web.propertyTypes[name] as PropertyConfiguration
+                    )
 
             return newValue
         }

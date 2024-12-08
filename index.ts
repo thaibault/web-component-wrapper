@@ -98,7 +98,7 @@ export const wrapAsWebComponent = <
                     Array<string>
             )
                 propertiesToReflectAsAttributes.set(
-                    name, ReactWeb.propertyTypes[name]
+                    name, ReactWeb.propertyTypes[name] as string
                 )
         else if (typeof propertiesToReflectAsAttributes === 'object')
             for (

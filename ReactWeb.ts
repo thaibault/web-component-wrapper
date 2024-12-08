@@ -23,14 +23,12 @@ import {
     copy,
     delimitedToCamelCase,
     extend,
-    func,
     Mapping,
-    NullSymbol,
     represent,
     TemplateFunction,
-    timeout,
-    UndefinedSymbol
+    timeout
 } from 'clientnode'
+import {func, NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
 import React, {
     Attributes,
     ComponentType as ReactComponentType,
@@ -680,7 +678,10 @@ export class ReactWeb<
                     this.slots[name],
                     {...this.scope, parent: this},
                     ([func, 'function'] as Array<PropertyConfiguration>)
-                        .includes(this.self.propertyTypes[name])
+                        .includes(
+                            this.self.propertyTypes[name] as
+                                PropertyConfiguration
+                        )
                 )
 
         if (this.slots.default && this.slots.default.length > 0)
@@ -688,7 +689,10 @@ export class ReactWeb<
                 this.slots.default,
                 {...this.scope, parent: this},
                 ([func, 'function'] as Array<PropertyConfiguration>)
-                    .includes(this.self.propertyTypes.children)
+                    .includes(
+                        this.self.propertyTypes.children as
+                            PropertyConfiguration
+                    )
             )
     }
     /**
