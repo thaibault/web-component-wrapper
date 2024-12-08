@@ -81,7 +81,7 @@
     "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",
     "@webcomponents/webcomponentsjs": "^2.8.0",
-    "clientnode": "^3.0.1235",
+    "clientnode": "^3.0.1237",
     "documentation-website": "^1.0.340",
     "eslint": "^9.16.0",
     "eslint-config-google": "^0.14.0",
@@ -92,7 +92,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript-eslint": "^8.17.0",
-    "weboptimizer": "^2.0.1542",
+    "weboptimizer": "^2.0.1543",
     "webpack-dev-server": "^5.1.0"
   },
   "peerDependencies": {

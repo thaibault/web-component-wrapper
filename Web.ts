@@ -18,22 +18,40 @@
 */
 // region imports
 import {
+    any,
+    array,
+    arrayOf,
+    boolean,
     camelCaseToDelimited,
     compile,
     CompilationResult,
     convertPlainObjectToMap,
     copy,
     delimitedToCamelCase,
+    element,
+    elementType,
     evaluate,
     EvaluationResult,
+    exact,
     extend,
+    func,
+    instanceOf,
     isFunction,
     isObject,
     lowerCase,
     Mapping,
+    node,
+    number,
+    object,
+    objectOf,
+    oneOf,
+    oneOfType,
     PositiveEvaluationResult,
     PlainObject,
     represent,
+    shape,
+    string,
+    symbol,
     TemplateFunction,
     timeout,
     unique,
@@ -41,26 +59,6 @@ import {
     UTILITY_SCOPE_NAMES,
     UTILITY_SCOPE_VALUES
 } from 'clientnode'
-import {
-    any,
-    array,
-    arrayOf,
-    boolean,
-    element,
-    elementType,
-    instanceOf,
-    func,
-    node,
-    number,
-    object,
-    objectOf,
-    oneOf,
-    oneOfType,
-    exact,
-    shape,
-    string,
-    symbol
-} from 'clientnode/dist/property-types'
 
 import property from './decorator'
 import {

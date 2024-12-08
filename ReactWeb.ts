@@ -23,14 +23,14 @@ import {
     copy,
     delimitedToCamelCase,
     extend,
+    func,
     Mapping,
+    NullSymbol,
     represent,
     TemplateFunction,
-    timeout
+    timeout,
+    UndefinedSymbol
 } from 'clientnode'
-import {
-    func, NullSymbol, UndefinedSymbol
-} from 'clientnode/dist/property-types'
 import React, {
     Attributes,
     ComponentType as ReactComponentType,

@@ -16,8 +16,9 @@
     endregion
 */
 // region imports
-import {Mapping, TemplateFunction, ValueOf} from 'clientnode'
-import PropertyTypes, {ValidationMap} from 'clientnode/dist/property-types'
+import {
+    Mapping, PropertyTypes, TemplateFunction, ValidationMap, ValueOf
+} from 'clientnode'
 import React, {
     ComponentType as ReactComponentType, HTMLAttributes, ReactElement
 } from 'react'

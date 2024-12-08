@@ -17,8 +17,7 @@
     endregion
 */
 // region imports
-import {camelCaseToDelimited, copy} from 'clientnode'
-import {string} from 'clientnode/dist/property-types'
+import {camelCaseToDelimited, copy, string} from 'clientnode'
 
 import Web from './Web'
 import {PropertiesConfiguration, PropertyConfiguration} from './type'
