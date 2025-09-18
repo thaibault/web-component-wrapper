@@ -3002,12 +3002,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^24.5.1":
-  version: 24.5.1
-  resolution: "@types/node@npm:24.5.1"
+"@types/node@npm:^24.5.2":
+  version: 24.5.2
+  resolution: "@types/node@npm:24.5.2"
   dependencies:
     undici-types: "npm:~7.12.0"
-  checksum: 10c0/5f0cb038be789b58170e616452ba1f8ebb85bf2fbce58a7e32b1eb08391f64f5e31a9cdbccefbfcd9e6d73b66b564b5e037a1d678ab20213559a32e1d7b6ce17
+  checksum: 10c0/96baaca6564d39c6f7f6eddd73ce41e2a7594ef37225cd52df3be36fad31712af8ae178387a72d0b80f2e2799e7fd30c014bc0ae9eb9f962d9079b691be00c48
   languageName: node
   linkType: hard
 
@@ -5290,31 +5290,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clientnode@npm:3.0.1306":
-  version: 3.0.1306
-  resolution: "clientnode@npm:3.0.1306"
-  peerDependencies:
-    "@babel/runtime": "*"
-    "@types/prop-types": "*"
-    jquery: "*"
-    node-fetch: "*"
-    prop-types: "*"
-  peerDependenciesMeta:
-    "@babel/runtime":
-      optional: true
-    "@types/prop-types":
-      optional: true
-    jquery:
-      optional: true
-    node-fetch:
-      optional: true
-    prop-types:
-      optional: true
-  checksum: 10c0/c18daaf416eb8316570a3c0095bbd46760aeb754a668038d4f58b475e6ad22324a663e07f318bde2cc067f97e55a364ab7601bced8a97434b08de5b84bb19709
-  languageName: node
-  linkType: hard
-
-"clientnode@npm:^3.0.1307":
+"clientnode@npm:3.0.1307":
   version: 3.0.1307
   resolution: "clientnode@npm:3.0.1307"
   peerDependencies:
@@ -5335,6 +5311,30 @@ __metadata:
     prop-types:
       optional: true
   checksum: 10c0/c2e272614161e7117ed8907bc579753fccc04697cfdbf2e14ef61c0ef4e03c0f5066df5579cf1b4246ab61fb4e6e8e61fe061938ba60d957e162d14752590b15
+  languageName: node
+  linkType: hard
+
+"clientnode@npm:^3.0.1308":
+  version: 3.0.1308
+  resolution: "clientnode@npm:3.0.1308"
+  peerDependencies:
+    "@babel/runtime": "*"
+    "@types/prop-types": "*"
+    jquery: "*"
+    node-fetch: "*"
+    prop-types: "*"
+  peerDependenciesMeta:
+    "@babel/runtime":
+      optional: true
+    "@types/prop-types":
+      optional: true
+    jquery:
+      optional: true
+    node-fetch:
+      optional: true
+    prop-types:
+      optional: true
+  checksum: 10c0/e82908b0f0f9babfcb1c062c1a2bb55f9bd8ab61979ac08867a05c097eb73138c077f769c6add9b011cc29a9aced55ac3d7a4513bc308382c588739c1d9361be
   languageName: node
   linkType: hard
 
@@ -6110,9 +6110,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-jsdoc@npm:^58.1.1":
-  version: 58.1.1
-  resolution: "eslint-plugin-jsdoc@npm:58.1.1"
+"eslint-plugin-jsdoc@npm:^59.0.0":
+  version: 59.0.0
+  resolution: "eslint-plugin-jsdoc@npm:59.0.0"
   dependencies:
     "@es-joy/jsdoccomment": "npm:~0.58.0"
     are-docs-informative: "npm:^0.0.2"
@@ -6127,7 +6127,7 @@ __metadata:
     spdx-expression-parse: "npm:^4.0.0"
   peerDependencies:
     eslint: ^7.0.0 || ^8.0.0 || ^9.0.0
-  checksum: 10c0/73a0bf35c583f9e3373aeebb9f8c72f08131042dc043049e3229d0925e06cc1afe505de1785aaef97b2600eadfce2398999008699b3827f34d8a20a13c2110fe
+  checksum: 10c0/211d46c7ef26ac9980a9fd0a1fa7013d6d4f0ff3ec38db7349af2edc6d957b5e9f3ed398c9cf6de6536e91ef25784a67ab928eaa3ee5988b8b7b066c3fa86a67
   languageName: node
   linkType: hard
 
@@ -11258,25 +11258,25 @@ __metadata:
     "@types/ejs": "npm:^3.1.5"
     "@types/html-minifier": "npm:^4.0.5"
     "@types/jsdom": "npm:^21.1.7"
-    "@types/node": "npm:^24.5.1"
+    "@types/node": "npm:^24.5.2"
     "@types/react": "npm:^19.1.13"
     "@types/react-dom": "npm:^19.1.9"
     "@types/webpack-env": "npm:^1.18.8"
     "@typescript-eslint/eslint-plugin": "npm:^8.44.0"
     "@typescript-eslint/parser": "npm:^8.44.0"
     "@webcomponents/webcomponentsjs": "npm:^2.8.0"
-    clientnode: "npm:^3.0.1307"
+    clientnode: "npm:^3.0.1308"
     documentation-website: "npm:^1.0.394"
     eslint: "npm:^9.35.0"
     eslint-config-google: "npm:^0.14.0"
-    eslint-plugin-jsdoc: "npm:^58.1.1"
+    eslint-plugin-jsdoc: "npm:^59.0.0"
     jest: "npm:^30.1.3"
     jsdoc: "npm:^4.0.4"
     prop-types: "npm:^15.8.1"
     react: "npm:^19.1.1"
     react-dom: "npm:^19.1.1"
     typescript-eslint: "npm:^8.44.0"
-    weboptimizer: "npm:^2.0.1607"
+    weboptimizer: "npm:^2.0.1608"
     webpack-dev-server: "npm:^5.2.2"
   peerDependencies:
     "@babel/runtime": "*"
@@ -11306,9 +11306,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"weboptimizer@npm:^2.0.1607":
-  version: 2.0.1607
-  resolution: "weboptimizer@npm:2.0.1607"
+"weboptimizer@npm:^2.0.1608":
+  version: 2.0.1608
+  resolution: "weboptimizer@npm:2.0.1608"
   dependencies:
     "@babel/core": "npm:^7.28.4"
     "@babel/plugin-proposal-class-properties": "npm:^7.18.6"
@@ -11322,7 +11322,7 @@ __metadata:
     babel-loader: "npm:^10.0.0"
     babel-plugin-transform-modern-regexp: "npm:^0.0.6"
     babel-preset-minify: "npm:^0.5.2"
-    clientnode: "npm:3.0.1306"
+    clientnode: "npm:3.0.1307"
     ejs: "npm:^3.1.10"
     exports-loader: "npm:^5.0.0"
     extract-loader: "npm:^5.1.0"
@@ -11448,7 +11448,7 @@ __metadata:
       optional: true
   bin:
     weboptimizer: index.js
-  checksum: 10c0/4228bfa302f4b0d0de309cac28e98a44553d1ac41420a0dfc07747eba7788360db21660dcf1743f2fadca2dc06065d75545dad9c27659ff0f5f4bb4ce2d36292
+  checksum: 10c0/476afcd491ddbc7cc8a353525e993b10cca99c4561cf9e40bb91f3f7f3fc1dd85e2b5aa98ce4e982576b4a4856ca8b0c8874cea185c9d41f8f3e86ff5d301691
   languageName: node
   linkType: hard
 
