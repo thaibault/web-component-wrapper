@@ -196,20 +196,21 @@ export class ReactWeb<
             }
         }
 
-        if (!this.reactRoot)
-            this.reactRoot = createRoot(
-                this.root,
-                {
-                    identifierPrefix: String(
-                        this.id ||
-                        this.internalProperties.id ||
-                        this.externalProperties.id ||
-                        (this as unknown as {name?: number | string}).name ||
-                        this.internalProperties.name ||
-                        this.externalProperties.name
-                    )
-                }
-            )
+        if (!this.reactRoot) {
+            const identifierPrefixCandidate: unknown =
+                this.id ||
+                this.internalProperties.id ||
+                this.externalProperties.id ||
+                (this as unknown as { name?: number | string }).name ||
+                this.internalProperties.name ||
+                this.externalProperties.name
+
+            let identifierPrefix = ''
+            if (typeof identifierPrefixCandidate === 'string')
+                identifierPrefix = identifierPrefixCandidate
+
+            this.reactRoot = createRoot(this.root, {identifierPrefix})
+        }
 
         await new Promise<void>((resolve: () => void) => {
             flushSync(() => {
