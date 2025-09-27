@@ -172,11 +172,14 @@
             <p>Lorem ipsum...</p>
 
             <input
-                data-bind-property-disabled="false"
+                name="my-web-test-input"
+                data-bind-property-disabled="true"
                 data-bind-attribute-class="'class-' + exampleNumber"
                 bind-property-placeholder="'Binded number: ' + exampleNumber"
                 bind-on-input="event.target.title = baseWeb.self._name + ': ' + event.target.value"
             />
+
+            <a href="TODO">TODO</a>
 
             <my-web
                 id="nested-web-1"
@@ -240,6 +243,7 @@
                     ></h2>
 
                     <input
+                        name="my-react-web-test-input"
                         bind-on-change="parent.scope.value = event.target.value; root.render()"
                         default-value="test"
                     />
