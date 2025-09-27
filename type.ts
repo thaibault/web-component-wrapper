@@ -26,7 +26,7 @@ import Web from './Web'
 // endregion
 // region exports
 export interface CompiledDomNodeTemplateItem {
-    children: Array<CompiledDomNodeTemplate>
+    children: Array<DomNodeToCompiledTemplateMap>
 
     error: null | string
 
@@ -34,7 +34,7 @@ export interface CompiledDomNodeTemplateItem {
     template: string
     templateFunction: TemplateFunction
 }
-export type CompiledDomNodeTemplate<NodeType = Node> =
+export type DomNodeToCompiledTemplateMap<NodeType = Node> =
     Map<NodeType, CompiledDomNodeTemplateItem>
 
 export type EventCallbackMapping = Map<string, () => void>
