@@ -905,6 +905,7 @@ export class Web<
 
         if (!domNodeTemplateCache.has(domNode)) {
             const compilerOptions: CompilerOptions = {
+                filter: options.filter,
                 ignoreComponents: options.ignoreComponents,
                 ignoreNestedComponents: options.ignoreNestedComponents,
                 unsafe: options.unsafe
