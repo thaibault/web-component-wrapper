@@ -886,21 +886,28 @@ export class Web<
         scope: Mapping<unknown> = {},
         options: {
             applyBindings?: boolean
+            domNodeTemplateCache?: DomNodeToCompiledTemplateMap
             filter?: (domNode: Node) => boolean
             ignoreComponents?: boolean
             ignoreNestedComponents?: boolean
-            domNodeTemplateCache?: DomNodeToCompiledTemplateMap
             unsafe?: boolean
         } = {}
     ): void {
-        const domNodeTemplateCache =
-            options.domNodeTemplateCache ?? this.domNodeTemplateCache
+        options = {
+            domNodeTemplateCache: this.domNodeTemplateCache,
+            ignoreComponents: true,
+            ignoreNestedComponents: true,
+            unsafe: this.self.renderUnsafe,
+            ...options
+        }
+        const domNodeTemplateCache = options.domNodeTemplateCache as
+            DomNodeToCompiledTemplateMap
 
         if (!domNodeTemplateCache.has(domNode)) {
             const compilerOptions: CompilerOptions = {
-                ignoreComponents: options.ignoreComponents ?? true,
-                ignoreNestedComponents: options.ignoreNestedComponents ?? true,
-                unsafe: options.unsafe ?? this.self.renderUnsafe
+                ignoreComponents: options.ignoreComponents,
+                ignoreNestedComponents: options.ignoreNestedComponents,
+                unsafe: options.unsafe
             }
             const compiledDomNode =
                 this.compileDomNodeTemplate<NodeType>(
