@@ -817,6 +817,7 @@ export class Web<
                         ignoreComponents: options.ignoreNestedComponents
                     }
                 )
+
                 if (result)
                     children.push(result)
             }
@@ -826,12 +827,16 @@ export class Web<
 
         return result
     }
+    /**
+     * @param options - Evaluation options.
+     * @param scope - Scope to evaluate against.
+     * @returns Evaluated string result or null.
+     */
     evaluateCompiledDomNodeTemplate(
-        {
-            domNode, error, templateFunction, scopeNames
-        }: CompiledDomNodeTemplateItem,
-        scope: Mapping<unknown>
+        options: CompiledDomNodeTemplateItem, scope: Mapping<unknown>
     ): null | string {
+        const {domNode, error, templateFunction, scopeNames} = options
+
         if (!(templateFunction && scopeNames))
             return null
 
@@ -934,16 +939,25 @@ export class Web<
                 else
                     domNode.textContent = output
 
-            if (compiledDomNode.children.length)
-                for (const childCompiledDomNode of compiledDomNode.children) {
-                    const output =
-                        this.evaluateCompiledDomNodeTemplate(
-                            childCompiledDomNode, scope
-                        )
+            if (compiledDomNode.children.length) {
+                const evaluateChildDomNode = (
+                    children: Array<CompiledDomNodeTemplateItem>
+                ) => {
+                    for (const childCompiledDomNode of children) {
+                        const output =
+                            this.evaluateCompiledDomNodeTemplate(
+                                childCompiledDomNode, scope
+                            )
 
-                    if (output !== null)
-                        childCompiledDomNode.domNode.textContent = output
+                        if (output !== null)
+                            childCompiledDomNode.domNode.textContent = output
+
+                        if (childCompiledDomNode.children.length)
+                            evaluateChildDomNode(childCompiledDomNode.children)
+                    }
                 }
+                evaluateChildDomNode(compiledDomNode.children)
+            }
         }
 
         if (options.applyBindings)
