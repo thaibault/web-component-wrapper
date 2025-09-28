@@ -33,6 +33,7 @@
                 // region prepare web-component
                 const Web = webComponentWrapper.index.Web
 
+                Web.evaluateSlots = true
                 Web.content =
                     MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION.value === 0 ?
                         ('<div class="wrapper">' +
@@ -85,11 +86,10 @@
 
                 webComponentWrapper.index.webAPI.register('my-web')
                 // endregion
-
-                const oneWeb = document.querySelector('#web-1')
-
                 const twoWeb = document.querySelector('#web-2')
                 twoWeb.exampleBoolean = true
+                twoWeb.scope.linkURL = 'https://torben.website/'
+                twoWeb.scope.linkLabel = 'Cool website'
 
                 // region prepare react-web-component
                 const ReactWeb = webComponentWrapper.index.ReactWeb
@@ -143,11 +143,8 @@
                 webComponentWrapper.index.reactWebAPI.register('my-react-web')
                 // endregion
 
-                const oneReactWeb = document.querySelector('#web-react-1')
-
                 const twoReactWeb = document.querySelector('#web-react-2')
                 twoReactWeb.exampleBoolean = true
-
             }
         </script>
         <!--endregion-->
@@ -179,8 +176,6 @@
                 bind-on-input="event.target.title = baseWeb.self._name + ': ' + event.target.value"
             />
 
-            <a href="TODO">TODO</a>
-
             <my-web
                 id="nested-web-1"
                 bind-on-render="console.log('Render:', this, 'by', baseWeb.self._name)"
@@ -192,6 +187,8 @@
         <my-web id="web-2">
             <h1>Slotted Content</h1>
             <p>Lorem ipsum...</p>
+
+            <a data-bind-attribute-href="linkURL">${linkLabel}</a>
         </my-web>
 
         <hr/>
