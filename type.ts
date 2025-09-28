@@ -25,16 +25,23 @@ import React, {
 import Web from './Web'
 // endregion
 // region exports
-export interface CompiledDomNodeTemplateItem {
-    children: Array<CompiledDomNodeTemplate>
-
-    error: null | string
-
-    scopeNames: Array<string>
-    template: string
-    templateFunction: TemplateFunction
+export interface CompilerOptions {
+    filter?: (domNode: Node) => boolean
+    ignoreComponents?: boolean
+    ignoreNestedComponents?: boolean
+    unsafe?: boolean
 }
-export type CompiledDomNodeTemplate<NodeType = Node> =
+export interface CompiledDomNodeTemplateItem {
+    domNode: Node
+    children: Array<CompiledDomNodeTemplateItem>
+
+    error?: null | string
+
+    scopeNames?: Array<string>
+    template?: string
+    templateFunction?: TemplateFunction
+}
+export type DomNodeToCompiledTemplateMap<NodeType = Node> =
     Map<NodeType, CompiledDomNodeTemplateItem>
 
 export type EventCallbackMapping = Map<string, () => void>

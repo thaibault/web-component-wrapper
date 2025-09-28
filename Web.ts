@@ -65,9 +65,9 @@ import {
 import property from './decorator'
 import {
     AttributesReflectionConfiguration,
-    CompiledDomNodeTemplate,
-    CompiledDomNodeTemplateItem,
+    CompiledDomNodeTemplateItem, CompilerOptions,
     ComponentAdapter,
+    DomNodeToCompiledTemplateMap,
     EventCallbackMapping,
     EventMapper,
     EventMapping,
@@ -220,7 +220,7 @@ export class Web<
     scope: Mapping<unknown> = {...UTILITY_SCOPE}
 
     domNodeEventBindings = new Map<Node, EventCallbackMapping>()
-    domNodeTemplateCache: CompiledDomNodeTemplate = new Map()
+    domNodeTemplateCache: DomNodeToCompiledTemplateMap = new Map()
 
     externalProperties = {} as ExternalProperties
     ignoreAttributeUpdateObservations = false
@@ -248,8 +248,8 @@ export class Web<
     constructor() {
         super()
         /*
-            NOTE: We cannot not use something like "this.." e.g. "this.self".
-            to determine class properties since instance properties like "self"
+            NOTE: We cannot use something like "this." e.g. "this.self" to
+            determine class properties since instance properties like "self"
             may not set properly yet because this method is called during
             constructing this instance itself.
         */
@@ -712,7 +712,7 @@ export class Web<
                 this.applyBinding(domNode, scope)
             /*
                 NOTE: Slots of nested custom components (recognized by their
-                dash in name) should be rendered by themself.
+                dash in name) should be rendered by their own.
             */
             if (!domNode.nodeName.toLowerCase().includes('-'))
                 this.applyBindings(domNode.firstChild, scope)
@@ -733,8 +733,6 @@ export class Web<
      * should be traversed or not.
      * @param options.ignoreNestedComponents - Indicates if nested components
      * should be traversed or not.
-     * @param options.map - Yet compiled dom nodes to just reference instead of
-     * recompiling.
      * @param options.unsafe - Indicates if full html generation should be
      * allowed.
      * @returns Map of compiled templates.
@@ -742,35 +740,29 @@ export class Web<
     compileDomNodeTemplate<NodeType extends Node = Node>(
         domNode: NodeType,
         scope: ScopeDeclaration = [],
-        options: {
-            filter?: (domNode: NodeType) => boolean
-            ignoreComponents?: boolean
-            ignoreNestedComponents?: boolean
-            map?: CompiledDomNodeTemplate
-            unsafe?: boolean
-        } = {}
-    ): CompiledDomNodeTemplate<NodeType> {
+        options: CompilerOptions = {}
+    ): CompiledDomNodeTemplateItem | null {
         options = {
             ignoreComponents: true,
             ignoreNestedComponents: true,
-            map: this.domNodeTemplateCache,
             unsafe: this.self.renderUnsafe,
             ...options
         }
+        const nodeName: string = domNode.nodeName.toLowerCase()
         /*
             NOTE: Slots of nested custom components (recognized by their dash
-            in name) should be rendered / controlled by themself.
+            in name) should be rendered / controlled by them on their own.
         */
-        if (
-            options.ignoreComponents &&
-            domNode.nodeName.toLowerCase().includes('-')
-        )
-            return options.map as CompiledDomNodeTemplate<NodeType>
+        if (options.ignoreComponents && nodeName.includes('-'))
+            return null
 
         if (options.unsafe) {
-            let template: string = (domNode as unknown as HTMLElement).innerHTML
+            let template: string =
+                (domNode as unknown as HTMLElement).innerHTML
+
             if (
-                !template && (domNode as NodeType & {template: string}).template
+                !template &&
+                (domNode as NodeType & {template: string}).template
             )
                 template = (domNode as NodeType & {template: string}).template
 
@@ -778,70 +770,97 @@ export class Web<
                 const result: CompilationResult =
                     compile(`\`${template}\``, scope)
 
-                options.map?.set(
+                return {
                     domNode,
-                    {
-                        children: [],
-                        error: result.error,
-                        scopeNames: result.scopeNames,
-                        template,
-                        templateFunction: result.templateFunction
-                    }
-                )
-            }
-        } else {
-            const nodeName: string = domNode.nodeName.toLowerCase()
-            let template: string | undefined
-            if (['a', '#text'].includes(nodeName)) {
-                const content: null | string =
-                    nodeName === 'a' ?
-                        (domNode as unknown as HTMLLinkElement)
-                            .getAttribute('href') :
-                        domNode.textContent
-
-                if (content && this.self.hasCode(content))
-                    template = content.replace(/&nbsp;/g, ' ').trim()
+                    children: [],
+                    error: result.error,
+                    scopeNames: result.scopeNames,
+                    template,
+                    templateFunction: result.templateFunction
+                }
             }
 
-            const children: Array<CompiledDomNodeTemplate> = []
-
-            if (template) {
-                const result: CompilationResult =
-                    compile(`\`${template}\``, scope)
-
-                options.map?.set(
-                    domNode,
-                    {
-                        children,
-                        error: result.error,
-                        scopeNames: result.scopeNames,
-                        template,
-                        templateFunction: result.templateFunction
-                    }
-                )
-            }
-
-            // Compile content of each nested node.
-            let currentDomNode: ChildNode | null = domNode.firstChild
-            while (currentDomNode) {
-                if (
-                    !options.filter ||
-                    options.filter(currentDomNode as unknown as NodeType)
-                )
-                    children.push(this.compileDomNodeTemplate<NodeType>(
-                        currentDomNode as unknown as NodeType,
-                        scope,
-                        {
-                            ...options,
-                            ignoreComponents: options.ignoreNestedComponents
-                        }
-                    ))
-
-                currentDomNode = currentDomNode.nextSibling
-            }
+            return null
         }
 
-        return options.map as CompiledDomNodeTemplate<NodeType>
+        let template: null | string = null
+        if (nodeName === '#text') {
+            const content: null | string = domNode.textContent
+
+            if (content && this.self.hasCode(content))
+                template = content.replace(/&nbsp;/g, ' ').trim()
+        }
+
+        const children: Array<CompiledDomNodeTemplateItem> = []
+
+        const result: CompiledDomNodeTemplateItem = {children, domNode}
+
+        if (template) {
+            const compilationResult: CompilationResult =
+                compile(`\`${template}\``, scope)
+
+            result.error = compilationResult.error
+            result.scopeNames = compilationResult.scopeNames
+            result.template = template
+            result.templateFunction = compilationResult.templateFunction
+        }
+
+        // Compile content of each nested node.
+        let currentDomNode: ChildNode | null = domNode.firstChild
+        while (currentDomNode) {
+            if (!options.filter || options.filter(currentDomNode)) {
+                const result = this.compileDomNodeTemplate(
+                    currentDomNode,
+                    scope,
+                    {
+                        ...options,
+                        ignoreComponents: options.ignoreNestedComponents
+                    }
+                )
+                if (result)
+                    children.push(result)
+            }
+
+            currentDomNode = currentDomNode.nextSibling
+        }
+
+        return result
+    }
+    evaluateCompiledDomNodeTemplate(
+        {
+            domNode, error, templateFunction, scopeNames
+        }: CompiledDomNodeTemplateItem,
+        scope: Mapping<unknown>
+    ): null | string {
+        if (!(templateFunction && scopeNames))
+            return null
+
+        if (error) {
+            console.warn(
+                'Error occurred during compiling node content:',
+                error
+            )
+
+            return null
+        }
+
+        let output: null | string = null
+
+        try {
+            output = templateFunction(...scopeNames.map(
+                (name: string): unknown => scope[name]
+            ))
+        } catch (error) {
+            console.warn(
+                `Error occurred when "${this.self._name}" is  running`,
+                `"${String(templateFunction)}": with bound`,
+                `names "${scopeNames.join('", "')}":`,
+                `"${error as string}". Rendering node:`,
+                domNode
+            )
+        }
+
+        return output
     }
     /**
      * Compiles and evaluates given node content and their children. Replaces
@@ -857,105 +876,70 @@ export class Web<
      * should be traversed or not.
      * @param options.ignoreNestedComponents - Indicates if nested components
      * should be traversed or not.
-     * @param options.map - Yet compiled dom nodes to just reference instead of
-     * recompiling.
+     * @param options.domNodeTemplateCache - Yet compiled dom nodes to just
+     * reference instead of recompiling.
      * @param options.unsafe - Indicates if full html generation should be
      * allowed.
-     * @returns Map of compiled templates.
      */
     evaluateDomNodeTemplate<NodeType extends Node = Node>(
         domNode: NodeType,
         scope: Mapping<unknown> = {},
         options: {
             applyBindings?: boolean
-            filter?: (domNode: NodeType) => boolean
+            filter?: (domNode: Node) => boolean
             ignoreComponents?: boolean
             ignoreNestedComponents?: boolean
-            map?: CompiledDomNodeTemplate
+            domNodeTemplateCache?: DomNodeToCompiledTemplateMap
             unsafe?: boolean
         } = {}
-    ): CompiledDomNodeTemplate<NodeType> {
-        options = {
-            applyBindings: true,
-            ignoreComponents: true,
-            ignoreNestedComponents: true,
-            map: this.domNodeTemplateCache,
-            unsafe: this.self.renderUnsafe,
-            ...options
-        }
+    ): void {
+        const domNodeTemplateCache =
+            options.domNodeTemplateCache ?? this.domNodeTemplateCache
 
-        if (!options.map?.has(domNode))
-            this.compileDomNodeTemplate<NodeType>(domNode, scope, options)
-
-        if (options.map?.has(domNode)) {
-            const {error, scopeNames, templateFunction} =
-                options.map.get(domNode) as CompiledDomNodeTemplateItem
-
-            if (error)
-                console.warn(
-                    `Error occurred during compiling node content: ${error}`
+        if (!domNodeTemplateCache.has(domNode)) {
+            const compilerOptions: CompilerOptions = {
+                ignoreComponents: options.ignoreComponents ?? true,
+                ignoreNestedComponents: options.ignoreNestedComponents ?? true,
+                unsafe: options.unsafe ?? this.self.renderUnsafe
+            }
+            const compiledDomNode =
+                this.compileDomNodeTemplate<NodeType>(
+                    domNode, scope, compilerOptions
                 )
-            else {
-                let output: null | string = null
-
-                try {
-                    output = templateFunction(...scopeNames.map(
-                        (name: string): unknown => scope[name]
-                    ))
-                } catch (error) {
-                    console.warn(
-                        `Error occurred when "${this.self._name}" is running` +
-                        ` "${templateFunction as unknown as string}": with ` +
-                        `bound names "${scopeNames.join('", "')}": "` +
-                        `${error as string}". Rendering node:`,
-                        domNode
-                    )
-                }
-
-                if (output !== null)
-                    if (options.unsafe)
-                        (domNode as unknown as HTMLElement).innerHTML = output
-                    else if (domNode.nodeName.toLowerCase() === 'a')
-                        (domNode as unknown as HTMLElement)
-                            .setAttribute('href', output)
-                    else
-                        domNode.textContent = output
-            }
+            if (compiledDomNode)
+                domNodeTemplateCache.set(domNode, compiledDomNode)
         }
-        /*
-            NOTE: Slots of nested custom components (recognized by their dash
-            in name) should be rendered / controlled by themself.
-        */
-        if (!(
-            options.unsafe ||
-            options.ignoreComponents &&
-            domNode.nodeName.toLowerCase().includes('-')
-        )) {
-            // Render content of each nested node.
-            let currentDomNode =
-                domNode.firstChild as unknown as NodeType | null
 
-            while (currentDomNode) {
-                if (!options.filter || options.filter(currentDomNode))
-                    this.evaluateDomNodeTemplate<NodeType>(
-                        currentDomNode,
-                        scope,
-                        {
-                            ...options,
-                            applyBindings: false,
-                            ignoreComponents: options.ignoreNestedComponents
-                        }
-                    )
+        if (domNodeTemplateCache.has(domNode)) {
+            const compiledDomNode = domNodeTemplateCache.get(domNode) as
+                CompiledDomNodeTemplateItem
 
-                currentDomNode = currentDomNode.nextSibling as
-                    unknown as NodeType
-            }
+            const output =
+                this.evaluateCompiledDomNodeTemplate(compiledDomNode, scope)
+
+            if (output !== null)
+                if (
+                    options.unsafe &&
+                    (domNode as unknown as Element).innerHTML
+                )
+                    (domNode as unknown as Element).innerHTML = output
+                else
+                    domNode.textContent = output
+
+            if (compiledDomNode.children.length)
+                for (const childCompiledDomNode of compiledDomNode.children) {
+                    const output =
+                        this.evaluateCompiledDomNodeTemplate(
+                            childCompiledDomNode, scope
+                        )
+
+                    if (output !== null)
+                        childCompiledDomNode.domNode.textContent = output
+                }
         }
 
         if (options.applyBindings)
             this.applyBindings(domNode, scope)
-
-        return options.map as CompiledDomNodeTemplate<NodeType>
     }
     /**
      * Replaces given dom node with given nodes.
@@ -1208,10 +1192,11 @@ export class Web<
                         this.self.replaceDomNodes(domNode, this.slots.default)
                     }
                 } else
-                    this.slots.default = this.self.unwrapDomNode(domNode)
-                        .map((domNode: Node): Node =>
-                            this.grabSlotContent(domNode)
-                        )
+                    this.slots.default =
+                        this.self.unwrapDomNode(domNode)
+                            .map((domNode: Node): Node =>
+                                this.grabSlotContent(domNode)
+                            )
             else if (this.slots[name]) {
                 if (this.self.renderSlots) {
                     if (this.self.evaluateSlots)
@@ -1239,21 +1224,19 @@ export class Web<
             now. This extra wrapping can be used to avoid first dom rendering
             before actual template code has been evaluated.
         */
+        const element: Element | null =
+            (node as Element).firstElementChild ? slot as Element : null
         if (
-            (slot as HTMLElement).firstElementChild?.nodeName.toLowerCase() ===
-                'textarea' &&
+            element &&
+            element.firstElementChild?.nodeName.toLowerCase() === 'textarea' &&
             (
-                !(slot as HTMLElement).firstElementChild?.hasAttribute(
-                    'data-no-template'
-                ) ||
-                (slot as HTMLElement).firstElementChild?.getAttribute(
-                    'data-no-template'
-                ) === 'false'
+                !element.firstElementChild.hasAttribute('data-no-template') ||
+                element.firstElementChild.getAttribute('data-no-template') ===
+                    'false'
             )
         ) {
             const content: string =
-                ((slot as HTMLElement).firstElementChild as HTMLInputElement)
-                    .value
+                (element.firstElementChild as HTMLTextAreaElement).value
             /*
                 NOTE: These kind of slots is always used as a template and
                 should therefor be copied in every case.
@@ -1265,15 +1248,11 @@ export class Web<
                 re-instantiate this slot during whole component
                 re-instantiation.
             */
-            ;(slot as Partial<HTMLElement>).classList?.remove(
-                'web-component-template'
-            )
-            const newSlot: Node = slot.cloneNode()
-            ;(slot as Partial<HTMLElement>).classList?.add(
-                'web-component-template'
-            )
-            ;(newSlot as HTMLElement).innerHTML = ''
-            ;(newSlot as Node & {template: string}).template = content
+            element.classList.remove('web-component-template')
+            const newSlot: Element = element.cloneNode() as Element
+            element.classList.add('web-component-template')
+            newSlot.innerHTML = ''
+            ;(newSlot as Element & {template: string}).template = content
             return newSlot
         }
 
@@ -1307,7 +1286,8 @@ export class Web<
                 this.grabSlotContent(slot) as HTMLElement
         }
         if (this.slots.default)
-            this.slots.default = [this.slots.default as unknown as Node]
+            this.slots.default =
+                ([] as Array<Node>).concat(this.slots.default)
         else if (this.childNodes.length > 0)
             this.slots.default = Array.from(this.childNodes)
                 .map((domNode: Node): Node => this.grabSlotContent(domNode))
