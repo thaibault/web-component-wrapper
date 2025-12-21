@@ -43,9 +43,7 @@ export function property(
         readAttribute?: boolean
         type?: PropertyConfiguration
         update?: boolean
-        /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
         writeAttribute?: boolean | PropertyConfiguration
-        /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
     } = {}
 ): PropertyDecorator {
     options = {readAttribute: true, type: string, ...options}
@@ -121,15 +119,7 @@ export function property(
                     self.propertiesToReflectAsAttributes, name
                 )
             ) {
-                /*
-                    eslint-disable
-                    @typescript-eslint/no-redundant-type-constituents
-                */
                 let result: PropertyConfiguration | undefined
-                /*
-                    eslint-enable
-                    @typescript-eslint/no-redundant-type-constituents
-                */
                 if (typeof options.writeAttribute === 'boolean') {
                     if (
                         options.writeAttribute &&

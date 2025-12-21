@@ -68,7 +68,13 @@ describe('ReactWeb', (): void => {
         const component: FunctionComponent<{
             property: string
             onEvent?: () => void
+            /*
+                eslint-disable @typescript-eslint/no-useless-default-assignment
+            */
         }> = ({onEvent, property = componentProperty}): ReactElement => {
+            /*
+                eslint-enable @typescript-eslint/no-useless-default-assignment
+            */
             triggerOnEvent = onEvent
             componentProperty = property
 
