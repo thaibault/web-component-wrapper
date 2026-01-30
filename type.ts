@@ -128,6 +128,8 @@ export interface WebComponentConfiguration<
     propertyAliases?: Mapping
     propTypes?: PropertiesConfiguration
     renderProperties?: Array<string>
+
+    unmountOnDisconnect?: boolean
 }
 export interface StaticWebComponent<
     ComponentType = unknown,

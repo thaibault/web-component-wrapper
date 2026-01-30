@@ -104,6 +104,8 @@ export class ReactWeb<
 
     static _name = 'ReactWebComponent'
 
+    unmountOnDisconnect = true
+
     compiledSlots: (
         Mapping<ReactRenderItemsFactory> &
         {children?: ReactRenderItemsFactory}
@@ -139,8 +141,8 @@ export class ReactWeb<
      * handlers and state will be removed.
      */
     disconnectedCallback() {
-        // TODO Triggers error in "web-input-material"
-        // this.reactRoot?.unmount()
+        if (this.unmountOnDisconnect)
+            this.reactRoot?.unmount()
 
         super.disconnectedCallback()
     }
