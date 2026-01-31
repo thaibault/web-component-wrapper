@@ -180,7 +180,7 @@ export const wrapAsWebComponent = <
         ) as InternalProperties
 
         unmountOnDisconnect =
-            configuration.unmountOnDisconnect ?? false
+            configuration.unmountOnDisconnect ?? true
     }
 
     const webComponentAPI: WebComponentAPI<
