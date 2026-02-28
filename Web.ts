@@ -1107,7 +1107,7 @@ export class Web<
         if (!this.self.eventToPropertyMapping)
             return false
 
-        // Grab all existing output to property specifications
+        // Grab all existing output to property definitions
         let result = false
         for (const name of Object.keys(this.self.eventToPropertyMapping))
             if (!Object.prototype.hasOwnProperty.call(
@@ -1634,7 +1634,7 @@ export class Web<
         return result
     }
     /**
-     * Evaluates given property value depending on its type specification and
+     * Evaluates given property value depending on its property definition and
      * registers in properties mapping object.
      * @param attributeName - Name of given value.
      * @param value - Value to evaluate.
