@@ -25,8 +25,7 @@ import {
     extend,
     Mapping,
     represent,
-    TemplateFunction,
-    timeout
+    TemplateFunction
 } from 'clientnode'
 import {func, NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
 import React, {
@@ -226,15 +225,6 @@ export class ReactWeb<
                 resolve()
             })
         })
-
-        /*
-            NOTE: Update current instance if we have a newly created one
-            otherwise check after current queue has been finished.
-        */
-        if (this.instance?.current)
-            this.reflectInstanceProperties()
-        else
-            await timeout(this.reflectInstanceProperties)
     }
     // endregion
     // region property handling
@@ -778,7 +768,8 @@ export class ReactWeb<
             ): ReactElement => {
                 useImperativeHandle(
                     reference,
-                    (): ComponentAdapter<Attributes> => ({properties})
+                    (): ComponentAdapter<Attributes> => ({properties}),
+                    [properties]
                 )
 
                 return createElement(wrapped as ReactComponentType, properties)
@@ -818,7 +809,14 @@ export class ReactWeb<
         */
         if (!properties.ref) {
             this.instance = createRef() as {current?: ComponentAdapter}
-            properties.ref = this.instance
+            properties.ref = (reference: ComponentAdapter) => {
+                if (this.instance)
+                    this.instance.current = reference
+                else
+                    this.instance = {current: reference}
+
+                this.reflectInstanceProperties()
+            }
         }
     }
     /**
