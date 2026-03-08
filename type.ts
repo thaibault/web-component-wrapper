@@ -93,7 +93,11 @@ export type ReactComponentBaseProperties<TElement = HTMLElement> =
             'dangerouslySetInnerHTML'
         ]
         key?: string
-        ref?: null | {current?: ComponentAdapter}
+        ref?: (
+            null |
+            {current?: ComponentAdapter} |
+            ((reference: ComponentAdapter) => void)
+        )
     }
 
 export type ReactRenderBaseItemFactory = (scope: Mapping<unknown>) =>
