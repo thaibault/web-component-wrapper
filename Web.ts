@@ -1786,7 +1786,9 @@ export class Web<
                             each other.
                         */
                         this.setInternalPropertyValue(name, evaluated)
-                        this.setExternalPropertyValue(name, copy(evaluated, 1))
+                        this.setExternalPropertyValue(
+                            name, copy(evaluated, false, 1)
+                        )
                     } else {
                         this.setInternalPropertyValue(name, null)
                         this.setExternalPropertyValue(name, null)
@@ -1858,7 +1860,7 @@ export class Web<
                         */
                         this.setInternalPropertyValue(name, evaluated.result)
                         this.setExternalPropertyValue(
-                            name, copy(evaluated.result, 1)
+                            name, copy(evaluated.result, false, 1)
                         )
                     } else if (this.hasAttribute(attributeName)) {
                         this.setInternalPropertyValue(name, true)
