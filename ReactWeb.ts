@@ -254,9 +254,11 @@ export class ReactWeb<
      */
     setPropertyValue(name: string, value: unknown) {
         this.reflectProperties(
-            {[name]: copy(value, 1)} as unknown as Partial<ExternalProperties>
+            {[name]: copy(value, false, 1)} as
+                unknown as
+                Partial<ExternalProperties>
         )
-        this.setInternalPropertyValue(name, copy(value, 1))
+        this.setInternalPropertyValue(name, copy(value, false, 1))
     }
     /**
      * Internal property setter. Respects configured aliases.
