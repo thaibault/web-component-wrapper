@@ -216,7 +216,7 @@ export class ReactWeb<
         await new Promise<void>((resolve: () => void) => {
             flushSync(() => {
                 this.reactRoot?.render(
-                    createElement<InternalProperties>(
+                    createElement(
                         this.self.content as
                             ReactComponentType<InternalProperties>,
                         this.internalProperties
