@@ -916,9 +916,7 @@ export class Web<
                 unsafe: options.unsafe
             }
             const compiledDomNode =
-                this.compileDomNodeTemplate<NodeType>(
-                    domNode, scope, compilerOptions
-                )
+                this.compileDomNodeTemplate(domNode, scope, compilerOptions)
             if (compiledDomNode)
                 domNodeTemplateCache.set(domNode, compiledDomNode)
         }
