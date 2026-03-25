@@ -803,8 +803,6 @@ export class ReactWeb<
 
         this.self.removeKnownUnwantedPropertyKeys(this.self, properties)
 
-        // TODO check if we should use a callback here to update the wrapping
-        // components state accordingly!
         /*
             NOTE: Provide instance if and only if not explicitly requested from
             parent via properties.
