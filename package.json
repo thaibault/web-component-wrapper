@@ -92,7 +92,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "typescript-eslint": "^8.57.2",
-    "weboptimizer": "^3.0.15",
+    "weboptimizer": "^3.0.16",
     "webpack-dev-server": "^5.2.3"
   },
   "peerDependencies": {
