@@ -48,5 +48,5 @@ Data can be communicated back via:
 ### Configuring Data-Flow
 
 A Web-Component-Wrapper component forwards (transformed) given properties into
-a wrapped react component via `props` and reads data via provided callbacks
+a wrapped React component via `props` and reads data via provided callbacks
 as part of `props` or as part of reacts `ref` object.
