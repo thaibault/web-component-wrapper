@@ -19,6 +19,7 @@
 // region imports
 import {camelCaseToDelimited, Mapping, unique} from 'clientnode'
 
+import propertyImport from './decorator'
 import ReactWebImport, {api as reactWebAPIImport} from './ReactWeb'
 import WebImport, {api as webAPIImport} from './Web'
 import {
@@ -30,6 +31,7 @@ import {
     WebComponentConfiguration
 } from './type'
 // endregion
+export const property = propertyImport
 export const ReactWeb = ReactWebImport
 export const reactWebAPI = reactWebAPIImport
 export const webAPI = webAPIImport

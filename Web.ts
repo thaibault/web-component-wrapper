@@ -632,7 +632,7 @@ export class Web<
                     }
                     /*
                         NOTE: We pre-compile event listener since they should
-                        usually be called more than it would be re-rendered.
+                        usually be called more often than binded.
                     */
                     const compilation: CompilationResult = compile(
                         value, scope, true, true, domNode
@@ -640,7 +640,7 @@ export class Web<
 
                     if (compilation.error)
                         console.warn(
-                            'Error occurred during compiling given event ' +
+                            'Error occurred during compiling given event',
                             `binding "${attributeName}" on node:`,
                             domNode,
                             compilation.error
@@ -668,14 +668,14 @@ export class Web<
                                 )
                             } catch (error) {
                                 console.warn(
-                                    'Error occurred during processing given ' +
-                                    `event binding "${attributeName}" on ` +
+                                    'Error occurred during processing given',
+                                    `event binding "${attributeName}" on`,
                                     'node:',
                                     domNode,
-                                    `Given expression "${value}" could not ` +
+                                    `Given expression "${value}" could not`,
                                     'be evaluated with given scope names "' +
-                                    `${compilation.scopeNames.join('", "')}"` +
-                                    `: ${represent(error)}`
+                                    compilation.scopeNames.join('", "') +
+                                    `": ${represent(error)}`
                                 )
                             }
                         }
