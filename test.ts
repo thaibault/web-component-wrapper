@@ -14,10 +14,11 @@
     endregion
 */
 // region imports
-import {describe, expect, jest, test} from '@jest/globals'
 import {Mapping, timeout, ValueOf} from 'clientnode'
 import {func, string} from 'clientnode/property-types'
 import {createElement, FunctionComponent, ReactElement} from 'react'
+
+import {describe, expect, jest, test} from '@jest/globals'
 
 import wrapAsWebComponent from './index'
 import ReactWeb from './ReactWeb'
