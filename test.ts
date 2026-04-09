@@ -22,8 +22,8 @@ import {describe, expect, jest, test} from '@jest/globals'
 
 import wrapAsWebComponent from './index'
 import ReactWeb from './ReactWeb'
-import Web from './Web'
 import {ComponentType, PropertiesConfiguration, WebComponentAPI} from './type'
+import Web from './Web'
 // endregion
 // region Web
 describe('Web', (): void => {
