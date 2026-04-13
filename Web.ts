@@ -607,22 +607,7 @@ export class Web<
                         ) as 'textContent'] =
                             (evaluated as PositiveEvaluationResult).result
                 } else if (name.startsWith('on-')) {
-                    if (!this.domNodeEventBindings.has(domNode))
-                        this.domNodeEventBindings.set(
-                            // eslint-disable-next-line func-call-spacing
-                            domNode, new Map<string, () => void>()
-                        )
-
-                    const eventMap: EventCallbackMapping | undefined =
-                        this.domNodeEventBindings.get(domNode)
-
                     name = delimitedToCamelCase(name.substring('on-'.length))
-
-                    if (eventMap?.has(name)) {
-                        const callback = eventMap.get(name)
-                        if (callback)
-                            callback()
-                    }
 
                     scope = {
                         console,
@@ -645,51 +630,45 @@ export class Web<
                             domNode,
                             compilation.error
                         )
-                    else {
-                        const handler: EventListener = (
-                            ...parameters: Array<unknown>
-                        ): void => {
-                            scope.event = parameters[0]
-                            scope.parameters = parameters
+                    else
+                        this.addSecureEventListener(
+                            domNode,
+                            name,
+                            (...parameters: Array<unknown>): void => {
+                                scope.event = parameters[0]
+                                scope.parameters = parameters
 
-                            try {
-                                compilation.templateFunction(
-                                    /*
-                                        NOTE: We want to be sure to have same
-                                        ordering as we have for the scope names
-                                        and to call internal registered getter
-                                        by retrieving values. So simple using
-                                        "...Object.values(scope)" is not
-                                        appreciate here.
-                                    */
-                                    ...compilation.originalScopeNames.map(
-                                        (name: string): unknown => scope[name]
+                                try {
+                                    compilation.templateFunction(
+                                        /*
+                                            NOTE: We want to be sure to have
+                                            same ordering as we have for the
+                                            scope names and to call internal
+                                            registered getter by retrieving
+                                            values. So simple using
+                                            "...Object.values(scope)" is not
+                                            appreciate here.
+                                        */
+                                        ...compilation.originalScopeNames.map(
+                                            (name: string): unknown =>
+                                                scope[name]
+                                        )
                                     )
-                                )
-                            } catch (error) {
-                                console.warn(
-                                    'Error occurred during processing given',
-                                    `event binding "${attributeName}" on`,
-                                    'node:',
-                                    domNode,
-                                    `Given expression "${value}" could not`,
-                                    'be evaluated with given scope names "' +
-                                    compilation.scopeNames.join('", "') +
-                                    `": ${represent(error)}`
-                                )
+                                } catch (error) {
+                                    console.warn(
+                                        'Error occurred during processing',
+                                        'given event binding',
+                                        `"${attributeName}" on node:`,
+                                        domNode,
+                                        `Given expression "${value}" could`,
+                                        'not be evaluated with given scope',
+                                        'names "' +
+                                        compilation.scopeNames.join('", "') +
+                                        `": ${represent(error)}`
+                                    )
+                                }
                             }
-                        }
-
-                        domNode.addEventListener(name, handler)
-                        eventMap?.set(name, () => {
-                            domNode.removeEventListener(name, handler)
-
-                            eventMap.delete(name)
-
-                            if (eventMap.size === 0)
-                                this.domNodeEventBindings.delete(domNode)
-                        })
-                    }
+                        )
                 }
             }
         }
@@ -998,6 +977,31 @@ export class Web<
         parent.removeChild(domNode)
 
         return result
+    }
+    addSecureEventListener(
+        domNode: Node, name: string, handler: () => void
+    ) {
+        if (!this.domNodeEventBindings.has(domNode))
+            this.domNodeEventBindings.set(
+                // eslint-disable-next-line func-call-spacing
+                domNode, new Map<string, () => void>()
+            )
+
+        const eventMap = this.domNodeEventBindings.get(domNode)
+
+        const oldHandler = eventMap?.get(name)
+        if (oldHandler && oldHandler !== handler)
+            oldHandler()
+        eventMap?.set(name, () => {
+            domNode.removeEventListener(name, handler)
+
+            eventMap.delete(name)
+
+            if (eventMap.size === 0)
+                this.domNodeEventBindings.delete(domNode)
+        })
+
+        domNode.addEventListener(name, handler)
     }
     //// endregion
     /**
