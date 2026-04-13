@@ -219,7 +219,7 @@ export class Web<
     rootInstance: null | Web = null
     scope: Mapping<unknown> = {...UTILITY_SCOPE}
 
-    domNodeEventBindings = new Map<Node, EventCallbackMapping>()
+    domNodeEventBindings = new Map<Node | Window, EventCallbackMapping>()
     domNodeTemplateCache: DomNodeToCompiledTemplateMap = new Map()
 
     externalProperties = {} as ExternalProperties
@@ -979,7 +979,8 @@ export class Web<
         return result
     }
     addSecureEventListener(
-        domNode: Node, name: string,
+        domNode: Node | Window,
+        name: string,
         handler: EventListenerOrEventListenerObject
     ) {
         if (!this.domNodeEventBindings.has(domNode))
