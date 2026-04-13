@@ -979,7 +979,8 @@ export class Web<
         return result
     }
     addSecureEventListener(
-        domNode: Node, name: string, handler: () => void
+        domNode: Node, name: string,
+        handler: EventListenerOrEventListenerObject
     ) {
         if (!this.domNodeEventBindings.has(domNode))
             this.domNodeEventBindings.set(
