@@ -29,6 +29,7 @@ import {
     extend,
     isFunction,
     isObject,
+    Logger,
     lowerCase,
     Mapping,
     PositiveEvaluationResult,
@@ -65,7 +66,8 @@ import {
 import property from './decorator'
 import {
     AttributesReflectionConfiguration,
-    CompiledDomNodeTemplateItem, CompilerOptions,
+    CompiledDomNodeTemplateItem,
+    CompilerOptions,
     ComponentAdapter,
     DomNodeToCompiledTemplateMap,
     EventCallbackMapping,
@@ -79,6 +81,7 @@ import {
     WebComponentAPI
 } from './type'
 // endregion
+const log = new Logger({name: 'web-component-wrapper-web'})
 /*
     NOTE: We mock HTMLElement to be able to load this class and derived one
     into node environments.
@@ -211,6 +214,10 @@ export class Web<
     batchPropertyUpdates = true
     batchUpdates = true
 
+    /*
+        NOTE: We set these properties to true initially since we want to
+        prevent any updates until the component is connected to dom.
+    */
     batchedAttributeUpdateRunning = true
     batchedPropertyUpdateRunning = true
     batchedUpdateRunning = true
@@ -583,8 +590,8 @@ export class Web<
                         evaluate(value, scope, false, true, domNode)
 
                     if (evaluated.error) {
-                        console.warn(
-                            'Error occurred during processing given ' +
+                        log.warn(
+                            'Error occurred during processing given',
                             `attribute binding "${attributeName}" on node:`,
                             domNode,
                             evaluated.error
@@ -624,7 +631,7 @@ export class Web<
                     )
 
                     if (compilation.error)
-                        console.warn(
+                        log.warn(
                             'Error occurred during compiling given event',
                             `binding "${attributeName}" on node:`,
                             domNode,
@@ -655,7 +662,7 @@ export class Web<
                                         )
                                     )
                                 } catch (error) {
-                                    console.warn(
+                                    log.warn(
                                         'Error occurred during processing',
                                         'given event binding',
                                         `"${attributeName}" on node:`,
@@ -820,7 +827,7 @@ export class Web<
             return null
 
         if (error) {
-            console.warn(
+            log.warn(
                 'Error occurred during compiling node content:',
                 error
             )
@@ -835,7 +842,7 @@ export class Web<
                 (name: string): unknown => scope[name]
             ))
         } catch (error) {
-            console.warn(
+            log.warn(
                 `Error occurred when "${this.self._name}" is  running`,
                 `"${String(templateFunction)}": with bound`,
                 `names "${scopeNames.join('", "')}":`,
@@ -1673,10 +1680,10 @@ export class Web<
                     )
 
                     if (result.error) {
-                        console.warn(
-                            `Failed to process pre-evaluation attribute "` +
-                            `${attributeName}": ${result.error}. Will be set` +
-                            ' to "undefined".'
+                        log.warn(
+                            `Failed to process pre-evaluation attribute`,
+                            `"${attributeName}": ${result.error}. Will be`,
+                            'set to "undefined".'
                         )
 
                         this.setInternalPropertyValue(name, undefined)
@@ -1718,9 +1725,9 @@ export class Web<
                         templateFunction = result.templateFunction
 
                         if (error)
-                            console.warn(
-                                'Failed to compile given handler "' +
-                                `${attributeName}": ${error}.`
+                            log.warn(
+                                'Failed to compile given handler',
+                                `"${attributeName}": ${error}.`
                             )
                     }
 
@@ -1747,14 +1754,14 @@ export class Web<
                                         ...UTILITY_SCOPE_VALUES
                                     )
                                 } catch (error) {
-                                    console.warn(
-                                        'Failed to evaluate function ' +
-                                        `"${attributeName}" with expression ` +
-                                        `"${value as string}" and scope ` +
-                                        'variables ' +
-                                        `"${scopeNames.join('", "')}" set to ` +
-                                        `"${represent(parameters)}": ` +
-                                        `${error as string}. Set property ` +
+                                    log.warn(
+                                        'Failed to evaluate function',
+                                        `"${attributeName}" with expression`,
+                                        `"${value as string}" and scope`,
+                                        'variables',
+                                        `"${scopeNames.join('", "')}" set to`,
+                                        `"${represent(parameters)}":`,
+                                        `${error as string}. Set property`,
                                         `to "undefined".`
                                     )
                                 }
@@ -1777,9 +1784,9 @@ export class Web<
                         try {
                             evaluated = JSON.parse(value) as PlainObject
                         } catch (error) {
-                            console.warn(
-                                'Error occurred during parsing given json ' +
-                                `attribute "${attributeName}": ` +
+                            log.warn(
+                                'Error occurred during parsing given json',
+                                `attribute "${attributeName}":`,
                                 represent(error)
                             )
 
@@ -1850,8 +1857,8 @@ export class Web<
                             value, {}, false, true, this
                         )
                         if (evaluated.error) {
-                            console.warn(
-                                'Error occurred during processing given ' +
+                            log.warn(
+                                'Error occurred during processing given',
                                 `attribute configuration "${attributeName}":`,
                                 evaluated.error
                             )
@@ -1956,7 +1963,7 @@ export class Web<
             `\`${this.self.content as string}\``, this.scope
         )
         if (evaluated.error) {
-            console.warn(`Failed to process template: ${evaluated.error}`)
+            log.warn(`Failed to process template: ${evaluated.error}`)
 
             return Promise.resolve()
         }

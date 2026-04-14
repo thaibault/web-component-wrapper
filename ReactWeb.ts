@@ -22,7 +22,7 @@ import {
     compile,
     copy,
     delimitedToCamelCase,
-    extend,
+    extend, Logger,
     Mapping,
     represent,
     TemplateFunction
@@ -66,6 +66,7 @@ import {
     WebComponentConfiguration
 } from './type'
 // endregion
+const log = new Logger({name: 'web-component-wrapper-web'})
 /*
     Live cycle:
 
@@ -456,8 +457,8 @@ export class ReactWeb<
                     compile(value as string, knownScopeNames)
 
                 if (error) {
-                    console.warn(
-                        'Error occurred during compiling given attribute ' +
+                    log.warn(
+                        'Error occurred during compiling given attribute',
                         `binding "${attributeName}" on node:`,
                         domNode,
                         error
@@ -492,8 +493,8 @@ export class ReactWeb<
                 } = compile(value as string, knownScopeNames, true)
 
                 if (error) {
-                    console.warn(
-                        'Error occurred during compiling given event ' +
+                    log.warn(
+                        'Error occurred during compiling given event',
                         `binding "${attributeName}" on node:`,
                         domNode,
                         error
@@ -523,13 +524,14 @@ export class ReactWeb<
                             )
                         )
                     } catch (error) {
-                        console.warn(
-                            'Error occurred during processing given ' +
+                        log.warn(
+                            'Error occurred during processing given',
                             `event binding "${attributeName}" on node: `,
                             domNode,
-                            `Given expression "${value as string}" could ` +
-                            'not be evaluated with given scope names "' +
-                            `${scopeNames.join('", "')}": ${represent(error)}`
+                            `Given expression "${value as string}" could`,
+                            'not be evaluated with given scope names',
+                            `"${scopeNames.join('", "')}":`,
+                            represent(error)
                         )
                     }
                 }
