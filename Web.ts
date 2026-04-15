@@ -81,7 +81,7 @@ import {
     WebComponentAPI
 } from './type'
 // endregion
-const log = new Logger({name: 'web-component-wrapper-web'})
+export const log = new Logger({name: 'web-component-wrapper-web'})
 /*
     NOTE: We mock HTMLElement to be able to load this class and derived one
     into node environments.
@@ -617,7 +617,7 @@ export class Web<
                     name = delimitedToCamelCase(name.substring('on-'.length))
 
                     scope = {
-                        console,
+                        log,
                         event: undefined,
                         parameters: undefined,
                         ...scope
@@ -1212,7 +1212,7 @@ export class Web<
      */
     applySlots(targetDomNode: HTMLElement, scope: Mapping<unknown>): void {
         for (const domNode of Array.from(
-            targetDomNode.querySelectorAll<HTMLElement>('slot')
+            targetDomNode.querySelectorAll<HTMLSlotElement>('slot')
         )) {
             const name: null | string = domNode.getAttribute('name')
             if (name === null || name === 'default')

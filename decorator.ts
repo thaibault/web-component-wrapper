@@ -31,8 +31,8 @@ import {PropertiesConfiguration, PropertyConfiguration} from './type'
  * @param options.readAttribute - Indicates whether to read from existing
  * attribute also.
  * @param options.type - Value type to parse value.
- * @param options.update - Indicates whether to already existing property
- * configurations.
+ * @param options.update - Indicates whether to overwrite already existing
+ * property configurations.
  * @param options.writeAttribute - Indicates whether to sync attribute
  * representation back into dom.
  * @returns Generated decorator.

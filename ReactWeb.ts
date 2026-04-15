@@ -66,7 +66,7 @@ import {
     WebComponentConfiguration
 } from './type'
 // endregion
-const log = new Logger({name: 'web-component-wrapper-web'})
+export const log = new Logger({name: 'web-component-wrapper-web'})
 /*
     Live cycle:
 
