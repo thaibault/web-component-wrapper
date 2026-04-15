@@ -156,13 +156,13 @@
             id="web-1"
 
             example-boolean
-            example-function="console.log(2)"
+            example-function="log.info(2)"
             example-json='{"key": false, "key2": null, "key3": {"key": 2}, "key4": "value"}'
             example-number="4"
             example-object="{key: false, key2: null, key3: {key: 2}, key4: 'value'}"
             example-string="value"
 
-            bind-on-render="console.log('Render:', this)"
+            bind-on-render="log.info('Render:', this)"
         >
             <h1>Slotted Content</h1>
 
@@ -178,7 +178,7 @@
 
             <my-web
                 id="nested-web-1"
-                bind-on-render="console.log('Render:', this, 'by', baseWeb.self._name)"
+                bind-on-render="log.info('Render:', this, 'by', baseWeb.self._name)"
             ></my-web>
         </my-web>
 
@@ -196,7 +196,7 @@
         <my-react-web
             id="web-react-1"
             example-boolean
-            example-function="console.log(2)"
+            example-function="log.info(2)"
             example-json='{
                 "key": false, "key2": null, "key3": {"key": 2}, "key4": "value"
             }'

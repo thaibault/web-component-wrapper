@@ -42,7 +42,7 @@ Data can flow into a component via
 
 Data can be communicated back via:
 
-- Properties `console.log(instance.value)`
+- Properties `log.info(instance.value)`
 - Observable events `instance.addEventListener('click', (event) => console.log(event.detail.value))`
 
 ### Configuring Data-Flow
