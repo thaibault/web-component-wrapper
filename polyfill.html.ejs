@@ -61,11 +61,14 @@ _%>
 <%_ if (typeof webComponents === 'undefined' || webComponents) { _%>
     <script>
         /*
-            Only provide the shadow dom polyfill and avoid to patch a lot of dom
-            apis.
+            Only provide the shadow dom polyfill and avoid to patch a lot of
+            dom apis.
         */
         window.ShadyDOM = {noPatch: true}
     </script>
-    <script src="/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
-    <script src="/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js"></script>
+    <script src="/@webcomponents/webcomponentsjs/webcomponents-bundle.js">
+    </script>
+    <script
+        src="/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js"
+    ></script>
 <%_ } _%>
