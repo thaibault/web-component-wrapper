@@ -65,7 +65,6 @@
     "update:documentation": "web-documentation",
     "watch": "weboptimizer build --watch"
   },
-  "runkitExample": "require('@babel/runtime/package.json')\n\nconst {Web} = require('web-component-wrapper')\n\nWeb.hasCode('<div>${expression}</div>')",
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.6",
     "@babel/runtime": "^7.29.2",
