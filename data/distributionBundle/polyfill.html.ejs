@@ -53,16 +53,22 @@
         'WeakMap',
         'WeakSet'
     ].concat(
-        typeof additionalFeatures === 'undefined' ? [] : additionalFeatures
+        typeof _.additionalFeatures === 'undefined' ? [] : _.additionalFeatures
     ))
 _%>
 <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?version=4.8.0&features=<%- encodeURIComponent(Array.from(features).sort().join(',')) %>"></script>
-<script>
-    /*
-        Only provide the shadow dom polyfill and avoid to patch a lot
-        of dom apis.
-    */
-    window.ShadyDOM = {noPatch: true}
-</script>
-<script src="/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
-<script src="/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js"></script>
+
+<%_ if (typeof _.webComponents === 'undefined' || _.webComponents) { _%>
+    <script>
+        /*
+            Only provide the shadow dom polyfill and avoid to patch a lot of
+            dom apis.
+        */
+        window.ShadyDOM = {noPatch: true}
+    </script>
+    <script src="/@webcomponents/webcomponentsjs/webcomponents-bundle.js">
+    </script>
+    <script
+        src="/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js"
+    ></script>
+<%_ } _%>
