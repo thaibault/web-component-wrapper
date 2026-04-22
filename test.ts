@@ -14,7 +14,7 @@
     endregion
 */
 // region imports
-import {Mapping, timeout, ValueOf} from 'clientnode'
+import {Mapping, timeout} from 'clientnode'
 import {func, string} from 'clientnode/property-types'
 import {createElement, FunctionComponent, ReactElement} from 'react'
 
@@ -93,9 +93,7 @@ describe('ReactWeb', (): void => {
             static content = component as ComponentType
 
             static propertyTypes: PropertiesConfiguration = {
-                ...Web.propertyTypes as Mapping<ValueOf<
-                    PropertiesConfiguration
-                >>,
+                ...Web.propertyTypes,
 
                 onEvent: func,
 
