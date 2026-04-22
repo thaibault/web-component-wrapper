@@ -1486,10 +1486,7 @@ export class Web<
             for (const name of Object.keys(this.instance.current.state)
                 .concat(
                     this.instance.current.state.modelState ?
-                        Object.keys(
-                            this.instance.current.state.modelState as
-                                Mapping<unknown>
-                        ) :
+                        Object.keys(this.instance.current.state.modelState) :
                         []
                 )
             )
@@ -1563,9 +1560,7 @@ export class Web<
                 'then' in wrappedMapping &&
                 isFunction((wrappedMapping as {then: unknown}).then)
             ) ?
-                await (wrappedMapping as Promise<EventMapping<
-                    ExternalProperties, InternalProperties
-                >>) :
+                await wrappedMapping :
                 wrappedMapping as
                     EventMapping<ExternalProperties, InternalProperties>
 

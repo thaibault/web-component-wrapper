@@ -107,9 +107,8 @@ export const wrapAsWebComponent = <
                 const name of ReactWeb.propertiesToReflectAsAttributes as
                     Array<string>
             )
-                (propertiesToReflectAsAttributes as unknown as Mapping)[
-                    name
-                ] = ReactWeb.propertyTypes[name] as string
+                propertiesToReflectAsAttributes[name] =
+                    ReactWeb.propertyTypes[name] as string
 
     const attributeNames: Array<string> =
         allPropertyNames.map((name: string): string =>
@@ -163,7 +162,7 @@ export const wrapAsWebComponent = <
         static propertyTypes: PropertiesConfiguration = {
             ...ReactWeb.propertyTypes,
             ...propertyTypes
-        } as PropertiesConfiguration
+        }
         static renderProperties: Array<string> =
             configuration.renderProperties ??
             component.renderProperties ??
@@ -191,9 +190,7 @@ export const wrapAsWebComponent = <
         InternalProperties,
         typeof ReactWeb<Type, ExternalProperties, InternalProperties>
     > = {
-        component: ConcreteComponent as typeof ReactWeb<
-            Type, ExternalProperties, InternalProperties
-        >,
+        component: ConcreteComponent,
         register: (tagName: string = camelCaseToDelimited(name)) => {
             customElements.define(tagName, ConcreteComponent)
         }
