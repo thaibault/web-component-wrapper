@@ -79,6 +79,7 @@ import {
     NormalizedAttributesReflectionConfiguration,
     PropertiesConfiguration,
     PropertyConfiguration,
+    RenderState,
     ScopeDeclaration,
     WebComponentAPI
 } from './type'
@@ -130,7 +131,13 @@ export const GenericHTMLElement: typeof HTMLElement =
  * @property _propertiesToReflectAsAttributes - A mapping of property names to
  * set as attributes when they are set/updated. Uses a map to hold order and
  * determine if a property exists in constant runtime.
- * @property rendered - Promise resolving after each rendering.
+ * @property renderState - Holds data about currently running render state.
+ * @property renderState.promise - Promise resolving when next rendering has
+ * been finished.
+ * @property renderState.pending - Indicates whether a rendering task is
+ * performing.
+ * @property renderState.resolve - Callback to trigger when rendering has been
+ * finished.
  * @property batchAttributeUpdates - Indicates whether to directly update dom
  * after each attribute mutation or to wait and batch mutations after current
  * queue has been finished.
@@ -213,11 +220,7 @@ export class Web<
     static _propertiesToReflectAsAttributes?:
         NormalizedAttributesReflectionConfiguration
 
-    renderState: {
-        promise: null | Promise<string>
-        pending: boolean
-        resolve: (reason: string) => void
-    } = {
+    renderState: RenderState = {
         promise: null,
         pending: false,
         resolve: NOOP
