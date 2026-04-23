@@ -213,8 +213,15 @@ export class Web<
     static _propertiesToReflectAsAttributes?:
         NormalizedAttributesReflectionConfiguration
 
-    rendered: null | Promise<string> = null
-    _resolveRendering: (reason: string) => void = NOOP
+    renderState: {
+        promise: null | Promise<string>
+        pending: boolean
+        resolve: (reason: string) => void
+    } = {
+        promise: null,
+        pending: false,
+        resolve: NOOP
+    }
 
     batchAttributeUpdates = true
     batchPropertyUpdates = true
@@ -315,9 +322,7 @@ export class Web<
                 this.batchedAttributeUpdateRunning = true
                 this.batchedUpdateRunning = true
 
-                this.rendered = new Promise<string>((resolve) => {
-                    this._resolveRendering = resolve
-                })
+                this.indicateNewRendering()
 
                 void timeout(() => {
                     this.batchedAttributeUpdateRunning = false
@@ -327,9 +332,7 @@ export class Web<
                 })
             }
         } else {
-            this.rendered = new Promise<string>((resolve) => {
-                this._resolveRendering = resolve
-            })
+            this.indicateNewRendering()
 
             void this.render('attributeChanged')
         }
@@ -369,9 +372,7 @@ export class Web<
 
         this.reflectExternalProperties(this.externalProperties)
 
-        this.rendered = new Promise<string>((resolve) => {
-            this._resolveRendering = resolve
-        })
+        this.indicateNewRendering()
 
         if (this.runDomConnectionAndRenderingInSameEventQueue)
             void this.render('connected')
@@ -526,9 +527,7 @@ export class Web<
      * @param value - New value to write.
      */
     triggerPropertySpecificRendering(name: string, value: unknown): void {
-        this.rendered = new Promise<string>((resolve) => {
-            this._resolveRendering = resolve
-        })
+        this.indicateNewRendering()
 
         if (this.batchPropertyUpdates) {
             if (!(
@@ -1216,8 +1215,6 @@ export class Web<
      * @param scope - Environment to render slots again if specified.
      */
     applySlots(targetDomNode: HTMLElement, scope: Mapping<unknown>): void {
-        console.log('RENDER', this.slots.default, 'END')
-
         for (const domNode of Array.from(
             targetDomNode.querySelectorAll<HTMLSlotElement>('slot')
         )) {
@@ -1324,6 +1321,7 @@ export class Web<
             this.slots[slotValue ?? slot.nodeName.toLowerCase()] =
                 this.grabSlotContent(slot) as HTMLElement
         }
+
         if (this.slots.default)
             this.slots.default =
                 ([] as Array<Node>).concat(this.slots.default)
@@ -1890,13 +1888,25 @@ export class Web<
     /// endregion
     /// region render
     /**
+     * Indicates a new render task.
+     */
+    indicateNewRendering() {
+        if (!this.renderState.pending) {
+            this.renderState.pending = true
+            this.renderState.promise = new Promise<string>((resolve) => {
+                this.renderState.resolve = (reason: string) => {
+                    this.renderState.pending = false
+                    resolve(reason)
+                }
+            })
+        }
+    }
+    /**
      * Triggers a new rendering cycle by respecting batch configuration.
      * @param reason - A description why rendering should be triggered.
      */
     triggerRender(reason: string) {
-        this.rendered = new Promise<string>((resolve) => {
-            this._resolveRendering = resolve
-        })
+        this.indicateNewRendering()
 
         if (this.batchUpdates) {
             if (!this.batchedUpdateRunning) {
@@ -1962,7 +1972,7 @@ export class Web<
         if (!this.dispatchEvent(new CustomEvent(
             'render', {detail: {reason, scope: this.scope}}
         ))) {
-            this._resolveRendering(reason)
+            this.renderState.resolve(reason)
             return Promise.resolve()
         }
 
@@ -1972,7 +1982,7 @@ export class Web<
         if (evaluated.error) {
             log.warn(`Failed to process template: ${evaluated.error}`)
 
-            this._resolveRendering(reason)
+            this.renderState.resolve(reason)
             return Promise.resolve()
         }
 
@@ -1997,7 +2007,8 @@ export class Web<
             this.root.firstChild, this.scope, this.self.renderSlots
         )
 
-        this._resolveRendering(reason)
+        this.renderState.resolve(reason)
+
         return Promise.resolve()
     }
     /// endregion
