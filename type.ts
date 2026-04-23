@@ -25,6 +25,11 @@ import React, {
 import Web from './Web'
 // endregion
 // region exports
+export interface RenderState {
+    promise: null | Promise<string>
+    pending: boolean
+    resolve: (reason: string) => void
+}
 export interface CompilerOptions {
     filter?: (domNode: Node) => boolean
     ignoreComponents?: boolean
