@@ -39,6 +39,7 @@ import {
     TemplateFunction,
     timeout,
     unique,
+    unwrap,
     UTILITY_SCOPE,
     UTILITY_SCOPE_NAMES,
     UTILITY_SCOPE_VALUES
@@ -989,24 +990,6 @@ export class Web<
 
         domNode.remove()
     }
-    /**
-     * Moves content of given dom node one level up and removes given node.
-     * @param domNode - Node to unwrap.
-     * @returns List of unwrapped nodes.
-     */
-    static unwrapDomNode(domNode: HTMLElement): Array<ChildNode> {
-        // Move all children out of the element to unwrap fallback content.
-        const parent = domNode.parentNode as HTMLElement
-        const result: Array<ChildNode> = []
-        while (domNode.firstChild) {
-            result.push(domNode.firstChild)
-            parent.insertBefore(domNode.firstChild, domNode)
-        }
-
-        parent.removeChild(domNode)
-
-        return result
-    }
     addSecureEventListener(
         domNode: Node | Window,
         name: string,
@@ -1247,11 +1230,10 @@ export class Web<
                         this.self.replaceDomNodes(domNode, this.slots.default)
                     }
                 } else
-                    this.slots.default =
-                        this.self.unwrapDomNode(domNode)
-                            .map((domNode: Node): Node =>
-                                this.grabSlotContent(domNode)
-                            )
+                    this.slots.default = unwrap(domNode)
+                        .map((domNode: Node): Node =>
+                            this.grabSlotContent(domNode)
+                        )
             else if (this.slots[name]) {
                 if (this.self.renderSlots) {
                     if (this.self.evaluateSlots)
@@ -1261,7 +1243,7 @@ export class Web<
                 }
             } else
                 this.slots[name] = this.grabSlotContent(
-                    this.self.unwrapDomNode(domNode)
+                    unwrap(domNode)
                         .filter((domNode: Node): boolean =>
                             domNode.nodeName.toLowerCase() !== '#text'
                         )[0]
