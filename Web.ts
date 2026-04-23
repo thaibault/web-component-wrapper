@@ -1216,6 +1216,8 @@ export class Web<
      * @param scope - Environment to render slots again if specified.
      */
     applySlots(targetDomNode: HTMLElement, scope: Mapping<unknown>): void {
+        console.log('RENDER', this.slots.default, 'END')
+
         for (const domNode of Array.from(
             targetDomNode.querySelectorAll<HTMLSlotElement>('slot')
         )) {
