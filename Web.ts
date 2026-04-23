@@ -32,6 +32,7 @@ import {
     Logger,
     lowerCase,
     Mapping,
+    NOOP,
     PositiveEvaluationResult,
     PlainObject,
     represent,
@@ -128,6 +129,7 @@ export const GenericHTMLElement: typeof HTMLElement =
  * @property _propertiesToReflectAsAttributes - A mapping of property names to
  * set as attributes when they are set/updated. Uses a map to hold order and
  * determine if a property exists in constant runtime.
+ * @property rendered - Promise resolving after each rendering.
  * @property batchAttributeUpdates - Indicates whether to directly update dom
  * after each attribute mutation or to wait and batch mutations after current
  * queue has been finished.
@@ -209,6 +211,9 @@ export class Web<
     static _propertyAliasIndex?: Mapping
     static _propertiesToReflectAsAttributes?:
         NormalizedAttributesReflectionConfiguration
+
+    rendered: null | Promise<string> = null
+    _resolveRendering: (reason: string) => void = NOOP
 
     batchAttributeUpdates = true
     batchPropertyUpdates = true
@@ -309,6 +314,10 @@ export class Web<
                 this.batchedAttributeUpdateRunning = true
                 this.batchedUpdateRunning = true
 
+                this.rendered = new Promise<string>((resolve) => {
+                    this._resolveRendering = resolve
+                })
+
                 void timeout(() => {
                     this.batchedAttributeUpdateRunning = false
                     this.batchedUpdateRunning = false
@@ -316,8 +325,13 @@ export class Web<
                     void this.render('attributeChanged')
                 })
             }
-        } else
+        } else {
+            this.rendered = new Promise<string>((resolve) => {
+                this._resolveRendering = resolve
+            })
+
             void this.render('attributeChanged')
+        }
     }
     /**
      * Triggered when this component is mounted into the document.
@@ -353,6 +367,10 @@ export class Web<
         this.grabGivenSlots()
 
         this.reflectExternalProperties(this.externalProperties)
+
+        this.rendered = new Promise<string>((resolve) => {
+            this._resolveRendering = resolve
+        })
 
         if (this.runDomConnectionAndRenderingInSameEventQueue)
             void this.render('connected')
@@ -507,6 +525,10 @@ export class Web<
      * @param value - New value to write.
      */
     triggerPropertySpecificRendering(name: string, value: unknown): void {
+        this.rendered = new Promise<string>((resolve) => {
+            this._resolveRendering = resolve
+        })
+
         if (this.batchPropertyUpdates) {
             if (!(
                 this.batchedPropertyUpdateRunning || this.batchedUpdateRunning
@@ -1888,6 +1910,10 @@ export class Web<
      * @param reason - A description why rendering should be triggered.
      */
     triggerRender(reason: string) {
+        this.rendered = new Promise<string>((resolve) => {
+            this._resolveRendering = resolve
+        })
+
         if (this.batchUpdates) {
             if (!this.batchedUpdateRunning) {
                 this.batchedUpdateRunning = true
@@ -1951,8 +1977,10 @@ export class Web<
 
         if (!this.dispatchEvent(new CustomEvent(
             'render', {detail: {reason, scope: this.scope}}
-        )))
+        ))) {
+            this._resolveRendering(reason)
             return Promise.resolve()
+        }
 
         const evaluated: EvaluationResult = evaluate(
             `\`${this.self.content as string}\``, this.scope
@@ -1960,6 +1988,7 @@ export class Web<
         if (evaluated.error) {
             log.warn(`Failed to process template: ${evaluated.error}`)
 
+            this._resolveRendering(reason)
             return Promise.resolve()
         }
 
@@ -1984,6 +2013,7 @@ export class Web<
             this.root.firstChild, this.scope, this.self.renderSlots
         )
 
+        this._resolveRendering(reason)
         return Promise.resolve()
     }
     /// endregion
