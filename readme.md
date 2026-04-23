@@ -26,7 +26,7 @@ Project status
 [![code coverage](https://img.shields.io/coverallsCoverage/github/thaibault/web-component-wrapper?label=code%20coverage&style=for-the-badge)](https://coveralls.io/github/thaibault/web-component-wrapper)
 
 [![deploy web documentation](https://img.shields.io/github/actions/workflow/status/thaibault/web-component-wrapper/deploy-web-documentation.yaml?label=deploy%20web%20documentation&style=for-the-badge)](https://github.com/thaibault/web-component-wrapper/actions/workflows/deploy-web-documentation.yaml)
-[![documentation website](https://img.shields.io/website-up-down-green-red/https/torben.website/web-component-wrapper.svg?label=web-documentation&style=for-the-badge)](https://torben.website/web-component-wrapper)
+[![web documentation](https://img.shields.io/website-up-down-green-red/https/torben.website/web-component-wrapper.svg?label=web-documentation&style=for-the-badge)](https://torben.website/web-component-wrapper)
 
 Use case
 --------

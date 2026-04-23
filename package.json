@@ -44,10 +44,10 @@
     "url": "https://github.com/thaibault/web-component-wrapper"
   },
   "scripts": {
-    "build": "yarn build:types; yarn build:plain",
-    "build:bundle": "yarn build:types; yarn build:bundle:plain",
-    "build:bundle:plain": "weboptimizer build '{__reference__: \"target:bundle\"}'; yarn build:next",
-    "build:plain": "weboptimizer build; yarn build:next",
+    "build": "yarn build:types; yarn build:plain; yarn build:next",
+    "build:bundle": "yarn build:types; yarn build:bundle:plain; yarn build:next",
+    "build:bundle:plain": "weboptimizer build '{__reference__: \"target:bundle\"}'",
+    "build:plain": "weboptimizer build",
     "build:next": "weboptimizer build '{__reference__: \"target:next\"}'",
     "build:types": "weboptimizer build:types",
     "check": "yarn check:types; yarn lint",
