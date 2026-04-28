@@ -2014,23 +2014,19 @@ export class Web<
 
         await timeout()
 
-        if (resolveRendering) {
-            this.renderState.pending = false
-            this.renderState.resolve(reason)
-            await Promise.all(this.self.pendingRenderPromises)
+        void Promise.all(this.self.pendingRenderPromises).then(() => {
             this.prepareNewRenderingPromise()
 
             this.applyBindings(
                 this.root.firstChild, this.scope, this.self.renderSlots
             )
-        } else
-            void Promise.all(this.self.pendingRenderPromises).then(() => {
-                this.prepareNewRenderingPromise()
+        })
 
-                this.applyBindings(
-                    this.root.firstChild, this.scope, this.self.renderSlots
-                )
-            })
+        if (resolveRendering) {
+            this.renderState.pending = false
+            this.renderState.resolve(reason)
+            await Promise.all(this.self.pendingRenderPromises)
+        }
     }
     /// endregion
     // endregion
