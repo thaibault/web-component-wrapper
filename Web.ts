@@ -1884,6 +1884,26 @@ export class Web<
     /// endregion
     /// region render
     /**
+     * Resolves the rendering promise.
+     * @param reason - Rendering reason description.
+     * @param resolveRendering - Indicates whether to resolve the rendering or
+     * just return a resolving promise directly.
+     * @returns A promise resolving when all nested render promises has been
+     * resolved.
+     */
+    resolveRenderingPromise(
+        reason: string, resolveRendering: boolean
+    ): Promise<void> {
+        if (resolveRendering) {
+            this.renderState.pending = false
+            this.renderState.resolve(reason)
+
+            return Promise.all(this.self.pendingRenderPromises)
+        }
+
+        return Promise.resolve()
+    }
+    /**
      * Setups a new rendering cycle representing promise.
      */
     prepareNewRenderingPromise() {
@@ -2022,11 +2042,7 @@ export class Web<
             )
         })
 
-        if (resolveRendering) {
-            this.renderState.pending = false
-            this.renderState.resolve(reason)
-            await Promise.all(this.self.pendingRenderPromises)
-        }
+        await this.resolveRenderingPromise(reason, resolveRendering)
     }
     /// endregion
     // endregion

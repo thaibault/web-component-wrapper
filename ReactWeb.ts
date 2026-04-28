@@ -243,13 +243,12 @@ export class ReactWeb<
             }
         })
 
-        if (resolveRendering) {
-            await Promise.all(this.self.pendingRenderPromises)
+        void Promise.all(this.self.pendingRenderPromises).then(() => {
             this.prepareNewRenderingPromise()
-        } else
-            void Promise.all(this.self.pendingRenderPromises).then(() => {
-                this.prepareNewRenderingPromise()
-            })
+        })
+
+        if (resolveRendering)
+            await Promise.all(this.self.pendingRenderPromises)
     }
     // endregion
     // region property handling
