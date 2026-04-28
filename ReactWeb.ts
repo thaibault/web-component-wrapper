@@ -162,6 +162,12 @@ export class ReactWeb<
      * be needed for classes inheriting from this class.
      */
     async render(reason = 'unknown'): Promise<void> {
+        if (this.isRoot)
+            this.self.pendingRenderPromises = []
+
+        if (this.renderState.promise)
+            this.self.pendingRenderPromises.push(this.renderState.promise)
+
         /*
             NOTE: We prevent a nested react component from self rendering since
             they will be rendered by highest react parent.
@@ -171,8 +177,11 @@ export class ReactWeb<
             !this.dispatchEvent(new CustomEvent(
                 'render', {detail: {reason, scope: this.scope}}
             ))
-        )
+        ) {
+            this.renderState.resolve(reason)
+
             return
+        }
 
         this.determineRenderScope()
 
@@ -214,18 +223,18 @@ export class ReactWeb<
             this.reactRoot = createRoot(this.root, {identifierPrefix})
         }
 
-        await new Promise<void>((resolve: () => void) => {
-            flushSync(() => {
-                this.reactRoot?.render(
-                    createElement(
-                        this.self.content as
-                            ReactComponentType<InternalProperties>,
-                        this.internalProperties
-                    )
+        flushSync(() => {
+            this.reactRoot?.render(
+                createElement(
+                    this.self.content as
+                        ReactComponentType<InternalProperties>,
+                    this.internalProperties
                 )
-                resolve()
-            })
+            )
+            this.renderState.resolve(reason)
         })
+
+        await this.renderState.promise
     }
     // endregion
     // region property handling

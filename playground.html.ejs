@@ -20,7 +20,7 @@
         <meta http-equiv="expires" content="0">
         <meta http-equiv="pragma" content="no-cache">
         <title>playground</title>
-        <%- include('polyfill.html') %>
+        <%- _.include('polyfill.html') %>
         <!--region script-->
         <script>
             window.onload = function() {
@@ -29,6 +29,8 @@
                     MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION,
                     represent
                 } = webComponentWrapper.clientnode
+
+                console.log('A', MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION)
 
                 // region prepare web-component
                 const Web = webComponentWrapper.index.Web
