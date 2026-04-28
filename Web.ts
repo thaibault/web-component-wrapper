@@ -1959,7 +1959,7 @@ export class Web<
      * property.
      */
     applyShadowRootIfNotExisting() {
-        if (this.self.shadowDOM && this.rootInstance === this)
+        if (this.self.shadowDOM && this.rootDomNode === this)
             this.rootDomNode = (
                 (!('attachShadow' in this) && 'ShadyDOM' in window) ?
                     (
@@ -2057,11 +2057,11 @@ export class Web<
 
         await timeout()
 
-        void this.waitForNestedComponentRendering().then(() => {
-            this.applyBindings(
-                this.rootInstance.firstChild, this.scope, this.self.renderSlots
-            )
-        })
+        await this.waitForNestedComponentRendering()
+
+        this.applyBindings(
+            this.rootInstance.firstChild, this.scope, this.self.renderSlots
+        )
 
         await this.resolveRenderingPromiseIfSet(reason, resolveRendering)
     }
