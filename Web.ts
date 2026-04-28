@@ -275,6 +275,8 @@ export class Web<
      */
     constructor() {
         super()
+
+        this.prepareNewRenderingPromise()
         /*
             NOTE: We cannot use something like "this." e.g. "this.self" to
             determine class properties since instance properties like "self"
