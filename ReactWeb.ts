@@ -158,15 +158,20 @@ export class ReactWeb<
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
+     * @param resolveRendering - Indicates whether rendering should be resolved
+     * finally. Should be set to "false" via super calls in inherited render
+     * methods which do further dom manipulations afterwards and resolve the
+     * rendering process by their own.
      * @returns A promise resolving when rendering has finished. A promise may
      * be needed for classes inheriting from this class.
      */
-    async render(reason = 'unknown'): Promise<void> {
+    async render(reason = 'unknown', resolveRendering = true): Promise<void> {
+        this.renderState.pending = true
+
         if (this.isRoot)
             this.self.pendingRenderPromises = []
 
-        if (this.renderState.promise)
-            this.self.pendingRenderPromises.push(this.renderState.promise)
+        this.self.pendingRenderPromises.push(this.renderState.promise)
 
         /*
             NOTE: We prevent a nested react component from self rendering since
@@ -231,10 +236,20 @@ export class ReactWeb<
                     this.internalProperties
                 )
             )
-            this.renderState.resolve(reason)
+
+            if (resolveRendering) {
+                this.renderState.pending = false
+                this.renderState.resolve(reason)
+            }
         })
 
-        await this.renderState.promise
+        if (resolveRendering) {
+            await Promise.all(this.self.pendingRenderPromises)
+            this.prepareNewRenderingPromise()
+        } else
+            void Promise.all(this.self.pendingRenderPromises).then(() => {
+                this.prepareNewRenderingPromise()
+            })
     }
     // endregion
     // region property handling

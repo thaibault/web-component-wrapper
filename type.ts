@@ -26,7 +26,7 @@ import Web from './Web'
 // endregion
 // region exports
 export interface RenderState {
-    promise: null | Promise<string>
+    promise: Promise<string>
     pending: boolean
     resolve: (reason: string) => void
 }
