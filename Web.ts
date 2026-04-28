@@ -228,6 +228,8 @@ export class Web<
         resolve: NOOP
     }
 
+    childComponentInstances: Array<Web> = []
+
     batchAttributeUpdates = true
     batchPropertyUpdates = true
     batchUpdates = true
@@ -289,7 +291,7 @@ export class Web<
         this.generateAliasIndex()
 
         // NOTE: Shadow root will be applied when rendering the first time.
-        this.root = this
+        this.rootInstance = this
 
         /*
             NOTE: We define getter and setter at the end to avoid shadowing
@@ -350,14 +352,18 @@ export class Web<
             // Ignore error.
         }
 
-        // NOTE: Can be overwritten during option root determining.
-        this.parent = this
+        // NOTE: Can be overwritten during optional root determining.
+        this.parentInstance = this
         this.rootInstance = this
 
         this.attachEventHandler()
 
-        if (this.self.determineRootBinding)
+        if (this.self.determineRootBinding) {
             this.determineRootBinding()
+
+            if (this.parentInstance !== this)
+                this.parentInstance.childComponentInstances.push(this)
+        }
 
         if (this.self.applyRootBinding && this.isRoot) {
             this.determineRenderScope()
@@ -1018,33 +1024,41 @@ export class Web<
      */
     determineRootBinding() {
         /*
-            If this component is the root component trigger event handler by
-            its own in global context.
+            If this component is the root component we have to trigger binded
+            event handler by our own in global context since there is no parent
+            doing that for us.
         */
 
         let currentElement: Node | null = this.parentNode
         while (currentElement) {
-            const isComponent = (
+            const isComponent =
                 currentElement instanceof Web ||
-                currentElement.nodeName.includes('-') ||
-                /*
-                    NOTE: Assume none root if determined a wrapped closed
-                    shadow root.
-                */
+                currentElement.nodeName.includes('-') &&
+                currentElement.nodeName !== '#document-fragment'
+
+            const isInShadowDOM =
                 currentElement.parentNode === null &&
                 /* eslint-disable @typescript-eslint/no-base-to-string */
                 currentElement.toString() === '[object ShadowRoot]'
                 /* eslint-enable @typescript-eslint/no-base-to-string */
-            )
 
-            if (isComponent)
+            if (isComponent) {
                 if (this.rootInstance === this) {
-                    this.parent = currentElement as Web
-                    this.rootInstance = currentElement as Web
-
+                    this.parentInstance = currentElement as Web
+                    /*
+                        NOTE: There is at least one parent so we can set
+                        "isRoot" to "false".
+                    */
                     this.setPropertyValue('isRoot', false)
-                } else
-                    this.rootInstance = currentElement as Web
+                }
+
+                this.rootInstance = currentElement as Web
+            } else if (isInShadowDOM)
+                /*
+                    NOTE: Assume none root if determined a wrapped closed
+                    shadow DOM.
+                */
+                this.setPropertyValue('isRoot', false)
 
             currentElement = currentElement.parentNode
         }
@@ -1883,6 +1897,13 @@ export class Web<
     }
     /// endregion
     /// region render
+    async waitForNestedComponentRendering(): Promise<void> {
+        await Promise.all(this.childComponentInstances.map((component: Web) =>
+            component.renderState.pending ?
+                component.renderState.promise :
+                Promise.resolve()
+        ))
+    }
     /**
      * Resolves the rendering promise.
      * @param reason - Rendering reason description.
@@ -1891,14 +1912,15 @@ export class Web<
      * @returns A promise resolving when all nested render promises has been
      * resolved.
      */
-    async resolveRenderingPromise(
+    async resolveRenderingPromiseIfSet(
         reason: string, resolveRendering: boolean
     ): Promise<void> {
         if (resolveRendering) {
+            await this.waitForNestedComponentRendering()
+
             this.renderState.pending = false
             this.renderState.resolve(reason)
-
-            await Promise.all(this.self.pendingRenderPromises)
+            this.prepareNewRenderingPromise()
         }
     }
     /**
@@ -1935,8 +1957,8 @@ export class Web<
      * property.
      */
     applyShadowRootIfNotExisting() {
-        if (this.self.shadowDOM && this.root === this)
-            this.root = (
+        if (this.self.shadowDOM && this.rootInstance === this)
+            this.rootInstance = (
                 (!('attachShadow' in this) && 'ShadyDOM' in window) ?
                     (
                         window as unknown as
@@ -1958,11 +1980,11 @@ export class Web<
      */
     determineRenderScope(scope: Mapping<unknown> = {}) {
         this.scope = {
-            ...(this.parent?.scope || {}),
+            ...(this.parentInstance?.scope || {}),
             ...this.scope,
             ...this.internalProperties,
-            parent: this.parent,
-            root: this.rootInstance,
+            parentInstance: this.parentInstance,
+            rootInstance: this.rootInstance,
             self: this,
             [lowerCase(this.self._name) || 'instance']: this,
             ...scope
@@ -1981,6 +2003,7 @@ export class Web<
      * be needed for classes inheriting from this class.
      */
     async render(reason = 'unknown', resolveRendering = true): Promise<void> {
+        this.childComponentInstances = []
         this.renderState.pending = true
 
         if (this.isRoot) {
@@ -2019,7 +2042,7 @@ export class Web<
             NOTE: We first render into an intermediate render target and apply
             slot content until we finally publish everything to document. This
             avoids painting twice and internetexplorer bugs with empty node
-            after first overwriting content of "this.root".
+            after first overwriting content of "this.rootInstance".
         */
         const renderTargetDomNode: HTMLDivElement =
             document.createElement('div')
@@ -2028,19 +2051,17 @@ export class Web<
 
         this.applySlots(renderTargetDomNode, {...this.scope, parent: this})
 
-        this.root.innerHTML = renderTargetDomNode.innerHTML
+        this.rootInstance.innerHTML = renderTargetDomNode.innerHTML
 
         await timeout()
 
-        void Promise.all(this.self.pendingRenderPromises).then(() => {
-            this.prepareNewRenderingPromise()
-
+        void this.waitForNestedComponentRendering().then(() => {
             this.applyBindings(
-                this.root.firstChild, this.scope, this.self.renderSlots
+                this.rootInstance.firstChild, this.scope, this.self.renderSlots
             )
         })
 
-        await this.resolveRenderingPromise(reason, resolveRendering)
+        await this.resolveRenderingPromiseIfSet(reason, resolveRendering)
     }
     /// endregion
     // endregion

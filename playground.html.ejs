@@ -212,7 +212,7 @@
 
         <my-react-web id="web-react-2">
             <h1
-                bind-attribute-class="'class-' + parent.self._name"
+                bind-attribute-class="'class-' + parentInstance.self._name"
                 id="simple-id"
             >
                 Slotted Content
@@ -239,12 +239,12 @@
 
                     <input
                         name="my-react-web-test-input"
-                        bind-on-change="parent.scope.value = event.target.value; root.render()"
+                        bind-on-change="parentInstance.scope.value = event.target.value; rootInstance.render()"
                         default-value="test"
                     />
 
                     <div>
-                        Input: "<span bind-property-text-content="parent.scope.value || 'placeholder'"></span>"
+                        Input: "<span bind-property-text-content="parentInstance.scope.value || 'placeholder'"></span>"
                     </div>
                 </div>
             </my-react-web>

@@ -166,6 +166,7 @@ export class ReactWeb<
      * be needed for classes inheriting from this class.
      */
     async render(reason = 'unknown', resolveRendering = true): Promise<void> {
+        this.childComponentInstances = []
         this.renderState.pending = true
 
         if (this.isRoot)
@@ -182,23 +183,20 @@ export class ReactWeb<
             !this.dispatchEvent(new CustomEvent(
                 'render', {detail: {reason, scope: this.scope}}
             ))
-        ) {
-            this.renderState.resolve(reason)
-
-            return
-        }
+        )
+            return this.resolveRenderingPromiseIfSet(reason, resolveRendering)
 
         this.determineRenderScope()
 
         if (Object.keys(this.compiledSlots).length === 0)
             this.preCompileSlots()
 
-        this.evaluateSlots({...this.scope, parent: this})
+        this.evaluateSlots({...this.scope, parentInstance: this})
         this.prepareProperties(this.internalProperties)
 
         this.applyShadowRootIfNotExisting()
 
-        if (this.root !== this) {
+        if (this.rootInstance !== this) {
             /*
                 Remove template nodes since they will be replaced by reacts
                 render result (only necessary when having a dedicated rendering
@@ -225,7 +223,7 @@ export class ReactWeb<
             if (typeof identifierPrefixCandidate === 'string')
                 identifierPrefix = identifierPrefixCandidate
 
-            this.reactRoot = createRoot(this.root, {identifierPrefix})
+            this.reactRoot = createRoot(this.rootInstance, {identifierPrefix})
         }
 
         flushSync(() => {
@@ -237,18 +235,10 @@ export class ReactWeb<
                 )
             )
 
-            if (resolveRendering) {
-                this.renderState.pending = false
-                this.renderState.resolve(reason)
-            }
+            void this.resolveRenderingPromiseIfSet(reason, resolveRendering)
         })
 
-        void Promise.all(this.self.pendingRenderPromises).then(() => {
-            this.prepareNewRenderingPromise()
-        })
-
-        if (resolveRendering)
-            await Promise.all(this.self.pendingRenderPromises)
+        await this.renderState.promise
     }
     // endregion
     // region property handling
@@ -645,7 +635,7 @@ export class ReactWeb<
                     ...properties
                 }
                 runtimeScope = {
-                    ...properties, ...runtimeScope, parent: domNode
+                    ...properties, ...runtimeScope, parentInstance: domNode
                 }
 
                 ;(domNode as ReactWeb).evaluateSlots(runtimeScope)
@@ -696,7 +686,7 @@ export class ReactWeb<
             if (this.slots[name] && name !== 'default')
                 this.compiledSlots[name] = this.preCompileDomNode(
                     this.slots[name],
-                    {...this.scope, parent: this},
+                    {...this.scope, parentInstance: this},
                     ([func, 'function'] as Array<PropertyConfiguration>)
                         .includes(this.self.propertyTypes[name])
                 )
@@ -704,7 +694,7 @@ export class ReactWeb<
         if (this.slots.default && this.slots.default.length > 0)
             this.compiledSlots.children = this.preCompileDomNodes(
                 this.slots.default,
-                {...this.scope, parent: this},
+                {...this.scope, parentInstance: this},
                 ([func, 'function'] as Array<PropertyConfiguration>)
                     .includes(this.self.propertyTypes.children)
             )
