@@ -1891,17 +1891,15 @@ export class Web<
      * @returns A promise resolving when all nested render promises has been
      * resolved.
      */
-    resolveRenderingPromise(
+    async resolveRenderingPromise(
         reason: string, resolveRendering: boolean
     ): Promise<void> {
         if (resolveRendering) {
             this.renderState.pending = false
             this.renderState.resolve(reason)
 
-            return Promise.all(this.self.pendingRenderPromises)
+            await Promise.all(this.self.pendingRenderPromises)
         }
-
-        return Promise.resolve()
     }
     /**
      * Setups a new rendering cycle representing promise.
