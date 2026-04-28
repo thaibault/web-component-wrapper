@@ -152,7 +152,7 @@ export const GenericHTMLElement: typeof HTMLElement =
  * a property update is currently batched.
  * @property batchedUpdateRunning - Indicates whether a batched render update
  * is currently running.
- * @property parent - Parent component instance.
+ * @property parentInstance - Parent component instance.
  * @property rootInstance - Root component instance.
  * @property scope - Render scope.
  * @property domNodeEventBindings - Holds a mapping from nodes with registered
@@ -242,8 +242,11 @@ export class Web<
     batchedPropertyUpdateRunning = true
     batchedUpdateRunning = true
 
-    parent: null | Web = null
-    rootInstance: null | Web = null
+    parentInstance: null | Web = null
+    rootInstance: Web
+    rootDomNode:
+        ShadowRoot | Web<TElement, ExternalProperties, InternalProperties>
+
     scope: Mapping<unknown> = {...UTILITY_SCOPE}
 
     domNodeEventBindings = new Map<Node | Window, EventCallbackMapping>()
@@ -258,8 +261,6 @@ export class Web<
     instance: null | {current?: ComponentAdapter} = null
     @property({type: boolean, writeAttribute: true})
         isRoot = true
-
-    root: ShadowRoot | Web<TElement, ExternalProperties, InternalProperties>
 
     runDomConnectionAndRenderingInSameEventQueue = false
 
@@ -291,6 +292,7 @@ export class Web<
         this.generateAliasIndex()
 
         // NOTE: Shadow root will be applied when rendering the first time.
+        this.rootDomNode = this
         this.rootInstance = this
 
         /*
@@ -1958,7 +1960,7 @@ export class Web<
      */
     applyShadowRootIfNotExisting() {
         if (this.self.shadowDOM && this.rootInstance === this)
-            this.rootInstance = (
+            this.rootDomNode = (
                 (!('attachShadow' in this) && 'ShadyDOM' in window) ?
                     (
                         window as unknown as

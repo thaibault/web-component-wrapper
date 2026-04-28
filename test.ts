@@ -46,7 +46,7 @@ describe('Web', (): void => {
 
         document.body.appendChild(web)
 
-        expect(web).toHaveProperty('root', web)
+        expect(web).toHaveProperty('rootInstance', web)
 
         expect(web).not.toHaveProperty('clicked')
         web.click()
@@ -123,7 +123,7 @@ describe('ReactWeb', (): void => {
 
         document.body.appendChild(react)
 
-        expect(react).toHaveProperty('root', react)
+        expect(react).toHaveProperty('rootInstance', react)
         expect(react).toHaveProperty('reactRoot')
 
         expect(triggerOnEvent).not.toBeDefined()

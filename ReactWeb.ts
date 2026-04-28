@@ -223,7 +223,7 @@ export class ReactWeb<
             if (typeof identifierPrefixCandidate === 'string')
                 identifierPrefix = identifierPrefixCandidate
 
-            this.reactRoot = createRoot(this.rootInstance, {identifierPrefix})
+            this.reactRoot = createRoot(this.rootDomNode, {identifierPrefix})
         }
 
         flushSync(() => {
