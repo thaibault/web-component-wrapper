@@ -26,41 +26,38 @@
             window.onload = function() {
                 const {
                     camelCaseToDelimited,
-                    MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION,
+                    POLYFILL_TEMPLATE_STRINGS,
                     represent
                 } = webComponentWrapper.clientnode
-
-                console.log('A', MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION)
 
                 // region prepare web-component
                 const Web = webComponentWrapper.index.Web
 
                 Web.evaluateSlots = true
-                Web.content =
-                    MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION.value === 0 ?
-                        ('<div class="wrapper">' +
-                            "Example Properties\${id ? (' for ' + id) : ''}:" +
-                            '<ul>' +
-                                '${Object.keys(self.externalProperties)' +
-                                    '.map(function(name) {' +
-                                        'return (' +
-                                            "'<li>' +" +
-                                                'name +' +
-                                                "': ' +" +
-                                                'object.represent(self.externalProperties[name]) +' +
-                                            "'</li>'" +
-                                        ')' +
-                                    '})' +
-                                    ".join('')" +
-                                '}' +
-                            '</ul>' +
+                Web.content = POLYFILL_TEMPLATE_STRINGS.value ?
+                    (
+                        '<div class="wrapper">' +
                             '<slot>Fallback Slot content</slot>' +
-                        '</div>') :
-                        Web.content = (
-                            '<div class="wrapper">' +
-                                '<slot>Fallback Slot content</slot>' +
-                            '</div>'
-                        )
+                        '</div>'
+                    ) :
+                    ('<div class="wrapper">' +
+                        "Example Properties\${id ? (' for ' + id) : ''}:" +
+                        '<ul>' +
+                            '${Object.keys(self.externalProperties)' +
+                                '.map(function(name) {' +
+                                    'return (' +
+                                        "'<li>' +" +
+                                            'name +' +
+                                            "': ' +" +
+                                            'object.represent(self.externalProperties[name]) +' +
+                                        "'</li>'" +
+                                    ')' +
+                                '})' +
+                                ".join('')" +
+                            '}' +
+                        '</ul>' +
+                        '<slot>Fallback Slot content</slot>' +
+                    '</div>')
                 Web.propertiesToReflectAsAttributes.push('exampleBoolean')
 
                 const propertyTypes = {
@@ -81,10 +78,9 @@
                     .map(function(name) {
                         return camelCaseToDelimited(name)
                     })
-                Web.shadowDOM =
-                    MAXIMAL_SUPPORTED_INTERNET_EXPLORER_VERSION.value === 0 ?
-                        {mode: 'closed'} :
-                        null
+                Web.shadowDOM = POLYFILL_TEMPLATE_STRINGS.value ?
+                    null :
+                    {mode: 'closed'}
 
                 webComponentWrapper.index.webAPI.register('my-web')
                 // endregion
