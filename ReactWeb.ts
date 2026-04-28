@@ -191,12 +191,12 @@ export class ReactWeb<
         if (Object.keys(this.compiledSlots).length === 0)
             this.preCompileSlots()
 
-        this.evaluateSlots({...this.scope, parent: this})
+        this.evaluateSlots({...this.scope, parentInstance: this})
         this.prepareProperties(this.internalProperties)
 
         this.applyShadowRootIfNotExisting()
 
-        if (this.root !== this) {
+        if (this.rootInstance !== this) {
             /*
                 Remove template nodes since they will be replaced by reacts
                 render result (only necessary when having a dedicated rendering
@@ -223,7 +223,7 @@ export class ReactWeb<
             if (typeof identifierPrefixCandidate === 'string')
                 identifierPrefix = identifierPrefixCandidate
 
-            this.reactRoot = createRoot(this.root, {identifierPrefix})
+            this.reactRoot = createRoot(this.rootInstance, {identifierPrefix})
         }
 
         flushSync(() => {
@@ -635,7 +635,7 @@ export class ReactWeb<
                     ...properties
                 }
                 runtimeScope = {
-                    ...properties, ...runtimeScope, parent: domNode
+                    ...properties, ...runtimeScope, parentInstance: domNode
                 }
 
                 ;(domNode as ReactWeb).evaluateSlots(runtimeScope)
@@ -686,7 +686,7 @@ export class ReactWeb<
             if (this.slots[name] && name !== 'default')
                 this.compiledSlots[name] = this.preCompileDomNode(
                     this.slots[name],
-                    {...this.scope, parent: this},
+                    {...this.scope, parentInstance: this},
                     ([func, 'function'] as Array<PropertyConfiguration>)
                         .includes(this.self.propertyTypes[name])
                 )
@@ -694,7 +694,7 @@ export class ReactWeb<
         if (this.slots.default && this.slots.default.length > 0)
             this.compiledSlots.children = this.preCompileDomNodes(
                 this.slots.default,
-                {...this.scope, parent: this},
+                {...this.scope, parentInstance: this},
                 ([func, 'function'] as Array<PropertyConfiguration>)
                     .includes(this.self.propertyTypes.children)
             )
