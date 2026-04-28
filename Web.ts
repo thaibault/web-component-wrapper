@@ -223,7 +223,7 @@ export class Web<
         NormalizedAttributesReflectionConfiguration
 
     renderState: RenderState = {
-        promise: null,
+        promise: Promise.resolve(''),
         pending: false,
         resolve: NOOP
     }
@@ -327,8 +327,6 @@ export class Web<
                 this.batchedAttributeUpdateRunning = true
                 this.batchedUpdateRunning = true
 
-                this.indicateNewRendering()
-
                 void timeout(() => {
                     this.batchedAttributeUpdateRunning = false
                     this.batchedUpdateRunning = false
@@ -336,11 +334,8 @@ export class Web<
                     void this.render('attributeChanged')
                 })
             }
-        } else {
-            this.indicateNewRendering()
-
+        } else
             void this.render('attributeChanged')
-        }
     }
     /**
      * Triggered when this component is mounted into the document.
@@ -376,8 +371,6 @@ export class Web<
         this.grabGivenSlots()
 
         this.reflectExternalProperties(this.externalProperties)
-
-        this.indicateNewRendering()
 
         if (this.runDomConnectionAndRenderingInSameEventQueue)
             void this.render('connected')
@@ -532,8 +525,6 @@ export class Web<
      * @param value - New value to write.
      */
     triggerPropertySpecificRendering(name: string, value: unknown): void {
-        this.indicateNewRendering()
-
         if (this.batchPropertyUpdates) {
             if (!(
                 this.batchedPropertyUpdateRunning || this.batchedUpdateRunning
@@ -1893,26 +1884,22 @@ export class Web<
     /// endregion
     /// region render
     /**
-     * Indicates a new render task.
+     * Setups a new rendering cycle representing promise.
      */
-    indicateNewRendering() {
-        if (!this.renderState.pending) {
-            this.renderState.pending = true
+    prepareNewRenderingPromise() {
+        if (!this.renderState.pending)
             this.renderState.promise = new Promise<string>((resolve) => {
                 this.renderState.resolve = (reason: string) => {
                     this.renderState.pending = false
                     resolve(reason)
                 }
             })
-        }
     }
     /**
      * Triggers a new rendering cycle by respecting batch configuration.
      * @param reason - A description why rendering should be triggered.
      */
     triggerRender(reason: string) {
-        this.indicateNewRendering()
-
         if (this.batchUpdates) {
             if (!this.batchedUpdateRunning) {
                 this.batchedUpdateRunning = true
@@ -1968,17 +1955,22 @@ export class Web<
      * Method which does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
+     * @param resolveRendering - Indicates whether rendering should be resolved
+     * finally. Should be set to "false" via super calls in inherited render
+     * methods which do further dom manipulations afterwards and resolve the
+     * rendering process by their own.
      * @returns A promise resolving when rendering has finished. A promise may
      * be needed for classes inheriting from this class.
      */
-    async render(reason = 'unknown'): Promise<void> {
+    async render(reason = 'unknown', resolveRendering = true): Promise<void> {
+        this.renderState.pending = true
+
         if (this.isRoot) {
             await Promise.all(this.self.pendingRenderPromises)
             this.self.pendingRenderPromises = []
         }
 
-        if (this.renderState.promise)
-            this.self.pendingRenderPromises.push(this.renderState.promise)
+        this.self.pendingRenderPromises.push(this.renderState.promise)
 
         this.determineRenderScope()
 
@@ -2022,12 +2014,23 @@ export class Web<
 
         await timeout()
 
-        this.renderState.resolve(reason)
-        await Promise.all(this.self.pendingRenderPromises)
+        if (resolveRendering) {
+            this.renderState.pending = false
+            this.renderState.resolve(reason)
+            await Promise.all(this.self.pendingRenderPromises)
+            this.prepareNewRenderingPromise()
 
-        this.applyBindings(
-            this.root.firstChild, this.scope, this.self.renderSlots
-        )
+            this.applyBindings(
+                this.root.firstChild, this.scope, this.self.renderSlots
+            )
+        } else
+            void Promise.all(this.self.pendingRenderPromises).then(() => {
+                this.prepareNewRenderingPromise()
+
+                this.applyBindings(
+                    this.root.firstChild, this.scope, this.self.renderSlots
+                )
+            })
     }
     /// endregion
     // endregion
