@@ -1901,6 +1901,10 @@ export class Web<
     }
     /// endregion
     /// region render
+    /**
+     * Produces a promise resolving when all nested rendering promises have
+     * been resolved.
+     */
     async waitForNestedComponentRendering(): Promise<void> {
         await Promise.all(this.childComponentInstances.map((component: Web) =>
             component.renderState.pending ?
