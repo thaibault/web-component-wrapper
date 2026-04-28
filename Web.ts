@@ -183,6 +183,8 @@ export class Web<
 > extends GenericHTMLElement {
     // region properties
     static applyRootBinding = true
+    static pendingRenderPromises: Array<Promise<string>> = []
+
     static content: unknown =
         '<slot>Please provide a template to transclude.</slot>'
     static determineRootBinding = true
@@ -1969,14 +1971,24 @@ export class Web<
      * @returns A promise resolving when rendering has finished. A promise may
      * be needed for classes inheriting from this class.
      */
-    render(reason = 'unknown'): Promise<void> {
+    async render(reason = 'unknown'): Promise<void> {
+        if (this.isRoot) {
+            await Promise.all(this.self.pendingRenderPromises)
+            this.self.pendingRenderPromises = []
+        }
+
+        if (this.renderState.promise)
+            this.self.pendingRenderPromises.push(this.renderState.promise)
+
         this.determineRenderScope()
 
         if (!this.dispatchEvent(new CustomEvent(
             'render', {detail: {reason, scope: this.scope}}
         ))) {
             this.renderState.resolve(reason)
-            return Promise.resolve()
+            await Promise.all(this.self.pendingRenderPromises)
+
+            return
         }
 
         const evaluated: EvaluationResult = evaluate(
@@ -1986,7 +1998,9 @@ export class Web<
             log.warn(`Failed to process template: ${evaluated.error}`)
 
             this.renderState.resolve(reason)
-            return Promise.resolve()
+            await Promise.all(this.self.pendingRenderPromises)
+
+            return
         }
 
         this.applyShadowRootIfNotExisting()
@@ -2006,13 +2020,14 @@ export class Web<
 
         this.root.innerHTML = renderTargetDomNode.innerHTML
 
+        await timeout()
+
+        this.renderState.resolve(reason)
+        await Promise.all(this.self.pendingRenderPromises)
+
         this.applyBindings(
             this.root.firstChild, this.scope, this.self.renderSlots
         )
-
-        this.renderState.resolve(reason)
-
-        return Promise.resolve()
     }
     /// endregion
     // endregion
