@@ -1230,9 +1230,7 @@ export class Web<
                             for (const domNode of this.slots.default)
                                 this.evaluateDomNodeTemplate(domNode, scope)
 
-                        console.log('A', domNode, domNode.parent, this.slots.default)
                         replace(domNode, this.slots.default, Web.trimSlots)
-                        console.log('B', domNode.cloneNode(true))
                     }
                 } else
                     this.slots.default = unwrap(domNode)
@@ -2055,7 +2053,8 @@ export class Web<
             renderTargetDomNode, {...this.scope, parentInstance: this}
         )
 
-        this.rootInstance.innerHTML = renderTargetDomNode.innerHTML
+        console.log('place content', this.self._name, renderTargetDomNode.innerHTML.substring(0, 100))
+        this.hostDomNode.innerHTML = renderTargetDomNode.innerHTML
 
         await timeout()
 
