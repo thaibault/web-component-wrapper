@@ -383,8 +383,6 @@ export class Web<
 
         this.reflectExternalProperties(this.externalProperties)
 
-        console.log('TODO', this.self._name, 'connected')
-
         if (this.runDomConnectionAndRenderingInSameEventQueue)
             void this.render('connected')
         else
@@ -2001,8 +1999,6 @@ export class Web<
      * be needed for classes inheriting from this class.
      */
     async render(reason = 'unknown', resolveRendering = true): Promise<void> {
-        console.log('TODO', this.self._name, 'render')
-
         this.childComponentInstances = []
         this.renderState.pending = true
 
@@ -2053,7 +2049,6 @@ export class Web<
             renderTargetDomNode, {...this.scope, parentInstance: this}
         )
 
-        console.log('place content', this.self._name, renderTargetDomNode.innerHTML.substring(0, 100))
         this.hostDomNode.innerHTML = renderTargetDomNode.innerHTML
 
         await timeout()
