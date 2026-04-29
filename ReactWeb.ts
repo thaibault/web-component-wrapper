@@ -238,7 +238,8 @@ export class ReactWeb<
             void this.resolveRenderingPromiseIfSet(reason, resolveRendering)
         })
 
-        await this.renderState.promise
+        if (resolveRendering)
+            await this.renderState.promise
     }
     // endregion
     // region property handling
