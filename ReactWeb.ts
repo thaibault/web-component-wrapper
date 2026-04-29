@@ -223,7 +223,7 @@ export class ReactWeb<
             if (typeof identifierPrefixCandidate === 'string')
                 identifierPrefix = identifierPrefixCandidate
 
-            this.reactRoot = createRoot(this.rootDomNode, {identifierPrefix})
+            this.reactRoot = createRoot(this.hostDomNode, {identifierPrefix})
         }
 
         flushSync(() => {
@@ -238,7 +238,8 @@ export class ReactWeb<
             void this.resolveRenderingPromiseIfSet(reason, resolveRendering)
         })
 
-        await this.renderState.promise
+        if (resolveRendering)
+            await this.renderState.promise
     }
     // endregion
     // region property handling

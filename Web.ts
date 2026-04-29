@@ -35,6 +35,7 @@ import {
     NOOP,
     PositiveEvaluationResult,
     PlainObject,
+    replace,
     represent,
     TemplateFunction,
     timeout,
@@ -244,7 +245,7 @@ export class Web<
 
     parentInstance: null | Web = null
     rootInstance: Web
-    rootDomNode:
+    hostDomNode:
         ShadowRoot | Web<TElement, ExternalProperties, InternalProperties>
 
     scope: Mapping<unknown> = {...UTILITY_SCOPE}
@@ -294,7 +295,7 @@ export class Web<
         this.generateAliasIndex()
 
         // NOTE: Shadow root will be applied when rendering the first time.
-        this.rootDomNode = this
+        this.hostDomNode = this
         this.rootInstance = this
 
         /*
@@ -381,6 +382,8 @@ export class Web<
         this.grabGivenSlots()
 
         this.reflectExternalProperties(this.externalProperties)
+
+        console.log('TODO', this.self._name, 'connected')
 
         if (this.runDomConnectionAndRenderingInSameEventQueue)
             void this.render('connected')
@@ -976,25 +979,12 @@ export class Web<
             this.applyBindings(domNode, scope)
     }
     /**
-     * Replaces given dom node with given nodes.
-     * @param domNode - Node to replace its children.
-     * @param children - Element or array of elements to set as children.
+     * Adds an event listener to given dom node so that it will be deregistered
+     * when the component instance will be destroyed.
+     * @param domNode - Node to assign event handler to.
+     * @param name - Event name.
+     * @param handler - Callback to trigger when given event occurs.
      */
-    static replaceDomNodes(
-        domNode: HTMLElement, children: Array<Node> | Node
-    ) {
-        for (const child of ([] as Array<Node>).concat(children).reverse())
-            if (!(
-                Web.trimSlots &&
-                (
-                    child.nodeType === Node.TEXT_NODE &&
-                    child.nodeValue?.trim() === ''
-                )
-            ))
-                domNode.after(child)
-
-        domNode.remove()
-    }
     addSecureEventListener(
         domNode: Node | Window,
         name: string,
@@ -1240,7 +1230,9 @@ export class Web<
                             for (const domNode of this.slots.default)
                                 this.evaluateDomNodeTemplate(domNode, scope)
 
-                        this.self.replaceDomNodes(domNode, this.slots.default)
+                        console.log('A', domNode, domNode.parent, this.slots.default)
+                        replace(domNode, this.slots.default, Web.trimSlots)
+                        console.log('B', domNode.cloneNode(true))
                     }
                 } else
                     this.slots.default = unwrap(domNode)
@@ -1252,7 +1244,7 @@ export class Web<
                     if (this.self.evaluateSlots)
                         this.evaluateDomNodeTemplate(this.slots[name], scope)
 
-                    this.self.replaceDomNodes(domNode, this.slots[name])
+                    replace(domNode, this.slots[name], Web.trimSlots)
                 }
             } else
                 this.slots[name] = this.grabSlotContent(
@@ -1901,6 +1893,10 @@ export class Web<
     }
     /// endregion
     /// region render
+    /**
+     * Produces a promise resolving when all nested rendering promises have
+     * been resolved.
+     */
     async waitForNestedComponentRendering(): Promise<void> {
         await Promise.all(this.childComponentInstances.map((component: Web) =>
             component.renderState.pending ?
@@ -1961,8 +1957,8 @@ export class Web<
      * property.
      */
     applyShadowRootIfNotExisting() {
-        if (this.self.shadowDOM && this.rootDomNode === this)
-            this.rootDomNode = (
+        if (this.self.shadowDOM && this.hostDomNode === this)
+            this.hostDomNode = (
                 (!('attachShadow' in this) && 'ShadyDOM' in window) ?
                     (
                         window as unknown as
@@ -2007,6 +2003,8 @@ export class Web<
      * be needed for classes inheriting from this class.
      */
     async render(reason = 'unknown', resolveRendering = true): Promise<void> {
+        console.log('TODO', this.self._name, 'render')
+
         this.childComponentInstances = []
         this.renderState.pending = true
 
@@ -2053,17 +2051,19 @@ export class Web<
         renderTargetDomNode.innerHTML =
             (evaluated as PositiveEvaluationResult).result
 
-        this.applySlots(renderTargetDomNode, {...this.scope, parent: this})
+        this.applySlots(
+            renderTargetDomNode, {...this.scope, parentInstance: this}
+        )
 
         this.rootInstance.innerHTML = renderTargetDomNode.innerHTML
 
         await timeout()
 
-        await this.waitForNestedComponentRendering()
-
-        this.applyBindings(
-            this.rootInstance.firstChild, this.scope, this.self.renderSlots
-        )
+        void this.waitForNestedComponentRendering().then(() => {
+            this.applyBindings(
+                this.rootInstance.firstChild, this.scope, this.self.renderSlots
+            )
+        })
 
         await this.resolveRenderingPromiseIfSet(reason, resolveRendering)
     }
