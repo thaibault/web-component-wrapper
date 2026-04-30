@@ -33,6 +33,7 @@
                 // region prepare web-component
                 const Web = webComponentWrapper.index.Web
 
+                Web.doRender = true
                 Web.evaluateSlots = true
                 Web.content = POLYFILL_TEMPLATE_STRINGS.value ?
                     (
