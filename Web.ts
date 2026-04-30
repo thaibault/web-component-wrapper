@@ -119,6 +119,8 @@ export const GenericHTMLElement: typeof HTMLElement =
  * content into them. If a slot should be used multiple times (for example when
  * it works as a template node) they should be copied to avoid unexpected
  * mutations.
+ * @property doRender - Configures whether this component instance should
+ * evaluate its given body content.
  * @property evaluateSlots - Indicates whether to evaluate slot content when
  * before rendering them.
  * @property renderSlots - Indicates whether determined slots should be
@@ -139,6 +141,8 @@ export const GenericHTMLElement: typeof HTMLElement =
  * performing.
  * @property renderState.resolve - Callback to trigger when rendering has been
  * finished.
+ * @property childComponentInstances - List of direct child components (needed
+ * to wait for them to finish dom manipulation).
  * @property batchAttributeUpdates - Indicates whether to directly update dom
  * after each attribute mutation or to wait and batch mutations after current
  * queue has been finished.
@@ -211,6 +215,7 @@ export class Web<
         []
     static renderProperties: Array<string> = ['children']
 
+    static doRender = false
     static cloneSlots = false
     static evaluateSlots = false
     static renderSlots = true
@@ -234,7 +239,6 @@ export class Web<
     batchAttributeUpdates = true
     batchPropertyUpdates = true
     batchUpdates = true
-
     /*
         NOTE: We set these properties to true initially since we want to
         prevent any updates until the component is connected to dom.
@@ -1035,6 +1039,7 @@ export class Web<
                 /* eslint-enable @typescript-eslint/no-base-to-string */
 
             if (isComponent) {
+                // Check whether we found the first parent component.
                 if (this.rootInstance === this) {
                     this.parentInstance = currentElement as Web
                     /*
@@ -2003,19 +2008,25 @@ export class Web<
         this.renderState.pending = true
 
         if (this.isRoot) {
-            await Promise.all(this.self.pendingRenderPromises)
-            this.self.pendingRenderPromises = []
+            await this.resolveRenderingPromiseIfSet(reason, resolveRendering)
+
+            if (resolveRendering) {
+                await Promise.all(this.self.pendingRenderPromises)
+                this.self.pendingRenderPromises = []
+            }
         }
 
         this.self.pendingRenderPromises.push(this.renderState.promise)
 
         this.determineRenderScope()
 
-        if (!this.dispatchEvent(new CustomEvent(
-            'render', {detail: {reason, scope: this.scope}}
-        ))) {
-            this.renderState.resolve(reason)
-            await Promise.all(this.self.pendingRenderPromises)
+        if (!(
+            this.self.doRender &&
+            this.dispatchEvent(new CustomEvent(
+                'render', {detail: {reason, scope: this.scope}}
+            ))
+        )) {
+            await this.resolveRenderingPromiseIfSet(reason, resolveRendering)
 
             return
         }
@@ -2051,11 +2062,15 @@ export class Web<
 
         this.hostDomNode.innerHTML = renderTargetDomNode.innerHTML
 
+        /*
+            NOTE: Wait until nested components have registered themself to be
+            able to wait for there rendering.
+        */
         await timeout()
 
         void this.waitForNestedComponentRendering().then(() => {
             this.applyBindings(
-                this.rootInstance.firstChild, this.scope, this.self.renderSlots
+                this.hostDomNode.firstChild, this.scope, this.self.renderSlots
             )
         })
 
