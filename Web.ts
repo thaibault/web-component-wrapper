@@ -11,7 +11,7 @@
     License
     -------
 
-    This library written by Torben Sickert stand under a creative commons
+    This library written by Torben Sickert stands under a creative commons
     naming 3.0 unported license.
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
@@ -96,7 +96,7 @@ export const GenericHTMLElement: typeof HTMLElement =
         (class HTMLElement {}) as unknown as typeof HTMLElement :
         HTMLElement
 /**
- * Generic web component to render a content against instance specific values.
+ * Generic web component to render a content against instance-specific values.
  * @property applyRootBinding - If determined itself as root declarative event
  * and property bindings will be applied to itself.
  * @property content - Content to render when changes happened.
@@ -107,17 +107,17 @@ export const GenericHTMLElement: typeof HTMLElement =
  * @property observedAttributes - Attribute names to observe for changes.
  * @property controllableProperties - A list of controllable property names.
  * @property eventToPropertyMapping - Explicitly defined output events (a
- * mapping of event names to a potential parameter to properties transformer).
+ * mapping of event names to a potential parameter to properties-transformer).
  * @property propertyAliases - A mapping of property names to be treated as
  * equal.
  * @property propertyTypes - Configuration defining how to convert attributes
  * into properties and reflect property changes back to attributes.
- * @property propertiesToReflectAsAttributes - An item, list or mapping of
+ * @property propertiesToReflectAsAttributes - An Item, List, or Mapping of
  * properties to reflect as attributes.
  * @property renderProperties - List of known render properties.
  * @property cloneSlots - Indicates whether to clone slot before to transclude
- * content into them. If a slot should be used multiple times (for example when
- * it works as a template node) they should be copied to avoid unexpected
+ * content into them. If a slot should be used multiple times (for example,
+ * when it works as a template node.) they should be copied to avoid unexpected
  * mutations.
  * @property doRender - Configures whether this component instance should
  * evaluate its given body content.
@@ -127,7 +127,7 @@ export const GenericHTMLElement: typeof HTMLElement =
  * rendered into root node.
  * @property trimSlots - Ignore empty text nodes while applying slots.
  * @property renderUnsafe - Defines default render behavior.
- * @property _name - Name to access instance evaluated content or used
+ * @property _name - Name to access instance-evaluated content or used
  * to derive default component name. This is also useful for logging.
  * @property _propertyAliasIndex - Internal alias index to quickly match
  * properties in both directions.
@@ -161,7 +161,7 @@ export const GenericHTMLElement: typeof HTMLElement =
  * @property rootInstance - Root component instance.
  * @property scope - Render scope.
  * @property domNodeEventBindings - Holds a mapping from nodes with registered
- * event handlers mapped to their de-registration function.
+ * event handlers mapped to their deregistration function.
  * @property domNodeTemplateCache - Caches template compilation results.
  * @property externalProperties - Holds currently evaluated or seen properties.
  * @property ignoreAttributeUpdateObservations - Indicates whether attribute
@@ -170,16 +170,16 @@ export const GenericHTMLElement: typeof HTMLElement =
  * are owned by this instance and should always be delegated.
  * @property outputEventNames - Set of determined output event names.
  * @property instance - Wrapped component instance.
- * @property isRoot - Indicates whether their exists another web derived
+ * @property isRoot - Indicates whether their exists another web-derived
  * component up the tree or not.
  * @property root - Hosting dom node.
  * @property runDomConnectionAndRenderingInSameEventQueue - Indicates whether
  * we should render initial dom immediately after the component is connected to
  * dom. Deactivating this allows wrapped components to detect their parents
- * since their parent connected callback will be called before the children's
+ * since their parent-connected callback will be called before the children's
  * render method.
  * @property self - Back-reference to this class.
- * @property slots - Grabbed slots which where present in the connecting phase.
+ * @property slots - Grabbed slots that where present in the connecting phase.
  */
 export class Web<
     TElement = HTMLElement,
@@ -350,7 +350,7 @@ export class Web<
     }
     /**
      * Triggered when this component is mounted into the document.
-     * Attaches event handler, grabs given slots, reflects external properties
+     * Attaches event handler, grabs given slots, reflects external properties,
      * and enqueues first rendering.
      */
     connectedCallback() {
@@ -428,7 +428,7 @@ export class Web<
         )
 
         for (const propertyName of allPropertyNames) {
-            // If there already exists a local value use them.
+            // If there already exists a local value, use them.
             if (Object.prototype.hasOwnProperty.call(this, propertyName))
                 this.setPropertyValue(
                     propertyName, this[propertyName as keyof Web]
@@ -534,7 +534,7 @@ export class Web<
         this.setInternalPropertyValue(name, value)
     }
     /**
-     * Triggers a new rendering cycle and respects property specific state
+     * Triggers a new rendering cycle and respects property-specific state
      * connection.
      * @param name - Property name to write.
      * @param value - New value to write.
@@ -592,7 +592,7 @@ export class Web<
     /// region utility
     //// region dom nodes
     /**
-     * Binds properties and event handler to given dom node.
+     * Binds properties and event handler to the given dom node.
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
      */
@@ -602,11 +602,13 @@ export class Web<
 
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
         )) {
-            let name = ''
+            let name: keyof WindowEventMap | undefined
             if (attributeName.startsWith('data-bind-'))
-                name = attributeName.substring('data-bind-'.length)
+                name = attributeName.substring('data-bind-'.length) as
+                    keyof WindowEventMap
             else if (attributeName.startsWith('bind-'))
-                name = attributeName.substring('bind-'.length)
+                name = attributeName.substring('bind-'.length) as
+                    keyof WindowEventMap
 
             if (name) {
                 const value: null | string = (domNode as HTMLElement)
@@ -647,7 +649,9 @@ export class Web<
                         ) as 'textContent'] =
                             (evaluated as PositiveEvaluationResult).result
                 } else if (name.startsWith('on-')) {
-                    name = delimitedToCamelCase(name.substring('on-'.length))
+                    name =
+                        delimitedToCamelCase(name.substring('on-'.length)) as
+                            keyof WindowEventMap
 
                     scope = {
                         log,
@@ -682,10 +686,10 @@ export class Web<
                                     compilation.templateFunction(
                                         /*
                                             NOTE: We want to be sure to have
-                                            same ordering as we have for the
-                                            scope names and to call internal
-                                            registered getter by retrieving
-                                            values. So simple using
+                                            the same ordering as we have for
+                                            the scope names and to call
+                                            internal registered getter by
+                                            retrieving values. So simple using
                                             "...Object.values(scope)" is not
                                             appreciate here.
                                         */
@@ -714,7 +718,7 @@ export class Web<
         }
     }
     /**
-     * Binds properties and event handler to given, sibling and nested nodes.
+     * Binds properties and event handler to given, sibling, and nested nodes.
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
      * @param renderSlots - Indicates whether to render nested elements of
@@ -740,7 +744,7 @@ export class Web<
         }
     }
     /**
-     * Compiles given node content and their children. Provides corresponding
+     * Compiles given node content and their children. Provides a corresponding
      * map of compiled template functions connected to their (sub) nodes and
      * expected scope names.
      * @param domNode - Node to compile.
@@ -752,7 +756,7 @@ export class Web<
      * should be traversed or not.
      * @param options.ignoreNestedComponents - Indicates if nested components
      * should be traversed or not.
-     * @param options.unsafe - Indicates if full html generation should be
+     * @param options.unsafe - Indicates if full HTML generation should be
      * allowed.
      * @returns Map of compiled templates.
      */
@@ -902,7 +906,7 @@ export class Web<
      * should be traversed or not.
      * @param options.domNodeTemplateCache - Yet compiled dom nodes to just
      * reference instead of recompiling.
-     * @param options.unsafe - Indicates if full html generation should be
+     * @param options.unsafe - Indicates if full HTML generation should be
      * allowed.
      */
     evaluateDomNodeTemplate<NodeType extends Node = Node>(
@@ -981,16 +985,20 @@ export class Web<
             this.applyBindings(domNode, scope)
     }
     /**
-     * Adds an event listener to given dom node so that it will be deregistered
-     * when the component instance will be destroyed.
+     * Adds an event listener to the given dom node so that it will be
+     * deregistered when the component instance is destroyed.
      * @param domNode - Node to assign event handler to.
      * @param name - Event name.
      * @param handler - Callback to trigger when given event occurs.
+     * @param options - Add event listener options.
+     * @param removeOptions - Remove event listener options.
      */
-    addSecureEventListener(
+    addSecureEventListener<EventName extends keyof WindowEventMap>(
         domNode: Node | Window,
-        name: string,
-        handler: EventListenerOrEventListenerObject
+        name: EventName,
+        handler: (this: Window, event: WindowEventMap[EventName]) => void,
+        options?: boolean | AddEventListenerOptions,
+        removeOptions?: EventListenerOptions
     ) {
         if (!this.domNodeEventBindings.has(domNode))
             this.domNodeEventBindings.set(
@@ -1004,7 +1012,11 @@ export class Web<
         if (oldHandler && oldHandler !== handler)
             oldHandler()
         eventMap?.set(name, () => {
-            domNode.removeEventListener(name, handler)
+            domNode.removeEventListener(
+                name,
+                handler as EventListenerOrEventListenerObject,
+                removeOptions
+            )
 
             eventMap.delete(name)
 
@@ -1012,7 +1024,9 @@ export class Web<
                 this.domNodeEventBindings.delete(domNode)
         })
 
-        domNode.addEventListener(name, handler)
+        domNode.addEventListener(
+            name, handler as EventListenerOrEventListenerObject, options
+        )
     }
     //// endregion
     /**
@@ -1020,9 +1034,9 @@ export class Web<
      */
     determineRootBinding() {
         /*
-            If this component is the root component we have to trigger binded
-            event handler by our own in global context since there is no parent
-            doing that for us.
+            If this component is the root component, we have to trigger
+            nested event handler by our own in global context since there is no
+            parent doing that for us.
         */
 
         let currentElement: Node | null = this.parentNode
@@ -1043,7 +1057,7 @@ export class Web<
                 if (this.rootInstance === this) {
                     this.parentInstance = currentElement as Web
                     /*
-                        NOTE: There is at least one parent so we can set
+                        NOTE: There is at least one parent, so we can set
                         "isRoot" to "false".
                     */
                     this.setPropertyValue('isRoot', false)
@@ -1075,7 +1089,7 @@ export class Web<
         )
     }
     /**
-     * Converts given list, item or map to a map (with ordering).
+     * Converts given the list, item, or map to a map (with ordering).
      * @param value - Attribute reflection configuration.
      * @returns Generated map.
      */
@@ -1163,7 +1177,7 @@ export class Web<
      * properties should be reflected.
      */
     attachImplicitDefinedOutputEventHandler(reflectProperties = true) {
-        // Determine all event handler to inject
+        // Determine all event handlers to inject
         for (const [name, type] of Object.entries(this.self.propertyTypes))
             if (
                 !Object.prototype.hasOwnProperty.call(
@@ -1197,7 +1211,7 @@ export class Web<
             this.forwardEvent(name, [this.externalProperties])
     }
     /**
-     * Forwards given event as native web event.
+     * Forwards given event as the native web event.
      * @param name - Event name.
      * @param parameters - Event parameters.
      * @returns False if event is cancelable, and at least one of the event
@@ -1215,9 +1229,9 @@ export class Web<
     /// endregion
     /// region slots
     /**
-     * Renders component given slot contents into given dom node. If expected
-     * slots are not given but a fallback is specified they will be loaded into
-     * internal slot mapping.
+     * Renders component given slot contents into the given dom node. If
+     * expected slots are not given but a fallback is specified, they will be
+     * loaded into internal slot mapping.
      * @param targetDomNode - Target dom node to render slots into.
      * @param scope - Environment to render slots again if specified.
      */
@@ -1257,15 +1271,15 @@ export class Web<
         }
     }
     /**
-     * Determines slot content from given node.
+     * Determines slot content from the given node.
      * @param slot - Node to grab slot content from.
      * @returns Determined slot.
      */
     grabSlotContent(slot: Node): Node {
         /*
-            If real (template) code is wrapped in a "textarea" tag unwrap it
+            If real (template) code is wrapped in a "textarea" tag, unwrap it
             now. This extra wrapping can be used to avoid first dom rendering
-            before actual template code has been evaluated.
+            before template code has been evaluated.
         */
         const element: Element | null =
             (node as Element).firstElementChild ? slot as Element : null
@@ -1281,13 +1295,13 @@ export class Web<
             const content: string =
                 (element.firstElementChild as HTMLTextAreaElement).value
             /*
-                NOTE: These kind of slots is always used as a template and
-                should therefor be copied in every case.
+                NOTE: These kinds of slots are always used as a template and
+                should therefore be copied in every case.
                 NOTE: A flat copy should suffice since we will replace nested
-                content either.
-                NOTE: Remove template content in copied node to avoid to render
+                content.
+                NOTE: Remove template content in copied node to avoid rendering
                 them before being evaluated. We cannot remove template code
-                from source node since this would make it impossible to
+                from the source node since this would make it impossible to
                 re-instantiate this slot during whole component
                 re-instantiation.
             */
@@ -1308,7 +1322,7 @@ export class Web<
         this.slots = {}
 
         for (const slot of Array.from(this.querySelectorAll('[slot]'))) {
-            // NOTE: This is how we avoid to grab slots from nested components.
+            // NOTE: This is how we avoid grabbing slots from nested components.
             let currentElement: Node | null = slot.parentNode
             let skip = true
             while (currentElement) {
@@ -1341,7 +1355,7 @@ export class Web<
     /// endregion
     /// region properties
     /**
-     * Determines if given property name exists in wrapped component state.
+     * Determines if a given property name exists in wrapped component state.
      * @param name - Property name to check if exists in state.
      * @returns Boolean result.
      */
@@ -1505,8 +1519,8 @@ export class Web<
                     this.internalProperties, name
                 ))
                     /*
-                        We want to avoid to fully delete this property to know
-                        which properties exists on the underlying instance.
+                        We want to avoid fully deleting this property to know
+                        which properties exist in the underlying instance.
                     */
                     this.setInternalPropertyValue(name, undefined)
 
@@ -1525,8 +1539,8 @@ export class Web<
                 this.setInternalPropertyValue(name, properties[name])
     }
     /**
-     * Reflect given event handler call with given parameter back to current
-     * properties state.
+     * Reflect the given event handler call with the given parameter back to
+     * current properties state.
      * @param name - Event name.
      * @param parameters - List of parameter to given event handler call.
      * @returns Mapped properties or null if nothing could be mapped.
@@ -1535,11 +1549,11 @@ export class Web<
         name: string, parameters: Array<unknown>
     ): Promise<Partial<ExternalProperties> | null> {
         /*
-            NOTE: We enforce to update components state immediately after an
+            NOTE: We enforce to update component state immediately after an
             event occurs since batching usually does not make sense here. An
             event runs within its own context.
-            On the other hand it can be necessary to immediately reflect a
-            property change to the components internal state to avoid
+            On the other hand, it can be necessary to immediately reflect a
+            property change to the component internal state to avoid
             contradicting internal render cycles.
         */
         const oldBatchUpdatesConfiguration: boolean = this.batchUpdates
@@ -1591,7 +1605,7 @@ export class Web<
         if (!handled && parameters.length > 0 && isObject(parameters[0])) {
             /*
                 Identified as somehow throw data back event (no synthetic
-                event; derived from a user triggered one) when following
+                event; derived from a user-triggered one) when following
                 condition does not hold.
             */
             let newProperties: ExternalProperties =
@@ -1651,8 +1665,8 @@ export class Web<
         return result
     }
     /**
-     * Evaluates given property value depending on its property definition and
-     * registers in properties mapping object.
+     * Evaluates the given property value depending on its property definition
+     * and registers in a property mapping object.
      * @param attributeName - Name of given value.
      * @param value - Value to evaluate.
      */
@@ -1798,10 +1812,7 @@ export class Web<
 
                             break
                         }
-                        /*
-                            NOTE: We have to avoid that both values changes
-                            each other.
-                        */
+                        // NOTE: That both values do have to be avoided.
                         this.setInternalPropertyValue(name, evaluated)
                         this.setExternalPropertyValue(
                             name, copy(evaluated, false, 1)
@@ -1871,10 +1882,7 @@ export class Web<
 
                             break
                         }
-                        /*
-                            NOTE: We have to avoid that both values changes
-                            each other.
-                        */
+                        // NOTE: That both values do have to be avoided.
                         this.setInternalPropertyValue(name, evaluated.result)
                         this.setExternalPropertyValue(
                             name, copy(evaluated.result, false, 1)
@@ -1910,7 +1918,7 @@ export class Web<
      * @param reason - Rendering reason description.
      * @param resolveRendering - Indicates whether to resolve the rendering or
      * just return a resolving promise directly.
-     * @returns A promise resolving when all nested render promises has been
+     * @returns A promise resolving when all nested render promises have been
      * resolved.
      */
     async resolveRenderingPromiseIfSet(
@@ -1925,7 +1933,7 @@ export class Web<
         }
     }
     /**
-     * Setups a new rendering cycle representing promise.
+     * Sets up a new rendering cycle representing promise.
      */
     prepareNewRenderingPromise() {
         if (!this.renderState.pending)
@@ -1954,7 +1962,7 @@ export class Web<
             void this.render(reason)
     }
     /**
-     * Creates shadow root if not created yet and assigns to current root
+     * Creates shadow root if not created yet and assigns to the current root
      * property.
      */
     applyShadowRootIfNotExisting() {
@@ -1975,7 +1983,7 @@ export class Web<
             )
     }
     /**
-     * Determines new scope object with useful default set of environment
+     * Determines a new scope object with a useful default set of environment
      * values.
      * @param scope - To apply to generated scope.
      */
@@ -1993,12 +2001,12 @@ export class Web<
         this.scope.scope = this.scope
     }
     /**
-     * Method which does the rendering job. Should be called when ever state
+     * Method that does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
      * @param resolveRendering - Indicates whether rendering should be resolved
      * finally. Should be set to "false" via super calls in inherited render
-     * methods which do further dom manipulations afterwards and resolve the
+     * methods which do further dom manipulations afterward and resolve the
      * rendering process by their own.
      * @returns A promise resolving when rendering has finished. A promise may
      * be needed for classes inheriting from this class.
@@ -2047,9 +2055,9 @@ export class Web<
 
         /*
             NOTE: We first render into an intermediate render target and apply
-            slot content until we finally publish everything to document. This
-            avoids painting twice and internetexplorer bugs with empty node
-            after first overwriting content of "this.rootInstance".
+            slot content until we finally publish everything to the document.
+            This avoids painting twice and internetexplorer bugs with an empty
+            node after first overwriting the content of "this.rootInstance".
         */
         const renderTargetDomNode: HTMLDivElement =
             document.createElement('div')
@@ -2063,8 +2071,8 @@ export class Web<
         this.hostDomNode.innerHTML = renderTargetDomNode.innerHTML
 
         /*
-            NOTE: Wait until nested components have registered themself to be
-            able to wait for there rendering.
+            NOTE: Wait until nested components have registered themselves to be
+            able to wait for their rendering.
         */
         await timeout()
 
