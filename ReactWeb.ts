@@ -11,7 +11,7 @@
     License
     -------
 
-    This library written by Torben Sickert stand under a creative commons
+    This library written by Torben Sickert stands under a creative commons
     naming 3.0 unported license.
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
@@ -70,16 +70,16 @@ export const log = new Logger({name: 'web-component-wrapper-web'})
 /*
     Live cycle:
 
-    1. Render react component with properties (defined in web-component) and
-       start listing to "onChange" events.
+    1. Render the React component with properties (defined in a web-component)
+       and start listing to "onChange" events.
     2. Reflect component properties to web-component properties and
        attributes (with prevented re-rendering caused by new properties).
     3. Component triggers an "onChange" event (caused by some react event)
        which delivers updated properties to the web-component.
-       -> Starting with first step.
+       -> Starting with the first step.
 */
 /**
- * Adapter for exposing a react component as web-component.
+ * Adapter for exposing a React component as a web-component.
  * @property attachWebComponentAdapterIfNotExists - Indicates whether to wrap
  * with a reference wrapper to get updated about internal state changes.
  * @property content - React component to wrap.
@@ -89,8 +89,9 @@ export const log = new Logger({name: 'web-component-wrapper-web'})
  * @property rootReactInstance - Saves determined root react instance.
  * @property self - Back-reference to this class.
  * @property wrapMemorizingWrapper - Determines whether to wrap component with
- * reacts memorizing wrapper to cache component render results.
- * @property isWrapped - Indicates whether react component is wrapped already.
+ * React's memorizing wrapper to cache component render results.
+ * @property isWrapped - Indicates whether a React component is wrapped
+ * already.
  */
 export class ReactWeb<
     TElement = HTMLElement,
@@ -122,7 +123,7 @@ export class ReactWeb<
     // region live-cycle
     /**
      * Triggered when this component is mounted into the document. Event
-     * handlers will be attached and final render proceed.
+     * handlers will be attached and the final render proceeds.
      */
     connectedCallback() {
         this.applyComponentWrapper()
@@ -155,12 +156,12 @@ export class ReactWeb<
             super.reflectExternalProperties(properties)
     }
     /**
-     * Method which does the rendering job. Should be called when ever state
+     * Method that does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
      * @param resolveRendering - Indicates whether rendering should be resolved
      * finally. Should be set to "false" via super calls in inherited render
-     * methods which do further dom manipulations afterwards and resolve the
+     * methods which do further dom manipulations afterward and resolve the
      * rendering process by their own.
      * @returns A promise resolving when rendering has finished. A promise may
      * be needed for classes inheriting from this class.
@@ -175,7 +176,7 @@ export class ReactWeb<
         this.self.pendingRenderPromises.push(this.renderState.promise)
 
         /*
-            NOTE: We prevent a nested react component from self rendering since
+            NOTE: We prevent a nested React component from self-rendering since
             they will be rendered by highest react parent.
         */
         if (
@@ -253,13 +254,14 @@ export class ReactWeb<
      *
      * The reason causes in avoiding this scenario:
      *
-     * 1. Property overwrites state.
+     * 1. Property overwrites the state.
      * 2. State changes but is shadowed by recent changes in property.
      *
      * So the following will be ensured:
      *
-     * 1. Property overwrites state.
-     * 2. Property is overwritten to "undefined" to lose control over state.
+     * 1. Property overwrites the state.
+     * 2. Property is overwritten to "undefined" to lose control over the
+     *    state.
      * 3. Now a state change can be represented back after property adaptions.
      *    (Converts reacts declarative nature into an imperative web-component
      *    style).
@@ -295,8 +297,8 @@ export class ReactWeb<
      * react-element or a react-element list.
      * @param domNodes - Nodes to convert.
      * @param scope - Additional scope to render subcomponents against.
-     * Necessary to bound needed environment variables into compiled context.
-     * @param isFunction - Indicates whether given render result should be
+     * Necessary to bound necessary environment variables into compiled context.
+     * @param isFunction - Indicates whether a given render result should be
      * provided as function (render property) with bound parameters environment
      * variable name.
      * @returns Transformed react elements.
@@ -304,7 +306,7 @@ export class ReactWeb<
     preCompileDomNodes(
         domNodes: Array<Node>, scope: Mapping<unknown> = {}, isFunction = false
     ): ReactRenderItemsFactory {
-        // NOTE: We ignore empty text nodes (like reacts jsx does).
+        // NOTE: We ignore empty text nodes (like React's jsx does).
         domNodes = domNodes.filter((domNode: Node): boolean => (
             domNode.nodeType !== Node.TEXT_NODE ||
             typeof domNode.nodeValue === 'string' &&
@@ -345,7 +347,7 @@ export class ReactWeb<
         return result
     }
     /**
-     * Converts given html dom node into a react-element.
+     * Converts a given html dom node into a react-element.
      * @param domNode - Node to convert.
      * @param scope - Additional scope to render subcomponents against.
      * @param isFunction - Indicates whether given nodes should be provided as
@@ -426,9 +428,9 @@ export class ReactWeb<
                 (domNode as ReactWeb).preCompileSlots()
             // endregion
             /*
-                NOTE: Nested components are already instantiated and connected
+                NOTE: Nested components are already instantiated and connected,
                 so use their initialized properties. We need to merge them when
-                actual rendering the nested component.
+                actually rendering the nested component.
             */
 
             if (
@@ -526,7 +528,7 @@ export class ReactWeb<
                     try {
                         eventHandler(
                             /*
-                                NOTE: We want to be ensure to have same
+                                NOTE: We want to be ensured to have the same
                                 ordering as we have for the scope names and to
                                 call internal registered getter by retrieving
                                 values. So simple using
@@ -565,9 +567,9 @@ export class ReactWeb<
             else if (!isComponent)
                 /*
                     NOTE: Properties of components are evaluated already by
-                    them self and set as "internalProperties". Those properties
-                    which need to be evaluated against the parent scope should
-                    be marked via the "bind-property-" prefix.
+                    them self and set as "internalProperties". Those
+                    properties, which need to be evaluated against the parent
+                    scope, should be marked via the "bind-property-" prefix.
                     That's why they are omitted here.
                 */
                 (staticProperties as Mapping<unknown>)[name] = value
@@ -626,9 +628,9 @@ export class ReactWeb<
                 // region evaluate nested render contexts
                 /*
                     NOTE: Properties of components are evaluated already by
-                    them self and set as "internalProperties". Those properties
-                    which need to be evaluated against the parent scope should
-                    be marked via the "bind-property-" prefix.
+                    them self and set as "internalProperties". Those
+                    properties, which need to be evaluated against the parent
+                    scope, should be marked via the "bind-property-" prefix.
                 */
                 properties = {
                     ...(domNode as ReactWeb).internalProperties as
@@ -655,9 +657,9 @@ export class ReactWeb<
     }
     /**
      * Evaluates given pre-compiled nodes into a single react element or a
-     * react element list.
+     * React element list.
      * @param nodes - Pre-compiled nodes.
-     * @param scope - Additional scope to render sub components against.
+     * @param scope - Additional scope to render subcomponents against.
      * @returns Transformed react elements.
      */
     evaluatePreCompiledDomNodes(
@@ -701,7 +703,7 @@ export class ReactWeb<
             )
     }
     /**
-     * Evaluates pre compiled slots.
+     * Evaluates pre-compiled slots.
      * @param scope - To render again.
      */
     evaluateSlots(scope: Mapping<unknown>) {
@@ -724,7 +726,7 @@ export class ReactWeb<
     // endregion
     // region helper
     /**
-     * Determines if given element type is a react-wrapped component.
+     * Determines if the given element type is a react-wrapped component.
      * @param domNode - Node to determine from.
      * @returns Boolean indicator.
      */
@@ -757,7 +759,7 @@ export class ReactWeb<
         }
     }
     /**
-     * Applies missing forward ref and or memorizing wrapper to current react
+     * Applies missing forward ref and or memorizing wrapper to a current react
      * component.
      */
     applyComponentWrapper(): void {
@@ -809,9 +811,9 @@ export class ReactWeb<
         }
     }
     /**
-     * Prepares given properties object to render against current component.
-     * Creates a reference for being recognized of reacts internal state
-     * updates.
+     * Prepares a given properties object to render against the current
+     * component. Creates a reference for being recognized of reacts internal
+     * state updates.
      * @param properties - Properties to prepare.
      */
     prepareProperties(properties: InternalProperties) {
@@ -836,7 +838,7 @@ export class ReactWeb<
         }
     }
     /**
-     * Updates current component instance and reflects newly determined
+     * Updates the current component instance and reflects newly determined
      * properties.
      */
     reflectInstanceProperties = () => {
@@ -852,7 +854,7 @@ export class ReactWeb<
             )
     }
     /**
-     * Removes unwanted known and not specified properties from given
+     * Removes unwanted known and not specified properties from a given
      * properties object (usually added by dev-tools).
      * @param target - ReactElement where properties belong to.
      * @param properties - Properties object to trim.
@@ -863,7 +865,7 @@ export class ReactWeb<
         if (typeof target.content === 'string')
             return
 
-        // NOTE: Known root of errors caused by browsers dev-tools.
+        // NOTE: Known root of errors caused by browser dev-tools.
         for (const name of ['isRoot', 'isTrusted', '__composed'] as const)
             if (
                 Object.prototype.hasOwnProperty.call(properties, name) &&
