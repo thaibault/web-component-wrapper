@@ -234,7 +234,8 @@ export class Web<
         resolve: NOOP
     }
 
-    childComponentInstances: Array<Web> = []
+    // Contsructor might be executed when accessed via child components.
+    childComponentInstances: Array<Web> | undefined = []
 
     batchAttributeUpdates = true
     batchPropertyUpdates = true
@@ -1907,9 +1908,15 @@ export class Web<
     /// region render
     /**
      * Produces a promise resolving when all nested rendering promises have
-     * been resolved.
+     * been resolved. This only waits for registered nested components. That
+     * means that nested components which where connected before the parent
+     * component got initialized will not be waited for. That might happen
+     * when nested component types got registered before the parent ones.
      */
     async waitForNestedComponentRendering(): Promise<void> {
+        if (!this.childComponentInstances)
+            return
+
         await Promise.all(this.childComponentInstances.map((component: Web) =>
             component.renderState.pending ?
                 component.renderState.promise :
