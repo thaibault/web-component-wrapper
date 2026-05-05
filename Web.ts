@@ -370,7 +370,10 @@ export class Web<
         if (this.self.determineRootBinding) {
             this.determineRootBinding()
 
-            if (this.parentInstance !== this)
+            if (
+                this.parentInstance !== this &&
+                this.parentInstance.childComponentInstances
+            )
                 this.parentInstance.childComponentInstances.push(this)
         }
 
