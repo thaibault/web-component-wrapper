@@ -197,11 +197,12 @@ export class ReactWeb<
 
         this.applyShadowRootIfNotExisting()
 
-        if (this.rootInstance !== this) {
+        if (this.rootInstance !== this && !this.reactRoot) {
             /*
                 Remove template nodes since they will be replaced by reacts
                 render result (only necessary when having a dedicated rendering
-                target like shadow root).
+                target like shadow root and only on first render before React
+                takes over DOM management).
             */
             let domNode: ChildNode | null = this.firstChild
             while (domNode) {
