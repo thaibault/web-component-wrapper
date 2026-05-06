@@ -10,7 +10,7 @@
     License
     -------
 
-    This library written by Torben Sickert stand under a creative commons
+    This library written by Torben Sickert stands under a creative commons
     naming 3.0 unported license.
     See https://creativecommons.org/licenses/by/3.0/deed.de
     endregion
@@ -25,6 +25,11 @@ import React, {
 import Web from './Web'
 // endregion
 // region exports
+export interface KnownWindowEventMap extends WindowEventMap {
+    DOMMouseScroll: Event
+    mousewheel: Event
+}
+export type KnownEventName = keyof KnownWindowEventMap
 export interface RenderState {
     promise: Promise<string>
     pending: boolean

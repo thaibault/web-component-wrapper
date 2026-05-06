@@ -77,6 +77,8 @@ import {
     EventMapper,
     EventMapping,
     EventToPropertyMapping,
+    KnownEventName,
+    KnownWindowEventMap,
     NormalizedAttributesReflectionConfiguration,
     PropertiesConfiguration,
     PropertyConfiguration,
@@ -606,13 +608,13 @@ export class Web<
 
         for (const attributeName of (domNode as HTMLElement).getAttributeNames(
         )) {
-            let name: keyof WindowEventMap | undefined
+            let name: KnownEventName | undefined
             if (attributeName.startsWith('data-bind-'))
                 name = attributeName.substring('data-bind-'.length) as
-                    keyof WindowEventMap
+                    KnownEventName
             else if (attributeName.startsWith('bind-'))
                 name = attributeName.substring('bind-'.length) as
-                    keyof WindowEventMap
+                    KnownEventName
 
             if (name) {
                 const value: null | string = (domNode as HTMLElement)
@@ -655,7 +657,7 @@ export class Web<
                 } else if (name.startsWith('on-')) {
                     name =
                         delimitedToCamelCase(name.substring('on-'.length)) as
-                            keyof WindowEventMap
+                            KnownEventName
 
                     scope = {
                         log,
@@ -997,10 +999,10 @@ export class Web<
      * @param options - Add event listener options.
      * @param removeOptions - Remove event listener options.
      */
-    addSecureEventListener<EventName extends keyof WindowEventMap>(
+    addSecureEventListener<EventName extends KnownEventName>(
         domNode: Node | Window,
         name: EventName,
-        handler: (this: Window, event: WindowEventMap[EventName]) => void,
+        handler: (this: Window, event: KnownWindowEventMap[EventName]) => void,
         options?: boolean | AddEventListenerOptions,
         removeOptions?: EventListenerOptions
     ) {
