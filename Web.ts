@@ -1746,7 +1746,7 @@ export class Web<
 
                     if (value) {
                         const result: CompilationResult =
-                            compile(value, scopeNames)
+                            compile(value, scopeNames, false, true, this)
                         error = result.error
                         templateFunction = result.templateFunction
 
@@ -1768,8 +1768,7 @@ export class Web<
                             let result: unknown = undefined
                             if (!error)
                                 try {
-                                    result = templateFunction?.call(
-                                        this,
+                                    result = templateFunction?.(
                                         parameters[0],
                                         parameters[0],
                                         parameters[0],
