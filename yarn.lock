@@ -5770,9 +5770,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clientnode@npm:^4.0.1394":
-  version: 4.0.1394
-  resolution: "clientnode@npm:4.0.1394"
+"clientnode@npm:^4.0.1395":
+  version: 4.0.1395
+  resolution: "clientnode@npm:4.0.1395"
   peerDependencies:
     "@babel/runtime": "*"
     "@types/prop-types": "*"
@@ -5787,7 +5787,7 @@ __metadata:
       optional: true
     prop-types:
       optional: true
-  checksum: 10c0/de1aa8348cd9d7e9b24828542614c847e657660457fcc31766e1bd777a672ac21db2038bbd3a8787a1e5a9cc55135b81a508320275417ede427811df81383b41
+  checksum: 10c0/7025ae6678d9ac7468c1050e051e75c292145924a31a47961cd7ef7b344a69e705ef3834249da905d521fb9c4859410df98cb1196459421af1773467866b3798
   languageName: node
   linkType: hard
 
@@ -10026,14 +10026,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:^19.2.5":
-  version: 19.2.5
-  resolution: "react-dom@npm:19.2.5"
+"react-dom@npm:^19.2.6":
+  version: 19.2.6
+  resolution: "react-dom@npm:19.2.6"
   dependencies:
     scheduler: "npm:^0.27.0"
   peerDependencies:
-    react: ^19.2.5
-  checksum: 10c0/8067606e9f58e4c2e8cb5f09570217dbc71c4843ebcaa20ae2085912d3e3a351f17d8f7c1713313cdda7f272840c8c34ff6c860fcb840862071bceea218e0c63
+    react: ^19.2.6
+  checksum: 10c0/dbf2aef67857c03a612bc9316a4562e5066f43fa04bf28f7f0734963fc1350da2c9f8eb973930655453281079f30cc8222bab383dbec4b5097084e2c081e3334
   languageName: node
   linkType: hard
 
@@ -10051,10 +10051,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^19.2.5":
-  version: 19.2.5
-  resolution: "react@npm:19.2.5"
-  checksum: 10c0/4b5f231dbef92886f602533c9ce3bde04d99f0e71dfb5d794c43e02726efaad0421c08688f75fc98a6d6e1dc017372e1af7abbfecdc86a79968f461675931a7a
+"react@npm:^19.2.6":
+  version: 19.2.6
+  resolution: "react@npm:19.2.6"
+  checksum: 10c0/66afde33b9a9ee87b1e1cae39d8e7e040d1262e719524fd70660c4d4ce79929c532ac19fc3df5a911edaf02768fdf2c49de4ede1ba99bc6aad72796e0e26e798
   languageName: node
   linkType: hard
 
@@ -11839,17 +11839,17 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.59.2"
     "@typescript-eslint/parser": "npm:^8.59.2"
     "@webcomponents/webcomponentsjs": "npm:^2.8.0"
-    clientnode: "npm:^4.0.1394"
+    clientnode: "npm:^4.0.1395"
     eslint: "npm:^10.3.0"
     eslint-config-google: "npm:^0.14.0"
     eslint-plugin-jsdoc: "npm:^62.9.0"
     jest: "npm:^30.3.0"
     jsdoc: "npm:^4.0.5"
     prop-types: "npm:^15.8.1"
-    react: "npm:^19.2.5"
-    react-dom: "npm:^19.2.5"
+    react: "npm:^19.2.6"
+    react-dom: "npm:^19.2.6"
     typescript-eslint: "npm:^8.59.2"
-    web-documentation: "npm:^1.0.6"
+    web-documentation: "npm:^1.0.8"
     weboptimizer: "npm:^3.0.22"
     webpack-dev-server: "npm:^5.2.3"
   peerDependencies:
@@ -11873,12 +11873,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"web-documentation@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "web-documentation@npm:1.0.6"
+"web-documentation@npm:^1.0.8":
+  version: 1.0.8
+  resolution: "web-documentation@npm:1.0.8"
   bin:
     web-documentation: build/deploy.js
-  checksum: 10c0/ece809da5fdc36cf5293ee87768c41a065a4e962612ee856e2c5bed2a0bfdedbaca22f7a788cf1067be281226df80c07020299dd2fbefdfb7b97be9a5a366b3d
+  checksum: 10c0/a5960ae1ca51d47b754a5dfa0087d897496c0ce4b4f66ef4d5e574522aadd47bc1b02dd460427b912a8ffa11d4f24ee16db208672925abcfbda8edba4bd09fec
   languageName: node
   linkType: hard
 
