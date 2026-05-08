@@ -16,7 +16,7 @@
     endregion
 */
 // region imports
-import {Mapping, TemplateFunction, ValueOf} from 'clientnode'
+import {Mapping, TemplateFunction, UTILITY_SCOPE, ValueOf} from 'clientnode'
 import PropertyTypes, {ValidationMap} from 'clientnode/property-types'
 import React, {
     ComponentType as ReactComponentType, HTMLAttributes, ReactElement
@@ -30,11 +30,13 @@ export interface KnownWindowEventMap extends WindowEventMap {
     mousewheel: Event
 }
 export type KnownEventName = keyof KnownWindowEventMap
+
 export interface RenderState {
     promise: Promise<string>
     pending: boolean
     resolve: (reason: string) => void
 }
+
 export interface CompilerOptions {
     filter?: (domNode: Node) => boolean
     ignoreComponents?: boolean
@@ -51,6 +53,7 @@ export interface CompiledDomNodeTemplateItem {
     template?: string
     templateFunction?: TemplateFunction
 }
+
 export type DomNodeToCompiledTemplateMap<NodeType = Node> =
     Map<NodeType, CompiledDomNodeTemplateItem>
 
@@ -76,6 +79,7 @@ export type EventToPropertyMapping<
 
 export type PropertyType = string | ValueOf<typeof PropertyTypes>
 export type PropertyConfiguration = PropertyType
+
 export type ValidationMapping = ValidationMap<ValueOf<typeof PropertyTypes>>
 export type PropertiesValidationMap =
     Mapping<ValueOf<typeof PropertyTypes>> // & ValidationMapping
@@ -88,6 +92,18 @@ export type AttributesReflectionConfiguration = (
     PropertiesConfiguration |
     NormalizedAttributesReflectionConfiguration
 )
+
+export type Scope<Type = unknown> =
+    (typeof UTILITY_SCOPE) &
+    {
+        data: Type
+        event: Type
+        firstArgument: Type
+        firstParameter: Type
+        options: Type
+        parameters: Type
+        scope: Type
+    }
 
 export type ScopeDeclaration = Array<string> | Mapping<unknown>
 export interface PreCompiledItem {

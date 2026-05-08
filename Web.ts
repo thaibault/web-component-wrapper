@@ -42,8 +42,7 @@ import {
     unique,
     unwrap,
     UTILITY_SCOPE,
-    UTILITY_SCOPE_NAMES,
-    UTILITY_SCOPE_VALUES
+    UTILITY_SCOPE_NAMES
 } from 'clientnode'
 import {
     any,
@@ -83,6 +82,7 @@ import {
     PropertiesConfiguration,
     PropertyConfiguration,
     RenderState,
+    Scope,
     ScopeDeclaration,
     WebComponentAPI
 } from './type'
@@ -1733,20 +1733,25 @@ export class Web<
                     let error: null | string = null
                     let templateFunction: TemplateFunction | undefined
 
-                    const scopeNames: Array<string> = [
+                    const scopeNames = [
                         'data',
                         'event',
                         'firstArgument',
                         'firstParameter',
                         'options',
-                        'scope',
                         'parameters',
-                        ...UTILITY_SCOPE_NAMES
-                    ]
+                        'scope'
+                    ] as const
 
                     if (value) {
-                        const result: CompilationResult =
-                            compile(value, scopeNames, false, true, this)
+                        const result: CompilationResult = compile(
+                            value,
+                            (scopeNames as unknown as Array<string>)
+                                .concat('scope', UTILITY_SCOPE_NAMES),
+                            false,
+                            true,
+                            this
+                        )
                         error = result.error
                         templateFunction = result.templateFunction
 
@@ -1766,17 +1771,23 @@ export class Web<
                                 )
 
                             let result: unknown = undefined
-                            if (!error)
+                            if (!error) {
+                                const scope = {
+                                    parameters,
+                                    ...UTILITY_SCOPE
+                                } as
+                                    unknown as
+                                    {-readonly [key in keyof Scope]: Scope[key]}
+                                for (const name of scopeNames)
+                                    scope[name] = parameters[0]
+
                                 try {
                                     result = templateFunction?.(
-                                        parameters[0],
-                                        parameters[0],
-                                        parameters[0],
-                                        parameters[0],
-                                        parameters[0],
-                                        parameters[0],
-                                        parameters,
-                                        ...UTILITY_SCOPE_VALUES
+                                        ...scopeNames
+                                            .map((name) => scope[name]),
+                                        scope,
+                                        ...UTILITY_SCOPE_NAMES
+                                            .map((name) => UTILITY_SCOPE[name])
                                     )
                                 } catch (error) {
                                     log.warn(
@@ -1790,6 +1801,7 @@ export class Web<
                                         `to "undefined".`
                                     )
                                 }
+                            }
 
                             if (!this.self.renderProperties.includes(name))
                                 this.forwardEvent(name, parameters)
