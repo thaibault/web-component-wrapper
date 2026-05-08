@@ -494,6 +494,7 @@ export class Web<
             )
         ) ?
             this.instance.current.properties[name] :
+            (this.internalProperties as Mapping<unknown>)[name] ??
             (this.externalProperties as Mapping<unknown>)[name]
         if (
             this.instance?.current?.state &&
@@ -1738,15 +1739,15 @@ export class Web<
                         'event',
                         'firstArgument',
                         'firstParameter',
-                        'options',
-                        'parameters'
+                        'options'
                     ] as const
 
                     if (value) {
                         const result: CompilationResult = compile(
                             value,
-                            (scopeNames as unknown as Array<string>)
-                                .concat('scope', UTILITY_SCOPE_NAMES),
+                            (scopeNames as unknown as Array<string>).concat(
+                                'parameters', 'scope', UTILITY_SCOPE_NAMES
+                            ),
                             false,
                             true,
                             this
@@ -1784,6 +1785,7 @@ export class Web<
                                     result = templateFunction?.(
                                         ...scopeNames
                                             .map((name) => scope[name]),
+                                        parameters,
                                         scope,
                                         ...UTILITY_SCOPE_NAMES
                                             .map((name) => UTILITY_SCOPE[name])
