@@ -3354,12 +3354,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^25.6.0":
-  version: 25.6.0
-  resolution: "@types/node@npm:25.6.0"
+"@types/node@npm:^25.6.2":
+  version: 25.6.2
+  resolution: "@types/node@npm:25.6.2"
   dependencies:
     undici-types: "npm:~7.19.0"
-  checksum: 10c0/d2d2015630ff098a201407f55f5077a20270ae4f465c739b40865cd9933b91b9c5d2b85568eadaf3db0801b91e267333ca7eb39f007428b173d1cdab4b339ac5
+  checksum: 10c0/7f540331aa3ab88c285aeaf2eb43e3992f54f0cdb7f3593d156af67b199d4eaf56590fa1c310a00aa58ff69dba668cb3915a157fe83cd6b40a73bb338a12f09a
   languageName: node
   linkType: hard
 
@@ -8479,7 +8479,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest@npm:^30.3.0":
+"jest@npm:30.3.0":
   version: 30.3.0
   resolution: "jest@npm:30.3.0"
   dependencies:
@@ -11832,7 +11832,7 @@ __metadata:
     "@types/ejs": "npm:^3.1.5"
     "@types/html-minifier": "npm:^4.0.6"
     "@types/jsdom": "npm:^28.0.1"
-    "@types/node": "npm:^25.6.0"
+    "@types/node": "npm:^25.6.2"
     "@types/react": "npm:^19.2.14"
     "@types/react-dom": "npm:^19.2.3"
     "@types/webpack-env": "npm:^1.18.8"
@@ -11843,13 +11843,13 @@ __metadata:
     eslint: "npm:^10.3.0"
     eslint-config-google: "npm:^0.14.0"
     eslint-plugin-jsdoc: "npm:^62.9.0"
-    jest: "npm:^30.3.0"
+    jest: "npm:30.3.0"
     jsdoc: "npm:^4.0.5"
     prop-types: "npm:^15.8.1"
     react: "npm:^19.2.6"
     react-dom: "npm:^19.2.6"
     typescript-eslint: "npm:^8.59.2"
-    web-documentation: "npm:^1.0.8"
+    web-documentation: "npm:^1.0.9"
     weboptimizer: "npm:^3.0.22"
     webpack-dev-server: "npm:^5.2.3"
   peerDependencies:
@@ -11873,12 +11873,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"web-documentation@npm:^1.0.8":
-  version: 1.0.8
-  resolution: "web-documentation@npm:1.0.8"
+"web-documentation@npm:^1.0.9":
+  version: 1.0.9
+  resolution: "web-documentation@npm:1.0.9"
   bin:
     web-documentation: build/deploy.js
-  checksum: 10c0/a5960ae1ca51d47b754a5dfa0087d897496c0ce4b4f66ef4d5e574522aadd47bc1b02dd460427b912a8ffa11d4f24ee16db208672925abcfbda8edba4bd09fec
+  checksum: 10c0/49374aa70ba451c5d806b26b5fd346860eb2c3de7185fbaac23b196d1d03215ce7b27bdd5e29cb0d1b3f2c7d234545f103575e33b39358f7692f7c900c5b7f55
   languageName: node
   linkType: hard
 
