@@ -84,7 +84,7 @@
     "eslint": "^10.3.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-jsdoc": "^62.9.0",
-    "jest": "^30.4.1",
+    "jest": "30.3.0",
     "jsdoc": "^4.0.5",
     "prop-types": "^15.8.1",
     "react": "^19.2.6",

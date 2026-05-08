@@ -68,6 +68,7 @@ import {
 import property from './decorator'
 import {
     AttributesReflectionConfiguration,
+    CallbackScope,
     CompiledDomNodeTemplateItem,
     CompilerOptions,
     ComponentAdapter,
@@ -82,7 +83,6 @@ import {
     PropertiesConfiguration,
     PropertyConfiguration,
     RenderState,
-    Scope,
     ScopeDeclaration,
     WebComponentAPI
 } from './type'
@@ -1739,8 +1739,7 @@ export class Web<
                         'firstArgument',
                         'firstParameter',
                         'options',
-                        'parameters',
-                        'scope'
+                        'parameters'
                     ] as const
 
                     if (value) {
@@ -1777,7 +1776,7 @@ export class Web<
                                     ...UTILITY_SCOPE
                                 } as
                                     unknown as
-                                    {-readonly [key in keyof Scope]: Scope[key]}
+                                    CallbackScope
                                 for (const name of scopeNames)
                                     scope[name] = parameters[0]
 

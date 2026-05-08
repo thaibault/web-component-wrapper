@@ -93,8 +93,12 @@ export type AttributesReflectionConfiguration = (
     NormalizedAttributesReflectionConfiguration
 )
 
-export type Scope<Type = unknown> =
-    (typeof UTILITY_SCOPE) &
+export type ReadonlyScope = typeof UTILITY_SCOPE
+export type Scope = {
+    -readonly [key in keyof ReadonlyScope]: ReadonlyScope[key]
+}
+export type CallbackScope<Type = unknown> =
+    Scope &
     {
         data: Type
         event: Type
@@ -102,7 +106,7 @@ export type Scope<Type = unknown> =
         firstParameter: Type
         options: Type
         parameters: Type
-        scope: Type
+        scope: CallbackScope<Type>
     }
 
 export type ScopeDeclaration = Array<string> | Mapping<unknown>
