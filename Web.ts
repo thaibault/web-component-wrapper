@@ -331,39 +331,46 @@ export class Web<
         if (this.ignoreAttributeUpdateObservations || oldValue === newValue)
             return
 
-        this.onUpdateAttribute(name, newValue)
+        void this.onUpdateAttribute(name, newValue)
     }
     /**
      * Updates given attribute representation.
      * @param name - Attribute name which was updates.
      * @param newValue - New updated value.
+     * @returns Promise resolving when attribute has been updated.
      */
-    onUpdateAttribute(name: string, newValue: string) {
-        this.pendingAttributeUpdates.push(() => {
-            this.evaluateStringOrNullAndSetAsProperty(name, newValue)
+    onUpdateAttribute(name: string, newValue: string): Promise<void> {
+        const promise = new Promise<void>((resolve) =>
+            this.pendingAttributeUpdates.push(() => {
+                this.evaluateStringOrNullAndSetAsProperty(name, newValue)
 
-            if (this.batchAttributeUpdates) {
-                if (!(
-                    this.batchedAttributeUpdateRunning ||
-                    this.batchedUpdateRunning
-                )) {
-                    this.batchedAttributeUpdateRunning = true
-                    this.batchedUpdateRunning = true
+                if (this.batchAttributeUpdates) {
+                    if (!(
+                        this.batchedAttributeUpdateRunning ||
+                        this.batchedUpdateRunning
+                    )) {
+                        this.batchedAttributeUpdateRunning = true
+                        this.batchedUpdateRunning = true
 
-                    void timeout(() => {
-                        this.batchedAttributeUpdateRunning = false
-                        this.batchedUpdateRunning = false
+                        void timeout(() => {
+                            this.batchedAttributeUpdateRunning = false
+                            this.batchedUpdateRunning = false
 
-                        void this.render('attributeChanged')
-                    })
-                }
-            } else
-                void this.render('attributeChanged')
-        })
+                            void this.render('attributeChanged')
+                        })
+                    }
+                } else
+                    void this.render('attributeChanged')
+
+                resolve()
+            })
+        )
 
         if (this.connectionRegistered)
             while (this.pendingAttributeUpdates.length)
                 (this.pendingAttributeUpdates.shift() as () => void)()
+
+        return promise
     }
     /**
      * Triggered when this component is mounted into the document.
@@ -374,7 +381,6 @@ export class Web<
         // NOTE: Hack to support IE 11 here.
         try {
             (this as {isConnected: boolean}).isConnected = true
-            this.connectionRegistered = true
         } catch {
             // Ignore error.
         }
