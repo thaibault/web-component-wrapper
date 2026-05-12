@@ -159,6 +159,10 @@ export const GenericHTMLElement: typeof HTMLElement =
  * a property update is currently batched.
  * @property batchedUpdateRunning - Indicates whether a batched render update
  * is currently running.
+ * @param connectionRegistered - Indicates whether this component is connected
+ * to DOM and could run its connectedCallback.
+ * @param pendingAttributeUpdates - Holds pending attribute updates which
+ * should be performed when the component is connected to DOM.
  * @property parentInstance - Parent component instance.
  * @property rootInstance - Root component instance.
  * @property scope - Render scope.
@@ -250,6 +254,9 @@ export class Web<
     batchedPropertyUpdateRunning = true
     batchedUpdateRunning = true
 
+    connectionRegistered = false
+    pendingAttributeUpdates: Array<() => void> = []
+
     parentInstance: null | Web = null
     rootInstance: Web
     hostDomNode:
@@ -332,24 +339,31 @@ export class Web<
      * @param newValue - New updated value.
      */
     onUpdateAttribute(name: string, newValue: string) {
-        this.evaluateStringOrNullAndSetAsProperty(name, newValue)
+        this.pendingAttributeUpdates.push(() => {
+            this.evaluateStringOrNullAndSetAsProperty(name, newValue)
 
-        if (this.batchAttributeUpdates) {
-            if (!(
-                this.batchedAttributeUpdateRunning || this.batchedUpdateRunning
-            )) {
-                this.batchedAttributeUpdateRunning = true
-                this.batchedUpdateRunning = true
+            if (this.batchAttributeUpdates) {
+                if (!(
+                    this.batchedAttributeUpdateRunning ||
+                    this.batchedUpdateRunning
+                )) {
+                    this.batchedAttributeUpdateRunning = true
+                    this.batchedUpdateRunning = true
 
-                void timeout(() => {
-                    this.batchedAttributeUpdateRunning = false
-                    this.batchedUpdateRunning = false
+                    void timeout(() => {
+                        this.batchedAttributeUpdateRunning = false
+                        this.batchedUpdateRunning = false
 
-                    void this.render('attributeChanged')
-                })
-            }
-        } else
-            void this.render('attributeChanged')
+                        void this.render('attributeChanged')
+                    })
+                }
+            } else
+                void this.render('attributeChanged')
+        })
+
+        if (this.connectionRegistered)
+            while (this.pendingAttributeUpdates.length)
+                (this.pendingAttributeUpdates.shift() as () => void)()
     }
     /**
      * Triggered when this component is mounted into the document.
@@ -360,9 +374,11 @@ export class Web<
         // NOTE: Hack to support IE 11 here.
         try {
             (this as {isConnected: boolean}).isConnected = true
+            this.connectionRegistered = true
         } catch {
             // Ignore error.
         }
+        this.connectionRegistered = true
 
         // NOTE: Can be overwritten during optional root determining.
         this.parentInstance = this
@@ -384,6 +400,9 @@ export class Web<
             this.determineRenderScope()
             this.applyBinding(this, this.scope)
         }
+
+        while (this.pendingAttributeUpdates.length)
+            (this.pendingAttributeUpdates.shift() as () => void)()
 
         this.batchedAttributeUpdateRunning = false
         this.batchedPropertyUpdateRunning = false
@@ -410,6 +429,7 @@ export class Web<
         } catch {
             // Ignore error.
         }
+        this.connectionRegistered = false
 
         for (const map of this.domNodeEventBindings.values())
             for (const deregister of map.values())
