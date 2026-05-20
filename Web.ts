@@ -1774,7 +1774,7 @@ export class Web<
                             (scopeNames as unknown as Array<string>).concat(
                                 'parameters', 'scope', UTILITY_SCOPE_NAMES
                             ),
-                            false,
+                            true,
                             true,
                             this
                         )
