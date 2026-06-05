@@ -25,12 +25,6 @@ import React, {
 import Web from './Web'
 // endregion
 // region exports
-export interface KnownWindowEventMap extends WindowEventMap {
-    DOMMouseScroll: Event
-    mousewheel: Event
-}
-export type KnownEventName = keyof KnownWindowEventMap
-
 export interface RenderState {
     promise: Promise<string>
     pending: boolean

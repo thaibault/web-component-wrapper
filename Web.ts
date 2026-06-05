@@ -29,6 +29,8 @@ import {
     extend,
     isFunction,
     isObject,
+    KnownEventName,
+    KnownWindowEventMap,
     Logger,
     lowerCase,
     Mapping,
@@ -77,8 +79,6 @@ import {
     EventMapper,
     EventMapping,
     EventToPropertyMapping,
-    KnownEventName,
-    KnownWindowEventMap,
     NormalizedAttributesReflectionConfiguration,
     PropertiesConfiguration,
     PropertyConfiguration,
@@ -1025,6 +1025,7 @@ export class Web<
      * @param handler - Callback to trigger when given event occurs.
      * @param options - Add event listener options.
      * @param removeOptions - Remove event listener options.
+     * @returns Deregister function.
      */
     addSecureEventListener<EventName extends KnownEventName>(
         domNode: Node | Window,
@@ -1032,19 +1033,20 @@ export class Web<
         handler: (this: Window, event: KnownWindowEventMap[EventName]) => void,
         options?: boolean | AddEventListenerOptions,
         removeOptions?: EventListenerOptions
-    ) {
+    ): () => void {
         if (!this.domNodeEventBindings.has(domNode))
             this.domNodeEventBindings.set(
                 // eslint-disable-next-line func-call-spacing
                 domNode, new Map<string, () => void>()
             )
 
-        const eventMap = this.domNodeEventBindings.get(domNode)
+        const eventMap =
+            this.domNodeEventBindings.get(domNode) as EventCallbackMapping
 
-        const oldHandler = eventMap?.get(name)
+        const oldHandler = eventMap.get(name)
         if (oldHandler && oldHandler !== handler)
             oldHandler()
-        eventMap?.set(name, () => {
+        const deregister = () => {
             domNode.removeEventListener(
                 name,
                 handler as EventListenerOrEventListenerObject,
@@ -1055,11 +1057,14 @@ export class Web<
 
             if (eventMap.size === 0)
                 this.domNodeEventBindings.delete(domNode)
-        })
+        }
+        eventMap.set(name, deregister)
 
         domNode.addEventListener(
             name, handler as EventListenerOrEventListenerObject, options
         )
+
+        return deregister
     }
     //// endregion
     /**
