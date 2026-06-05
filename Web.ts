@@ -30,6 +30,7 @@ import {
     isFunction,
     isObject,
     KnownEventName,
+    KnownWindowEventMap,
     Logger,
     lowerCase,
     Mapping,
@@ -78,7 +79,6 @@ import {
     EventMapper,
     EventMapping,
     EventToPropertyMapping,
-    KnownWindowEventMap,
     NormalizedAttributesReflectionConfiguration,
     PropertiesConfiguration,
     PropertyConfiguration,
@@ -1025,6 +1025,7 @@ export class Web<
      * @param handler - Callback to trigger when given event occurs.
      * @param options - Add event listener options.
      * @param removeOptions - Remove event listener options.
+     * @returns Deregister function.
      */
     addSecureEventListener<EventName extends KnownEventName>(
         domNode: Node | Window,
@@ -1039,9 +1040,10 @@ export class Web<
                 domNode, new Map<string, () => void>()
             )
 
-        const eventMap = this.domNodeEventBindings.get(domNode)
+        const eventMap =
+            this.domNodeEventBindings.get(domNode) as EventCallbackMapping
 
-        const oldHandler = eventMap?.get(name)
+        const oldHandler = eventMap.get(name)
         if (oldHandler && oldHandler !== handler)
             oldHandler()
         const deregister = () => {
@@ -1056,7 +1058,7 @@ export class Web<
             if (eventMap.size === 0)
                 this.domNodeEventBindings.delete(domNode)
         }
-        eventMap?.set(name, deregister)
+        eventMap.set(name, deregister)
 
         domNode.addEventListener(
             name, handler as EventListenerOrEventListenerObject, options
