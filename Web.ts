@@ -1032,7 +1032,7 @@ export class Web<
         handler: (this: Window, event: KnownWindowEventMap[EventName]) => void,
         options?: boolean | AddEventListenerOptions,
         removeOptions?: EventListenerOptions
-    ) {
+    ): () => void {
         if (!this.domNodeEventBindings.has(domNode))
             this.domNodeEventBindings.set(
                 // eslint-disable-next-line func-call-spacing
@@ -1044,7 +1044,7 @@ export class Web<
         const oldHandler = eventMap?.get(name)
         if (oldHandler && oldHandler !== handler)
             oldHandler()
-        eventMap?.set(name, () => {
+        const deregister = () => {
             domNode.removeEventListener(
                 name,
                 handler as EventListenerOrEventListenerObject,
@@ -1055,11 +1055,14 @@ export class Web<
 
             if (eventMap.size === 0)
                 this.domNodeEventBindings.delete(domNode)
-        })
+        }
+        eventMap?.set(name, deregister)
 
         domNode.addEventListener(
             name, handler as EventListenerOrEventListenerObject, options
         )
+
+        return deregister
     }
     //// endregion
     /**
