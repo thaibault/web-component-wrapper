@@ -433,8 +433,6 @@ export class Web<
         this.unRender('disconnected')
 
         this.unregisterConnectionState()
-
-        this.unregisterDomNodeEventBindings()
     }
     // endregion
     // region getter/setter
@@ -2156,7 +2154,7 @@ export class Web<
      * @param _reRenderReason - Description why a re-rendering is necessary.
      */
     unRender(_reason = 'unknown', _reRenderReason?: string): void {
-        // No base implementation needed.
+        this.unregisterDomNodeEventBindings()
     }
     /// endregion
     // endregion

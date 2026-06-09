@@ -148,8 +148,6 @@ export class ReactWeb<
             this.reactRoot?.unmount()
 
         this.unregisterConnectionState()
-
-        this.unregisterDomNodeEventBindings()
     }
     /**
      * Reflects wrapped component state back to web-component's attributes.
