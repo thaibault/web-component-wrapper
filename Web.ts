@@ -2065,17 +2065,8 @@ export class Web<
         this.scope.scope = this.scope
     }
     /**
-     * Method that does the rendering job. Should be called when ever state
-     * changes should be projected to the hosts dom content.
-     * @param _reason - Description why rendering is necessary.
-     * @param _reRenderReason - Description why a re-rendering is necessary.
-     */
-    unRender(_reason = 'unknown', _reRenderReason?: string): void {
-        // No base implementation needed.
-    }
-    /**
-     * Method that does the rendering job. Should be called when ever state
-     * changes should be projected to the hosts dom content.
+     * Does the rendering job. Should be called when ever state changes should
+     * be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
      * @param resolveRendering - Indicates whether rendering should be resolved
      * finally. Should be set to "false" via super calls in inherited render
@@ -2158,6 +2149,14 @@ export class Web<
         })
 
         await this.resolveRenderingPromiseIfSet(reason, resolveRendering)
+    }
+    /**
+     * Should free up memory listeners related to deprecated HTML.
+     * @param _reason - Description why rendering is necessary.
+     * @param _reRenderReason - Description why a re-rendering is necessary.
+     */
+    unRender(_reason = 'unknown', _reRenderReason?: string): void {
+        // No base implementation needed.
     }
     /// endregion
     // endregion
