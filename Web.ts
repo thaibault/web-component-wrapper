@@ -426,22 +426,15 @@ export class Web<
             })
     }
     /**
-     * Frees some memory.
+     * Triggered when this component is unmounted from the document. Event
+     * handlers will be removed and state updated accordingly.
      */
     disconnectedCallback() {
-        // NOTE: Hack to support IE 11 here.
-        try {
-            (this as {isConnected: boolean}).isConnected = false
-        } catch {
-            // Ignore error.
-        }
-        this.connectionRegistered = false
+        this.unRender('disconnected')
 
-        for (const map of this.domNodeEventBindings.values())
-            for (const deregister of map.values())
-                deregister()
+        this.unregisterConnectionState()
 
-        this.slots = {}
+        this.unregisterDomNodeEventBindings()
     }
     // endregion
     // region getter/setter
@@ -623,6 +616,22 @@ export class Web<
     // endregion
     // region helper
     /// region utility
+    unregisterConnectionState(): void {
+        // NOTE: Hack to support IE 11 here.
+        try {
+            (this as {isConnected: boolean}).isConnected = false
+        } catch {
+            // Ignore error.
+        }
+        this.connectionRegistered = false
+
+        this.slots = {}
+    }
+    unregisterDomNodeEventBindings(): void {
+        for (const map of this.domNodeEventBindings.values())
+            for (const deregister of map.values())
+                deregister()
+    }
     //// region dom nodes
     /**
      * Binds properties and event handler to the given dom node.
@@ -2059,11 +2068,10 @@ export class Web<
      * Method that does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
      * @param _reason - Description why rendering is necessary.
-     * @returns A promise resolving when un rendering has been finished. A
-     * promise may be needed for classes inheriting from this class.
+     * @param _reRenderReason - Description why a re-rendering is necessary.
      */
-    unRender(_reason = 'unknown'): Promise<void> {
-        return Promise.resolve()
+    unRender(_reason = 'unknown', _reRenderReason?: string): void {
+        // No base implementation needed.
     }
     /**
      * Method that does the rendering job. Should be called when ever state
@@ -2077,7 +2085,7 @@ export class Web<
      * may be needed for classes inheriting from this class.
      */
     async render(reason = 'unknown', resolveRendering = true): Promise<void> {
-        await this.unRender(reason)
+        this.unRender('reRender', reason)
 
         this.childComponentInstances = []
         this.renderState.pending = true

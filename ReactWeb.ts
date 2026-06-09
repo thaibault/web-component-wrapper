@@ -139,13 +139,17 @@ export class ReactWeb<
     }
     /**
      * Triggered when this component is unmounted from the document. Event
-     * handlers and state will be removed.
+     * handlers will be removed and state updated accordingly.
      */
     disconnectedCallback() {
+        this.unRender('disconnected')
+
         if (this.unmountOnDisconnect)
             this.reactRoot?.unmount()
 
-        super.disconnectedCallback()
+        this.unregisterConnectionState()
+
+        this.unregisterDomNodeEventBindings()
     }
     /**
      * Reflects wrapped component state back to web-component's attributes.
@@ -167,7 +171,7 @@ export class ReactWeb<
      * be needed for classes inheriting from this class.
      */
     async render(reason = 'unknown', resolveRendering = true): Promise<void> {
-        await super.unRender(reason)
+        super.unRender('reRender', reason)
 
         this.childComponentInstances = []
         this.renderState.pending = true
