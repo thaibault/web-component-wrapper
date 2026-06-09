@@ -2058,15 +2058,27 @@ export class Web<
     /**
      * Method that does the rendering job. Should be called when ever state
      * changes should be projected to the hosts dom content.
+     * @param _reason - Description why rendering is necessary.
+     * @returns A promise resolving when un rendering has been finished. A
+     * promise may be needed for classes inheriting from this class.
+     */
+    unRender(_reason = 'unknown'): Promise<void> {
+        return Promise.resolve()
+    }
+    /**
+     * Method that does the rendering job. Should be called when ever state
+     * changes should be projected to the hosts dom content.
      * @param reason - Description why rendering is necessary.
      * @param resolveRendering - Indicates whether rendering should be resolved
      * finally. Should be set to "false" via super calls in inherited render
      * methods which do further dom manipulations afterward and resolve the
      * rendering process by their own.
-     * @returns A promise resolving when rendering has finished. A promise may
-     * be needed for classes inheriting from this class.
+     * @returns A promise resolving when rendering has been finished. A promise
+     * may be needed for classes inheriting from this class.
      */
     async render(reason = 'unknown', resolveRendering = true): Promise<void> {
+        await this.unRender(reason)
+
         this.childComponentInstances = []
         this.renderState.pending = true
 
