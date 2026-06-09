@@ -167,6 +167,8 @@ export class ReactWeb<
      * be needed for classes inheriting from this class.
      */
     async render(reason = 'unknown', resolveRendering = true): Promise<void> {
+        await super.unRender(reason)
+
         this.childComponentInstances = []
         this.renderState.pending = true
 
