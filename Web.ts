@@ -2153,7 +2153,7 @@ export class Web<
      * @param _reason - Description why rendering is necessary.
      * @param _reRenderReason - Description why a re-rendering is necessary.
      */
-    unRender(_reason = 'unknown', _reRenderReason?: string): void {
+    unRender(_reason = 'unknown', _reRenderReason?: string) {
         this.unregisterDomNodeEventBindings()
     }
     /// endregion
