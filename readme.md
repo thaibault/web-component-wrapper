@@ -33,6 +33,94 @@ Use case
 
 Encapsulate your components as web-components.
 
+<div class="wd-table-of-contents">
+    <h2 id="content">Content<!--deDE:Inhalt--></h2>
+    <!--wd-table-of-contents-->
+</div>
+
+<!--|deDE:Installation-->
+Installation
+------------
+
+You can install via package manager, simply download the compiled version as
+zip file here and inject or request via cdn in HTML:
+<!--deDE:
+    Sie können das Paket über den Paketmanager installieren oder einfach die
+    kompilierte Version als ZIP-Datei hier herunterladen und in HTML einbinden
+    oder über ein CDN abrufen:
+-->
+
+```bash
+npm install web-component-wrapper
+```
+
+```TypeScript
+import {Web} from 'web-component-wrapper/Web'
+
+export class MyWebComponent<
+    TElement = HTMLElement,
+    ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
+    InternalProperties extends Mapping<unknown> = Mapping<unknown>
+> extends Web<TElement, ExternalProperties, InternalProperties> {
+    /**
+     * Defines dynamic getter and setter interface and resolves a configuration
+     * object. Initializes the map implementation.
+     */
+    constructor() {
+        super()
+        /*
+            Babel property declaration transformation overwrites defined
+            properties at the end of an implicit constructor. So we have to
+            redefine them as long as we want to declare expected component
+            interface properties to enable static type checks.
+        */
+        this.defineGetterAndSetterInterface()
+    }
+    /**
+     * Triggered when ever a given attribute has changed and triggers to update
+     * configured dom content.
+     * @param name - Attribute name which was updates.
+     * @param newValue - New updated value.
+     * @returns Returns when attribute has been updated.
+     */
+    async onUpdateAttribute(name: string, newValue: string): Promise<void> {
+        await super.onUpdateAttribute(name, newValue)
+
+        // ...
+    }
+    /**
+     * Updates controlled dom elements.
+     * @param reason - Why an update has been triggered.
+     * @param resolveRendering - Indicates whether rendering should be resolved
+     * finally. Should be set to "false" via super calls in inherited render
+     * methods which do further dom manipulations afterward and resolve the
+     * rendering process by their own.
+     * @returns A promise resolving when rendering has finished. A promise may
+     * be needed for classes inheriting from this class.
+     */
+    async render(reason = 'unknown', resolveRendering = true): Promise<void> {
+        await super.render(reason, false)
+
+        await this.waitForNestedComponentRendering()
+
+        // ...
+
+        await this.resolveRenderingPromiseIfSet(reason, resolveRendering)
+    }
+    
+    // ...
+}
+```
+
+<!--showExample-->
+
+```HTML
+<script src="https://unpkg.com/clientnode@latest/dist/bundle/index.js">
+</script>
+
+<div id="first-example-playground"></div>
+```
+
 ## Data-Flow
 
 Data can flow into a component via
