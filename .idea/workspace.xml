@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="eeaf8ff5-2543-4c53-b012-4df0d8b2ca5b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotChats">
+    <option name="panelChat">
+      <chat>
+        <option name="activeSessionId" value="e4ed9ab2-8d4d-48f8-a041-07621f1fa612" />
+        <option name="sessions">
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="e4ed9ab2-8d4d-48f8-a041-07621f1fa612" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-opus-4.6" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+        </option>
+        <option name="type" value="PANEL" />
+      </chat>
+    </option>
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_/Users/torben.sickert/local/public/project/repository/web-component-wrapper" value="3DFcohzntDy3j8lN778WsyMGBkA" />
+    </persistenceIdMap>
+  </component>
+  <component name="CopilotUserSelectedModel">
+    <selectedModels>
+      <entry key="agent-panel" value="Claude Opus 4.6" />
+      <entry key="chat-panel" value="Claude Opus 4.6" />
+    </selectedModels>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="108" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0000000000000013" />
+      <entry key="S5" value="1.0000029182572547" />
+      <entry key="S10" value="1.0038230925927754" />
+      <entry key="S30" value="1.5116941619484539" />
+      <entry key="S60" value="2.9247782610969777" />
+      <entry key="M2" value="5.349557017524897" />
+      <entry key="M5" value="12.304837187102853" />
+      <entry key="M10" value="21.647149793425644" />
+      <entry key="M15" value="28.28984626784921" />
+      <entry key="M30" value="40.90776202397784" />
+      <entry key="H1" value="52.92712194210304" />
+      <entry key="H2" value="61.89086654395014" />
+      <entry key="H4" value="67.47646645089905" />
+      <entry key="D1" value="72.83988496218082" />
+      <entry key="W1" value="73.83237408576393" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="8.461655532062428E-126" />
+      <entry key="S2" value="5.393414959329665E-32" />
+      <entry key="S5" value="3.1098936254844414E-13" />
+      <entry key="S10" value="5.576642023578159E-7" />
+      <entry key="S30" value="0.008234471039075049" />
+      <entry key="S60" value="0.09256298708081628" />
+      <entry key="M2" value="0.3443515399996521" />
+      <entry key="M5" value="0.9403280267637343" />
+      <entry key="M10" value="1.5137934758107152" />
+      <entry key="M15" value="1.8449573080711883" />
+      <entry key="M30" value="2.313145704137001" />
+      <entry key="H1" value="2.6223247105971703" />
+      <entry key="H2" value="2.8015263745946224" />
+      <entry key="H4" value="2.8982040690590627" />
+      <entry key="D1" value="2.9826650182389263" />
+      <entry key="W1" value="2.9975143548396637" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9138314502294005" />
+      <entry key="MS500" value="0.9821395952633915" />
+      <entry key="S2" value="0.9955046776706183" />
+      <entry key="S5" value="0.9982022421331245" />
+      <entry key="S10" value="1.0028383941155492" />
+      <entry key="S30" value="1.5156536754544965" />
+      <entry key="S60" value="3.0092260432460245" />
+      <entry key="M2" value="5.6840764963942245" />
+      <entry key="M5" value="13.23398701446664" />
+      <entry key="M10" value="23.14979258965646" />
+      <entry key="M15" value="30.124480993418633" />
+      <entry key="M30" value="43.212828031881465" />
+      <entry key="H1" value="55.54396337524553" />
+      <entry key="H2" value="64.68910496283334" />
+      <entry key="H4" value="70.37285526270655" />
+      <entry key="D1" value="75.82221993221408" />
+      <entry key="W1" value="76.82984056252086" />
+    </decayedShown>
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3DFcohzntDy3j8lN778WsyMGBkA" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/torben.sickert/local/public/project/repository/web-component-wrapper&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;yarn&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/torben.sickert/local/public/project/repository/web-component-wrapper/node_modules/typescript/lib&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.25134.101" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="eeaf8ff5-2543-4c53-b012-4df0d8b2ca5b" name="Changes" comment="" />
+      <created>1777881439138</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1777881439138</updated>
+      <workItem from="1777881440200" duration="23000" />
+      <workItem from="1777881946238" duration="13000" />
+      <workItem from="1777884974671" duration="3331000" />
+      <workItem from="1778000442453" duration="197000" />
+      <workItem from="1778000727754" duration="330000" />
+      <workItem from="1778001140063" duration="1000" />
+      <workItem from="1778001857073" duration="3426000" />
+      <workItem from="1778052784272" duration="13210000" />
+      <workItem from="1778079012225" duration="1025000" />
+      <workItem from="1778137822664" duration="1000" />
+      <workItem from="1778137828123" duration="1000" />
+      <workItem from="1778165395056" duration="4676000" />
+      <workItem from="1778170671187" duration="99000" />
+      <workItem from="1778241778490" duration="45000" />
+      <workItem from="1778249991226" duration="4210000" />
+      <workItem from="1778572310589" duration="4442000" />
+      <workItem from="1778582589623" duration="653000" />
+      <workItem from="1778583806983" duration="22000" />
+      <workItem from="1778838831510" duration="16000" />
+      <workItem from="1779286699414" duration="19000" />
+      <workItem from="1779298770068" duration="69000" />
+      <workItem from="1779298946361" duration="1078000" />
+      <workItem from="1779387571670" duration="52000" />
+      <workItem from="1779387670945" duration="37000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/Web.js" />
+        <option value="$PROJECT_DIR$/decorator.js" />
+        <option value="$PROJECT_DIR$/index.js" />
+        <option value="$PROJECT_DIR$/ReactWeb.js" />
+        <option value="$PROJECT_DIR$/ReactWeb.d.ts" />
+        <option value="$PROJECT_DIR$/index.d.ts" />
+        <option value="$PROJECT_DIR$/decorator.d.ts" />
+        <option value="$PROJECT_DIR$/Web.d.ts" />
+        <option value="$PROJECT_DIR$/test.d.ts" />
+        <option value="$PROJECT_DIR$/type.d.ts" />
+        <option value="$PROJECT_DIR$/Web.js" />
+        <option value="$PROJECT_DIR$/index.js" />
+        <option value="$PROJECT_DIR$/ReactWeb.js" />
+        <option value="$PROJECT_DIR$/decorator.js" />
+        <option value="$PROJECT_DIR$/node_modules/@eslint/plugin-kit/dist/cjs/types.d.cts" />
+      </list>
+    </option>
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>
