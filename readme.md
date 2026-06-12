@@ -115,7 +115,7 @@ export class MyWebComponent<
 <!--showExample-->
 
 ```HTML
-<script src="https://unpkg.com/clientnode@latest/dist/bundle/index.js">
+<script src="https://unpkg.com/web-component-wrapper@latest/WebNext.js">
 </script>
 
 <div id="first-example-playground"></div>
