@@ -19,13 +19,26 @@
     kompilierte Version als ZIP-Datei hier herunterladen und in HTML einbinden
     oder über ein CDN abrufen:
 --><pre><code class="language-bash">npm install web-component-wrapper
-</code></pre><pre><code class="language-TypeScript"><span class="hljs-keyword">import</span> {<span class="hljs-title class_">Web</span>} <span class="hljs-keyword">from</span> <span class="hljs-string">'web-component-wrapper/Web'</span>
+</code></pre><pre><code class="language-TypeScript"><span class="hljs-keyword">import</span> {func, <span class="hljs-built_in">object</span>} <span class="hljs-keyword">from</span> <span class="hljs-string">'clientnode/property-types'</span>
+<span class="hljs-keyword">import</span> {property} <span class="hljs-keyword">from</span> <span class="hljs-string">'web-component-wrapper/decorator'</span>
+<span class="hljs-keyword">import</span> {<span class="hljs-title class_">Web</span>} <span class="hljs-keyword">from</span> <span class="hljs-string">'web-component-wrapper/Web'</span>
 
 <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MyWebComponent</span>&lt;
     <span class="hljs-title class_">TElement</span> = <span class="hljs-title class_">HTMLElement</span>,
     <span class="hljs-title class_">ExternalProperties</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Mapping</span>&lt;<span class="hljs-built_in">unknown</span>&gt; = <span class="hljs-title class_">Mapping</span>&lt;<span class="hljs-built_in">unknown</span>&gt;,
     <span class="hljs-title class_">InternalProperties</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Mapping</span>&lt;<span class="hljs-built_in">unknown</span>&gt; = <span class="hljs-title class_">Mapping</span>&lt;<span class="hljs-built_in">unknown</span>&gt;
 &gt; <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Web</span>&lt;<span class="hljs-title class_">TElement</span>, <span class="hljs-title class_">ExternalProperties</span>, <span class="hljs-title class_">InternalProperties</span>&gt; {
+    <span class="hljs-keyword">static</span> content = <span class="hljs-string">`
+        &lt;div class="wrapper" on-click="this.rootInstance.onClick(event)"&gt;
+            &lt;slot&gt;Please provide a template to transclude.&lt;/slot&gt;
+        &lt;/div&gt;
+    `</span>
+    
+    <span class="hljs-meta">@property</span>({<span class="hljs-attr">type</span>: <span class="hljs-built_in">object</span>})
+    options = {} <span class="hljs-keyword">as</span> <span class="hljs-title class_">Options</span>
+
+    <span class="hljs-meta">@property</span>({<span class="hljs-attr">type</span>: func})
+    <span class="hljs-attr">onClick</span>: <span class="hljs-function">(<span class="hljs-params"><span class="hljs-attr">event</span>: <span class="hljs-title class_">MouseEvent</span></span>) =&gt;</span> <span class="hljs-title class_">Promise</span>&lt;<span class="hljs-built_in">void</span>&gt; = <span class="hljs-variable constant_">NOOP</span>
     <span class="hljs-comment">/**
      * Defines dynamic getter and setter interface and resolves a configuration
      * object. Initializes the map implementation.
@@ -74,6 +87,8 @@
     
     <span class="hljs-comment">// ...</span>
 }
+
+customElements.<span class="hljs-title function_">define</span>(<span class="hljs-string">'my-web-component'</span>, <span class="hljs-title class_">MyWebComponent</span>)
 </code></pre><!--showExample--><pre><code class="language-HTML"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"https://unpkg.com/web-component-wrapper@latest/WebNext.js"</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
 
