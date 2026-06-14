@@ -55,6 +55,8 @@ npm install web-component-wrapper
 ```
 
 ```TypeScript
+import {func, object} from 'clientnode/property-types'
+import {property} from 'web-component-wrapper/decorator'
 import {Web} from 'web-component-wrapper/Web'
 
 export class MyWebComponent<
@@ -62,6 +64,17 @@ export class MyWebComponent<
     ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
     InternalProperties extends Mapping<unknown> = Mapping<unknown>
 > extends Web<TElement, ExternalProperties, InternalProperties> {
+    static content = `
+        <div class="wrapper" on-click="this.rootInstance.onClick(event)">
+            <slot>Please provide a template to transclude.</slot>
+        </div>
+    `
+    
+    @property({type: object})
+    options = {} as Options
+
+    @property({type: func})
+    onClick: (event: MouseEvent) => Promise<void> = NOOP
     /**
      * Defines dynamic getter and setter interface and resolves a configuration
      * object. Initializes the map implementation.
@@ -110,6 +123,8 @@ export class MyWebComponent<
     
     // ...
 }
+
+customElements.define('my-web-component', MyWebComponent)
 ```
 
 <!--showExample-->
