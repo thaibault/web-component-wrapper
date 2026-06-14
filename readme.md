@@ -130,6 +130,10 @@ customElements.define('my-web-component', MyWebComponent)
 <!--showExample-->
 
 ```HTML
+<script
+    src="https://unpkg.com/clientnode@latest/dist/bundle/property-types.js"
+></script>
+
 <script src="https://unpkg.com/clientnode@latest/dist/bundle/index.js">
 </script>
 
