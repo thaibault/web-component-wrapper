@@ -5983,9 +5983,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clientnode@npm:^4.0.1422":
-  version: 4.0.1422
-  resolution: "clientnode@npm:4.0.1422"
+"clientnode@npm:^4.0.1423":
+  version: 4.0.1423
+  resolution: "clientnode@npm:4.0.1423"
   peerDependencies:
     "@babel/runtime": "*"
     "@types/prop-types": "*"
@@ -6000,7 +6000,7 @@ __metadata:
       optional: true
     prop-types:
       optional: true
-  checksum: 10c0/218f7acd6cf9b3c7330f5f3e585ea7e1c03d5bc483617b52fd76866326cab4a7d194b7d068c1542d6d30a12f32d809e05c5fc04499cb21a3804d93706a387b83
+  checksum: 10c0/d239a017d1d40852f02a91b0458d41048a7b730cfee4d68d4e2cbc615de59c1415afb028479f6e7cce676fe12757465947abacf37aa660c4d2e9bf5f288613f9
   languageName: node
   linkType: hard
 
@@ -12077,7 +12077,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.61.0"
     "@typescript-eslint/parser": "npm:^8.61.0"
     "@webcomponents/webcomponentsjs": "npm:^2.8.0"
-    clientnode: "npm:^4.0.1422"
+    clientnode: "npm:^4.0.1423"
     eslint: "npm:^10.5.0"
     eslint-config-google: "npm:^0.14.0"
     eslint-plugin-jsdoc: "npm:^63.0.2"
@@ -12087,7 +12087,7 @@ __metadata:
     react: "npm:^19.2.7"
     react-dom: "npm:^19.2.7"
     typescript-eslint: "npm:^8.61.0"
-    web-documentation: "npm:^1.0.37"
+    web-documentation: "npm:^1.0.38"
     weboptimizer: "npm:^3.0.24"
     webpack-dev-server: "npm:^5.2.5"
   peerDependencies:
@@ -12111,12 +12111,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"web-documentation@npm:^1.0.37":
-  version: 1.0.37
-  resolution: "web-documentation@npm:1.0.37"
+"web-documentation@npm:^1.0.38":
+  version: 1.0.38
+  resolution: "web-documentation@npm:1.0.38"
   bin:
     web-documentation: build/deploy.js
-  checksum: 10c0/9b98da3fa60d1cabe94ca20b6dd36426e06d6c4fa3d71ffa44835c9432cb824e257f9a752839319b950069ce8e2b01482c400279a02930db612dddc5a566ca1f
+  checksum: 10c0/4a35b78e9ae993fb3977ee9736aa2f33ee1f79db4bcdaccd5a61f4fc1430a9a287258225fd4129edfff3a4a019e8f03eae1e134419a73b49339f2529bf7dc230
   languageName: node
   linkType: hard
 

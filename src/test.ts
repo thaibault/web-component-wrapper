@@ -34,7 +34,7 @@ describe('Web', (): void => {
         class WebTest extends Web {
             static observedAttributes = ['is-root', 'on-click', 'on-event']
 
-            onClick: () => void
+            onClick: () => void = jest.fn()
         }
 
         expect(WebTest).toHaveProperty('content')
@@ -108,8 +108,8 @@ describe('ReactWeb', (): void => {
 
             readonly self = TestReactWeb
 
-            onClick: () => void
-            onEvent: () => void
+            onClick: () => void = jest.fn()
+            onEvent: () => void = jest.fn()
         }
 
         expect(TestReactWeb).toHaveProperty('content')
