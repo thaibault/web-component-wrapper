@@ -127,7 +127,7 @@ export class MyWebComponent<
 customElements.define('my-web-component', MyWebComponent)
 ```
 
-<!--showExample-->
+<!--showExample:hidden-->
 
 ```HTML
 <script
@@ -148,7 +148,7 @@ class MyGreeting extends webComponentWrapper.Web {
     static content = '<div>Hello ${name}</div>';
 
     name = 'string';
-}
+};
 
 customElements.define('my-greeting', MyGreeting);
 ```
