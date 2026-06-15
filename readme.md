@@ -138,13 +138,7 @@ Examples
 
 ```HTML
 <script
-    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/Web.js"
-></script>
-<script
-    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/ReactWeb.js"
-></script>
-<script
-    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/decorator.js"
+    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js"
 ></script>
 ```
 
