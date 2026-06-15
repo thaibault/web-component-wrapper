@@ -151,7 +151,8 @@ Examples
 class MyGreeting extends webComponentWrapper.Web {
     static doRender = true
     static evaluateSlots = true
-    static content = '<div>Hello ${this}</div>'
+    static determineRootBinding = false
+    static content = '<div>Hello ${this.name}</div>'
 }
 // Alternative to the decorator syntax:
 webComponentWrapper.property()({self: MyGreeting}, 'name')
