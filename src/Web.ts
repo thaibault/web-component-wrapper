@@ -240,7 +240,7 @@ export class Web<
         resolve: NOOP
     }
 
-    // Contsructor might be executed when accessed via child components.
+    // Constructor might be executed when accessed via child components.
     childComponentInstances: Array<Web> | undefined = []
 
     batchAttributeUpdates = true
