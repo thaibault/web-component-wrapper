@@ -31,7 +31,11 @@ describe('Web', (): void => {
         /**
          * Mock Test class.
          */
-        class WebTest extends Web {}
+        class WebTest extends Web {
+            static observedAttributes = ['is-root', 'on-click', 'on-event']
+
+            onClick: () => void
+        }
 
         expect(WebTest).toHaveProperty('content')
         expect(WebTest).toHaveProperty('observedAttributes')
@@ -41,7 +45,7 @@ describe('Web', (): void => {
 
         expect(web).not.toHaveProperty('clicked')
 
-        web.setAttribute('bind-on-click', 'this.clicked = true')
+        web.setAttribute('on-click', 'this.clicked = true')
         expect(web).not.toHaveProperty('clicked')
 
         document.body.appendChild(web)
@@ -49,13 +53,13 @@ describe('Web', (): void => {
         expect(web).toHaveProperty('rootInstance', web)
 
         expect(web).not.toHaveProperty('clicked')
-        web.click()
+        web.onClick()
         expect(web).toHaveProperty('clicked', true)
 
         const clickCallback = jest.fn()
         web.addEventListener('click', clickCallback)
         expect(clickCallback).not.toHaveBeenCalled()
-        web.click()
+        web.onClick()
         expect(clickCallback).toHaveBeenCalled()
     })
 })
@@ -90,8 +94,10 @@ describe('ReactWeb', (): void => {
             ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
             InternalProperties extends Mapping<unknown> = Mapping<unknown>
         > extends ReactWeb<TElement, ExternalProperties, InternalProperties> {
-            static content = component as ComponentType
+            static _name = 'Test'
 
+            static content = component as ComponentType
+            static observedAttributes = ['is-root', 'on-click', 'on-event']
             static propertyTypes: PropertiesConfiguration = {
                 ...Web.propertyTypes,
 
@@ -100,9 +106,10 @@ describe('ReactWeb', (): void => {
                 property: string
             }
 
-            static _name = 'Test'
-
             readonly self = TestReactWeb
+
+            onClick: () => void
+            onEvent: () => void
         }
 
         expect(TestReactWeb).toHaveProperty('content')
@@ -114,10 +121,12 @@ describe('ReactWeb', (): void => {
                 TestReactWeb & {property: string}
 
         expect(react).not.toHaveProperty('clicked')
-        react.setAttribute('bind-on-click', 'this.clicked = true')
+        react.setAttribute('on-click', 'this.clicked = true')
+        expect(react).toHaveProperty('onClick')
         expect(react).not.toHaveProperty('clicked')
 
-        react.setAttribute('bind-on-event', 'this.eventHappened = true')
+        react.setAttribute('on-event', 'this.eventHappened = true')
+        expect(react).toHaveProperty('onEvent')
 
         expect(triggerOnEvent).not.toBeDefined()
 
@@ -143,13 +152,13 @@ describe('ReactWeb', (): void => {
         expect(eventCallback).toHaveBeenCalled()
 
         expect(react).not.toHaveProperty('clicked')
-        react.click()
+        react.onClick()
         expect(react).toHaveProperty('clicked', true)
 
         const clickCallback = jest.fn()
         react.addEventListener('click', clickCallback)
         expect(clickCallback).not.toHaveBeenCalled()
-        react.click()
+        react.onClick()
         expect(clickCallback).toHaveBeenCalled()
 
         expect(componentProperty).toStrictEqual('initial')

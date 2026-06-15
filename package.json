@@ -23,32 +23,21 @@
     "email": "info@torben.website",
     "url": "https://torben.website"
   },
+  "main": "dist/index.js",
   "files": [
-    "decorator.d.ts",
-    "decorator.js",
-    "decoratorNext.js",
-    "index.d.ts",
-    "index.js",
-    "indexNext.js",
-    "polyfill.html.ejs",
-    "ReactWeb.d.ts",
-    "ReactWeb.js",
-    "ReactWebNext.js",
-    "Web.d.ts",
-    "Web.js",
-    "WebNext.js",
-    "type.d.ts"
+    "dist"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/thaibault/web-component-wrapper"
   },
   "scripts": {
-    "build": "yarn build:types; yarn build:plain; yarn build:next",
-    "build:bundle": "yarn build:types; yarn build:bundle:plain; yarn build:next",
+    "build": "yarn build:types; yarn build:plain; yarn build:compatible; yarn build:bundle",
+    "build:bundle": "yarn build:types; yarn build:bundle:plain; yarn build:bundle:compatible",
     "build:bundle:plain": "weboptimizer build '{__reference__: \"target:bundle\"}'",
+    "build:bundle:compatible": "weboptimizer build '{__reference__: [\"target:bundle\", \"target:compatible\"]}'",
     "build:plain": "weboptimizer build",
-    "build:next": "weboptimizer build '{__reference__: \"target:next\"}'",
+    "build:compatible": "weboptimizer build '{__reference__: \"target:compatible\"}'",
     "build:types": "weboptimizer build:types",
     "check": "yarn check:types; yarn lint",
     "check:types": "weboptimizer check:types",
@@ -149,9 +138,7 @@
     },
     "generic": {
       "supportedBrowsers": [
-        "IE >= 11",
-        "last 2 versions",
-        "> 5%"
+        "browserslist config and supports es6-class"
       ]
     },
     "injection": {
@@ -167,6 +154,14 @@
         }
       }
     },
+    "path": {
+      "source": {
+        "base": "src/"
+      },
+      "target": {
+        "base": "dist/"
+      }
+    },
     "target:bundle": {
       "inPlace": {
         "externalLibrary": {
@@ -174,6 +169,7 @@
           "normal": true
         }
       },
+      "libraryName": "webComponentWrapper",
       "module": {
         "preprocessor": {
           "javaScript": {
@@ -184,17 +180,24 @@
             }
           }
         }
+      },
+      "path": {
+        "target": {
+          "base": "dist/bundle/"
+        }
       }
     },
-    "target:next": {
+    "target:compatible": {
       "generic": {
         "supportedBrowsers": [
-          "browserslist config and supports es6-class"
+          "IE >= 11",
+          "last 2 versions",
+          "> 5%"
         ]
       },
-      "injection": {
-        "entry": {
-          "__evaluate__": "{decoratorNext: './decorator.ts', indexNext: './index.ts', ReactWebNext: './ReactWeb.ts', WebNext: './Web.ts'}"
+      "path": {
+        "target": {
+          "base": "dist/compatible/"
         }
       }
     }
