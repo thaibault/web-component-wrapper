@@ -26,9 +26,13 @@
   "main": "dist/index.js",
   "exports": {
     ".": "./dist/index.js",
+    "./compatible": "./dist/compatible/index.js",
     "./decorator": "./dist/decorator.js",
+    "./compatible/decorator": "./dist/compatible/decorator.js",
     "./ReactWeb": "./dist/ReactWeb.js",
+    "./compatible/ReactWeb": "./dist/compatible/ReactWeb.js",
     "./Web": "./dist/Web.js",
+    "./compatible/Web": "./dist/compatible/Web.js",
     "./type": "./dist/type.js"
   },
   "typesVersions": {
