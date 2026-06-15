@@ -85,8 +85,7 @@ export function property(
         if (options.type) {
             if (!Object.prototype.hasOwnProperty.call(self, 'propertyTypes'))
                 self.propertyTypes = self.propertyTypes ?
-                    {...self.propertyTypes
-                    } :
+                    {...self.propertyTypes} :
                     {}
 
             if (

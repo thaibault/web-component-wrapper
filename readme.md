@@ -155,7 +155,7 @@ class MyGreeting extends webComponentWrapper.Web {
     static content = '<div>Hello ${name}</div>'
 }
 // Alternative to the decorator syntax:
-webComponentWrapper.property()(MyGreeting, 'name')
+webComponentWrapper.property()({self: MyGreeting}, 'name')
 
 customElements.define('my-greeting', MyGreeting)
 ```

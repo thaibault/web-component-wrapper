@@ -32,6 +32,7 @@
 
                 // region prepare web-component
                 const Web = webComponentWrapper.index.Web
+                const property = webComponentWrapper.index.property
 
                 Web.doRender = true
                 Web.evaluateSlots = true
@@ -61,7 +62,7 @@
                     '</div>')
                 Web.propertiesToReflectAsAttributes.push('exampleBoolean')
 
-                const propertyTypes = {
+                for (const [name, type] of Object.entries({
                     children: 'object',
                     exampleBoolean: 'boolean',
                     exampleFunction: 'function',
@@ -71,14 +72,9 @@
                     exampleString: 'string',
                     exampleRenderPropFunction: 'function',
                     id: 'string'
-                }
-                for (let name in propertyTypes)
-                    Web.propertyTypes[name] = propertyTypes[name]
+                }))
+                    property({type})({self: Web}, name)
 
-                Web.observedAttributes = Object.keys(Web.propertyTypes)
-                    .map(function(name) {
-                        return camelCaseToDelimited(name)
-                    })
                 Web.shadowDOM = POLYFILL_TEMPLATE_STRINGS.value ?
                     null :
                     {mode: 'closed'}
