@@ -151,8 +151,7 @@ Examples
 class MyGreeting extends webComponentWrapper.Web {
     static doRender = true
     static evaluateSlots = true
-    static observedAttributes = ['name']
-    static content = '<div>Hello ${name}</div>'
+    static content = '<div>Hello ${this}</div>'
 }
 // Alternative to the decorator syntax:
 webComponentWrapper.property()({self: MyGreeting}, 'name')
@@ -170,17 +169,16 @@ customElements.define('my-greeting', MyGreeting)
 ### Simple React-Web-Component
 
 ```JavaScript
-class MyGreeting extends webComponentWrapper.ReactWeb {
+class MyReactGreeting extends webComponentWrapper.ReactWeb {
     static doRender = true
     static evaluateSlots = true
-    static observedAttributes = ['name']
     // Content has a react component to wrap.
     static content = ({name}) => <div>Hello {name}</div>
 }
 // Alternative to the decorator syntax:
-webComponentWrapper.property()(MyGreeting, 'name')
+webComponentWrapper.property()({self: MyReactGreeting}, 'name')
 
-customElements.define('my-greeting', MyGreeting)
+customElements.define('my-react-greeting', MyReactGreeting)
 ```
 
 ### Data-Flow
