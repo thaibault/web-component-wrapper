@@ -133,22 +133,30 @@ customElements.define('my-web-component', MyWebComponent)
 <script
     src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/Web.js"
 ></script>
-
-<my-greeting name="World"></my-greeting>
+<script
+    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/decorator.js"
+></script>
 ```
 
 <!--showExample:JavaScript-->
 
 ```JavaScript
-const {api, Web} = webComponentWrapper;
+class MyGreeting extends webComponentWrapper.Web {
+    static doRender: true;
+    static evaluateSlots: true;
+    static observedAttributes = ['name'];
+    static content = '<div>Hello ${name}</div>';
 
-Web.doRender = true;
-Web.evaluateSlots = true;
-Web.propertyTypes.name = 'string';
-Web.observedAttributes = ['name'];
-Web.content = '<div>Hello ${name}</div>';
+    name = 'string';
+}
 
-api.register('my-greeting');
+customElements.define('my-greeting', MyGreeting);
+```
+
+<!--showExample-->
+
+```HTML
+<my-greeting name="World"></my-greeting>
 ```
 
 ## Data-Flow
