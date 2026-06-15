@@ -147,6 +147,7 @@ class MyGreeting extends webComponentWrapper.Web {
     static observedAttributes = ['name'];
     static content = '<div>Hello ${name}</div>';
 
+    @property()
     name = 'string';
 };
 
