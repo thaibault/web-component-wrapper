@@ -99,7 +99,7 @@ customElements.<span class="hljs-title function_">define</span>(<span class="hlj
     <span class="hljs-keyword">static</span> content = <span class="hljs-string">'&lt;div&gt;Hello ${name}&lt;/div&gt;'</span>
 }
 <span class="hljs-comment">// Alternative to the decorator syntax:</span>
-webComponentWrapper.<span class="hljs-title function_">property</span>()(<span class="hljs-title class_">MyGreeting</span>, <span class="hljs-string">'name'</span>)
+webComponentWrapper.<span class="hljs-title function_">property</span>()({<span class="hljs-attr">self</span>: <span class="hljs-title class_">MyGreeting</span>}, <span class="hljs-string">'name'</span>)
 
 customElements.<span class="hljs-title function_">define</span>(<span class="hljs-string">'my-greeting'</span>, <span class="hljs-title class_">MyGreeting</span>)
 </code></pre><!--showExample--><pre><code class="language-HTML"><span class="hljs-tag">&lt;<span class="hljs-name">my-greeting</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"World"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">my-greeting</span>&gt;</span>
