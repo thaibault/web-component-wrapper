@@ -140,15 +140,15 @@ customElements.define('my-web-component', MyWebComponent)
 <!--showExample:JavaScript-->
 
 ```JavaScript
-const Web = webComponentWrapper.index.Web
+const Web = webComponentWrapper.index.Web;
 
-Web.doRender = true
-Web.evaluateSlots = true
-Web.propertyTypes.name = 'string'
-Web.observedAttributes = ['name']
-Web.content = '<div>Hello ${name}</div>'
+Web.doRender = true;
+Web.evaluateSlots = true;
+Web.propertyTypes.name = 'string';
+Web.observedAttributes = ['name'];
+Web.content = '<div>Hello ${name}</div>';
 
-webComponentWrapper.index.webAPI.register('my-greeting')
+webComponentWrapper.index.webAPI.register('my-greeting');
 ```
 
 ## Data-Flow
