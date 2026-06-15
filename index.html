@@ -96,13 +96,13 @@ customElements.<span class="hljs-title function_">define</span>(<span class="hlj
     <span class="hljs-keyword">static</span> doRender = <span class="hljs-literal">true</span>
     <span class="hljs-keyword">static</span> evaluateSlots = <span class="hljs-literal">true</span>
     <span class="hljs-keyword">static</span> determineRootBinding = <span class="hljs-literal">false</span>
-    <span class="hljs-keyword">static</span> content = <span class="hljs-string">'&lt;div&gt;Hello ${this.name}&lt;/div&gt;'</span>
+    <span class="hljs-keyword">static</span> content = <span class="hljs-string">'&lt;div&gt;Hello ${this.greetingName}&lt;/div&gt;'</span>
 }
 <span class="hljs-comment">// Alternative to the decorator syntax:</span>
-webComponentWrapper.<span class="hljs-title function_">property</span>()({<span class="hljs-attr">self</span>: <span class="hljs-title class_">MyGreeting</span>}, <span class="hljs-string">'name'</span>)
+webComponentWrapper.<span class="hljs-title function_">property</span>()({<span class="hljs-attr">self</span>: <span class="hljs-title class_">MyGreeting</span>}, <span class="hljs-string">'greetingName'</span>)
 
 customElements.<span class="hljs-title function_">define</span>(<span class="hljs-string">'my-greeting'</span>, <span class="hljs-title class_">MyGreeting</span>)
-</code></pre><!--showExample--><pre><code class="language-HTML"><span class="hljs-tag">&lt;<span class="hljs-name">my-greeting</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"World"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">my-greeting</span>&gt;</span>
+</code></pre><!--showExample--><pre><code class="language-HTML"><span class="hljs-tag">&lt;<span class="hljs-name">my-greeting</span> <span class="hljs-attr">greeting-name</span>=<span class="hljs-string">"World"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">my-greeting</span>&gt;</span>
 </code></pre><!--|deDE:Einfaches React-Web-Component Beispiel--><h3 id="wd-heading-simple-react-web-component">Simple React-Web-Component</h3><pre><code class="language-JavaScript"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyReactGreeting</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_ inherited__">webComponentWrapper.ReactWeb</span> {
     <span class="hljs-keyword">static</span> doRender = <span class="hljs-literal">true</span>
     <span class="hljs-keyword">static</span> evaluateSlots = <span class="hljs-literal">true</span>
