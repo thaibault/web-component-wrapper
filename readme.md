@@ -148,7 +148,7 @@ Web.propertyTypes.name = 'string';
 Web.observedAttributes = ['name'];
 Web.content = '<div>Hello ${name}</div>';
 
-webComponentWrapper.index.webAPI.register('my-greeting');
+Web.api.register('my-greeting');
 ```
 
 ## Data-Flow
