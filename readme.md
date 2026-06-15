@@ -127,11 +127,37 @@ export class MyWebComponent<
 customElements.define('my-web-component', MyWebComponent)
 ```
 
+<!--showExample:hidden-->
+
+```HTML
+<script
+    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/Web.js"
+></script>
+<script
+    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/decorator.js"
+></script>
+```
+
+<!--showExample:JavaScript-->
+
+```JavaScript
+class MyGreeting extends webComponentWrapper.Web {
+    static doRender: true
+    static evaluateSlots: true
+    static observedAttributes = ['name']
+    static content = '<div>Hello ${name}</div>'
+
+    @property()
+    name = 'string'
+};
+
+customElements.define('my-greeting', MyGreeting)
+```
+
 <!--showExample-->
 
 ```HTML
-<script src="https://unpkg.com/web-component-wrapper@latest/bundle/Web.js">
-</script>
+<my-greeting name="World"></my-greeting>
 ```
 
 ## Data-Flow
