@@ -39,7 +39,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "polyfill.html.ejs"
   ],
   "repository": {
     "type": "git",
