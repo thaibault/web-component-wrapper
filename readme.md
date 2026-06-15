@@ -142,16 +142,16 @@ customElements.define('my-web-component', MyWebComponent)
 
 ```JavaScript
 class MyGreeting extends webComponentWrapper.Web {
-    static doRender: true;
-    static evaluateSlots: true;
-    static observedAttributes = ['name'];
-    static content = '<div>Hello ${name}</div>';
+    static doRender: true
+    static evaluateSlots: true
+    static observedAttributes = ['name']
+    static content = '<div>Hello ${name}</div>'
 
     @property()
-    name = 'string';
+    name = 'string'
 };
 
-customElements.define('my-greeting', MyGreeting);
+customElements.define('my-greeting', MyGreeting)
 ```
 
 <!--showExample-->
