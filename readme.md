@@ -133,6 +133,22 @@ customElements.define('my-web-component', MyWebComponent)
 <script
     src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/Web.js"
 ></script>
+
+<my-greeting name="World"></my-greeting>
+```
+
+<!--showExample:JavaScript-->
+
+```JavaScript
+const Web = webComponentWrapper.index.Web
+
+Web.doRender = true
+Web.evaluateSlots = true
+Web.propertyTypes.name = 'string'
+Web.observedAttributes = ['name']
+Web.content = '<div>Hello ${name}</div>'
+
+webComponentWrapper.index.webAPI.register('my-greeting')
 ```
 
 ## Data-Flow
