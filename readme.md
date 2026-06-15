@@ -152,10 +152,10 @@ class MyGreeting extends webComponentWrapper.Web {
     static doRender = true
     static evaluateSlots = true
     static determineRootBinding = false
-    static content = '<div>Hello ${this.name}</div>'
+    static content = '<div>Hello ${this.greetingName}</div>'
 }
 // Alternative to the decorator syntax:
-webComponentWrapper.property()({self: MyGreeting}, 'name')
+webComponentWrapper.property()({self: MyGreeting}, 'greetingName')
 
 customElements.define('my-greeting', MyGreeting)
 ```
@@ -163,7 +163,7 @@ customElements.define('my-greeting', MyGreeting)
 <!--showExample-->
 
 ```HTML
-<my-greeting name="World"></my-greeting>
+<my-greeting greeting-name="World"></my-greeting>
 ```
 
 <!--|deDE:Einfaches React-Web-Component Beispiel-->
