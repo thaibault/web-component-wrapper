@@ -32,10 +32,9 @@
     "url": "https://github.com/thaibault/web-component-wrapper"
   },
   "scripts": {
-    "build": "yarn build:types; yarn build:plain; yarn build:compatible; yarn build:bundle",
-    "build:bundle": "yarn build:types; yarn build:bundle:plain; yarn build:bundle:compatible",
-    "build:bundle:plain": "weboptimizer build '{__reference__: \"target:bundle\"}'",
-    "build:bundle:compatible": "weboptimizer build '{__reference__: [\"target:bundle\", \"target:compatible\"]}'",
+    "build": "yarn build:types; yarn build:plain; yarn build:compatible; yarn build:bundle; yarn build:bundle:compatible",
+    "build:bundle": "weboptimizer build '{__reference__: \"target:bundle\"}'",
+    "build:bundle:compatible": "weboptimizer build '{__reference__: [\"target:bundle\", \"target:compatible\", \"target:bundle:compatible\"]}'",
     "build:plain": "weboptimizer build",
     "build:compatible": "weboptimizer build '{__reference__: \"target:compatible\"}'",
     "build:types": "weboptimizer build:types",
@@ -198,6 +197,13 @@
       "path": {
         "target": {
           "base": "dist/compatible/"
+        }
+      }
+    },
+    "target:bundle:compatible": {
+      "path": {
+        "target": {
+          "base": "dist/bundle/compatible/"
         }
       }
     }
