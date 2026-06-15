@@ -130,8 +130,9 @@ customElements.define('my-web-component', MyWebComponent)
 <!--showExample-->
 
 ```HTML
-<script src="https://unpkg.com/web-component-wrapper@latest/bundle/Web.js">
-</script>
+<script
+    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/Web.js"
+></script>
 ```
 
 ## Data-Flow
