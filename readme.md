@@ -140,7 +140,7 @@ customElements.define('my-web-component', MyWebComponent)
 <!--showExample:JavaScript-->
 
 ```JavaScript
-const Web = webComponentWrapper.index.Web;
+const Web = webComponentWrapper.Web;
 
 Web.doRender = true;
 Web.evaluateSlots = true;
