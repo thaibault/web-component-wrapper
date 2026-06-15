@@ -24,6 +24,20 @@
     "url": "https://torben.website"
   },
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./decorator": "./dist/decorator.js",
+    "./ReactWeb": "./dist/ReactWeb.js",
+    "./Web": "./dist/Web.js",
+    "./type": "./dist/type.js"
+  },
+  "typesVersions": {
+    "*": {
+      "type": [
+        "./dist/type.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist"
   ],
@@ -68,7 +82,7 @@
     "@typescript-eslint/eslint-plugin": "^8.61.0",
     "@typescript-eslint/parser": "^8.61.0",
     "@webcomponents/webcomponentsjs": "^2.8.0",
-    "clientnode": "^4.0.1422",
+    "clientnode": "^4.0.1423",
     "eslint": "^10.5.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-jsdoc": "^63.0.2",
@@ -78,7 +92,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "typescript-eslint": "^8.61.0",
-    "web-documentation": "^1.0.37",
+    "web-documentation": "^1.0.38",
     "weboptimizer": "^3.0.24",
     "webpack-dev-server": "^5.2.5"
   },
