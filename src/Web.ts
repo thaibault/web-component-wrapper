@@ -87,7 +87,7 @@ import {
     WebComponentAPI
 } from './type'
 // endregion
-export const log = new Logger({name: 'web-component-wrapper-web'})
+export const log = new Logger({name: 'web-component-wrapper.web'})
 /*
     NOTE: We mock HTMLElement to be able to load this class and derived one
     into node environments.
