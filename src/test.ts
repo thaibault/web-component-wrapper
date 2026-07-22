@@ -14,7 +14,13 @@
     endregion
 */
 // region imports
-import {Mapping, timeout} from 'clientnode'
+import type {Mapping} from 'clientnode'
+
+import type {
+    ComponentType, PropertiesConfiguration, WebComponentAPI
+} from './type'
+
+import {timeout} from 'clientnode'
 import {func, string} from 'clientnode/property-types'
 import {createElement, FunctionComponent, ReactElement} from 'react'
 
@@ -22,7 +28,7 @@ import {describe, expect, jest, test} from '@jest/globals'
 
 import wrapAsWebComponent from './index'
 import ReactWeb from './ReactWeb'
-import {ComponentType, PropertiesConfiguration, WebComponentAPI} from './type'
+
 import Web from './Web'
 // endregion
 // region Web
@@ -33,15 +39,14 @@ describe('Web', (): void => {
          */
         class WebTest extends Web {
             static observedAttributes = ['is-root', 'on-click', 'on-event']
-
-            onClick: () => void = jest.fn()
         }
 
         expect(WebTest).toHaveProperty('content')
         expect(WebTest).toHaveProperty('observedAttributes')
 
         customElements.define('test-web', WebTest)
-        const web: WebTest = document.createElement('test-web') as WebTest
+        const web = document.createElement('test-web') as
+            WebTest & {onClick: () => void}
 
         expect(web).not.toHaveProperty('clicked')
 
@@ -107,18 +112,20 @@ describe('ReactWeb', (): void => {
             }
 
             readonly self = TestReactWeb
-
-            onClick: () => void = jest.fn()
-            onEvent: () => void = jest.fn()
         }
 
         expect(TestReactWeb).toHaveProperty('content')
         expect(TestReactWeb).toHaveProperty('observedAttributes')
 
         customElements.define('test-react', TestReactWeb)
-        const react: (TestReactWeb & {property: string}) =
-            document.createElement('test-react') as
-                TestReactWeb & {property: string}
+        const react = document.createElement('test-react') as
+            TestReactWeb &
+            {
+                property: string
+
+                onClick: () => void
+                onEvent: () => void
+            }
 
         expect(react).not.toHaveProperty('clicked')
         react.setAttribute('on-click', 'this.clicked = true')

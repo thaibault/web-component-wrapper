@@ -20,19 +20,20 @@
         <meta http-equiv="expires" content="0">
         <meta http-equiv="pragma" content="no-cache">
         <title>playground</title>
-        <%- _.include('../polyfill.html') %>
+        <%- await _.include('../polyfill.html') %>
         <!--region script-->
         <script>
-            window.onload = function() {
+            window.onload = async function() {
                 const {
                     camelCaseToDelimited,
                     POLYFILL_TEMPLATE_STRINGS,
                     represent
-                } = webComponentWrapper.clientnode
+                } = await webComponentWrapper.clientnode
 
                 // region prepare web-component
-                const Web = webComponentWrapper.index.Web
-                const property = webComponentWrapper.index.property
+                const index = await webComponentWrapper.index
+                const Web = index.Web
+                const property = index.property
 
                 Web.doRender = true
                 Web.evaluateSlots = true
@@ -79,7 +80,7 @@
                     null :
                     {mode: 'closed'}
 
-                webComponentWrapper.index.webAPI.register('my-web')
+                index.webAPI.register('my-web')
                 // endregion
                 const twoWeb = document.querySelector('#web-2')
                 twoWeb.exampleBoolean = true
@@ -87,7 +88,7 @@
                 twoWeb.scope.linkLabel = 'Cool website'
 
                 // region prepare react-web-component
-                const ReactWeb = webComponentWrapper.index.ReactWeb
+                const ReactWeb = index.ReactWeb
                 const createElement = ReactWeb.react.createElement
 
                 ReactWeb.content = function(props) {
@@ -135,7 +136,7 @@
                 ReactWeb.observedAttributes = Web.observedAttributes
                 ReactWeb.shadowDOM = Web.shadowDOM
 
-                webComponentWrapper.index.reactWebAPI.register('my-react-web')
+                index.reactWebAPI.register('my-react-web')
                 // endregion
 
                 const twoReactWeb = document.querySelector('#web-react-2')

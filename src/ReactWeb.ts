@@ -17,35 +17,16 @@
     endregion
 */
 // region imports
-import {
-    camelCaseToDelimited,
-    compile,
-    copy,
-    delimitedToCamelCase,
-    extend, Logger,
-    Mapping,
-    represent,
-    TemplateFunction
-} from 'clientnode'
-import {func, NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
-import React, {
+import type {Mapping, TemplateFunction} from 'clientnode'
+import type {
     Attributes,
     ComponentType as ReactComponentType,
-    Fragment,
     ReactElement,
-    Ref,
-
-    createElement,
-    createRef,
-    forwardRef,
-    memo as memorize,
-    useImperativeHandle
+    Ref
 } from 'react'
-import {flushSync} from 'react-dom'
-import {createRoot, Root as ReactRoot} from 'react-dom/client'
+import type {Root as ReactRoot} from 'react-dom/client'
 
-import Web from './Web'
-import {
+import type {
     ComponentAdapter,
     ComponentType,
 
@@ -65,6 +46,29 @@ import {
     WebComponentAPI,
     WebComponentConfiguration
 } from './type'
+
+import {
+    camelCaseToDelimited,
+    compile,
+    copy,
+    delimitedToCamelCase,
+    extend,
+    Logger,
+    represent
+} from 'clientnode'
+import {func, NullSymbol, UndefinedSymbol} from 'clientnode/property-types'
+import React, {
+    createElement,
+    createRef,
+    forwardRef,
+    Fragment,
+    memo as memorize,
+    useImperativeHandle
+} from 'react'
+import {flushSync} from 'react-dom'
+import {createRoot} from 'react-dom/client'
+
+import Web from './Web'
 // endregion
 export const log = new Logger({name: 'web-component-wrapper.react-web'})
 /*

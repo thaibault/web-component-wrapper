@@ -17,29 +17,51 @@
     endregion
 */
 // region imports
+import type {
+    CompilationResult,
+    EvaluationResult,
+    KnownEventName,
+    KnownWindowEventMap,
+    Mapping,
+    PositiveEvaluationResult,
+    PlainObject,
+    TemplateFunction
+} from 'clientnode'
+
+import type {
+    AttributesReflectionConfiguration,
+    CallbackScope,
+    CompiledDomNodeTemplateItem,
+    CompilerOptions,
+    ComponentAdapter,
+    DomNodeToCompiledTemplateMap,
+    EventCallbackMapping,
+    EventMapper,
+    EventMapping,
+    EventToPropertyMapping,
+    NormalizedAttributesReflectionConfiguration,
+    PropertiesConfiguration,
+    PropertyConfiguration,
+    RenderState,
+    ScopeDeclaration,
+    WebComponentAPI
+} from './type'
+
 import {
     camelCaseToDelimited,
     compile,
-    CompilationResult,
     convertPlainObjectToMap,
     copy,
     delimitedToCamelCase,
     evaluate,
-    EvaluationResult,
     extend,
     isFunction,
     isObject,
-    KnownEventName,
-    KnownWindowEventMap,
     Logger,
     lowerCase,
-    Mapping,
     NOOP,
-    PositiveEvaluationResult,
-    PlainObject,
     replace,
     represent,
-    TemplateFunction,
     timeout,
     unique,
     unwrap,
@@ -68,24 +90,6 @@ import {
 } from 'clientnode/property-types'
 
 import property from './decorator'
-import {
-    AttributesReflectionConfiguration,
-    CallbackScope,
-    CompiledDomNodeTemplateItem,
-    CompilerOptions,
-    ComponentAdapter,
-    DomNodeToCompiledTemplateMap,
-    EventCallbackMapping,
-    EventMapper,
-    EventMapping,
-    EventToPropertyMapping,
-    NormalizedAttributesReflectionConfiguration,
-    PropertiesConfiguration,
-    PropertyConfiguration,
-    RenderState,
-    ScopeDeclaration,
-    WebComponentAPI
-} from './type'
 // endregion
 export const log = new Logger({name: 'web-component-wrapper.web'})
 /*
@@ -454,7 +458,9 @@ export class Web<
             // If there already exists a local value, use them.
             if (Object.prototype.hasOwnProperty.call(this, propertyName))
                 this.setPropertyValue(
+                    /* eslint-disable @typescript-eslint/unbound-method */
                     propertyName, this[propertyName as keyof Web]
+                    /* eslint-enable @typescript-eslint/unbound-method */
                 )
 
             Object.defineProperty(

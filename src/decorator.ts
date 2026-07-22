@@ -17,11 +17,12 @@
     endregion
 */
 // region imports
+import type {PropertiesConfiguration, PropertyConfiguration} from './type'
+
 import {camelCaseToDelimited, copy} from 'clientnode'
 import {string} from 'clientnode/property-types'
 
 import Web from './Web'
-import {PropertiesConfiguration, PropertyConfiguration} from './type'
 // endregion
 /**
  * Generates a decorator based on given configuration.
