@@ -197,7 +197,6 @@
           "normal": true
         }
       },
-      "libraryName": "webComponentWrapper",
       "module": {
         "preprocessor": {
           "javaScript": {
