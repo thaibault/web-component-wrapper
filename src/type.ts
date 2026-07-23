@@ -16,13 +16,20 @@
     endregion
 */
 // region imports
-import {Mapping, TemplateFunction, UTILITY_SCOPE, ValueOf} from 'clientnode'
-import PropertyTypes, {ValidationMap} from 'clientnode/property-types'
-import React, {
-    ComponentType as ReactComponentType, HTMLAttributes, ReactElement
+import type {
+    Mapping, TemplateFunction, UTILITY_SCOPE, ValueOf
+} from 'clientnode'
+import type {
+    default as PropertyTypes, ValidationMap
+} from 'clientnode/property-types'
+import type {
+    default as React,
+    ComponentType as ReactComponentType,
+    HTMLAttributes,
+    ReactElement
 } from 'react'
 
-import Web from './Web'
+import type Web from './Web'
 // endregion
 // region exports
 export interface RenderState {

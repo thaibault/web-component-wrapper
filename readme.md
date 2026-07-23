@@ -127,29 +127,35 @@ export class MyWebComponent<
 customElements.define('my-web-component', MyWebComponent)
 ```
 
+<!--|deDE:Beispiele-->
+Examples
+--------
+
+<!--|deDE:Lade via CDN-->
+### Load via CDN
+
 <!--showExample:hidden-->
 
 ```HTML
 <script
-    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/Web.js"
-></script>
-<script
-    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/decorator.js"
+    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js"
 ></script>
 ```
+
+<!--|deDE:Einfaches Web-Component Beispiel-->
+### Simple Web-Component
 
 <!--showExample:JavaScript-->
 
 ```JavaScript
 class MyGreeting extends webComponentWrapper.Web {
-    static doRender: true
-    static evaluateSlots: true
-    static observedAttributes = ['name']
-    static content = '<div>Hello ${name}</div>'
-
-    @property()
-    name = 'string'
-};
+    static doRender = true
+    static evaluateSlots = true
+    static determineRootBinding = false
+    static content = '<div>Hello ${rootInstance.greetingName}</div>'
+}
+// Alternative to the decorator syntax:
+webComponentWrapper.property()({self: MyGreeting}, 'greetingName')
 
 customElements.define('my-greeting', MyGreeting)
 ```
@@ -157,10 +163,26 @@ customElements.define('my-greeting', MyGreeting)
 <!--showExample-->
 
 ```HTML
-<my-greeting name="World"></my-greeting>
+<my-greeting greeting-name="World"></my-greeting>
 ```
 
-## Data-Flow
+<!--|deDE:Einfaches React-Web-Component Beispiel-->
+### Simple React-Web-Component
+
+```JavaScript
+class MyReactGreeting extends webComponentWrapper.ReactWeb {
+    static doRender = true
+    static evaluateSlots = true
+    // Content has a react component to wrap.
+    static content = ({name}) => <div>Hello {name}</div>
+}
+// Alternative to the decorator syntax:
+webComponentWrapper.property()({self: MyReactGreeting}, 'name')
+
+customElements.define('my-react-greeting', MyReactGreeting)
+```
+
+### Data-Flow
 
 Data can flow into a component via
 
@@ -172,7 +194,7 @@ Data can be communicated back via:
 - Properties `log.info(instance.value)`
 - Observable events `instance.addEventListener('click', (event) => console.log(event.detail.value))`
 
-### Configuring Data-Flow
+#### Configuring Data-Flow
 
 A Web-Component-Wrapper component forwards (transformed) given properties into
 a wrapped React component via `props` and reads data via provided callbacks
