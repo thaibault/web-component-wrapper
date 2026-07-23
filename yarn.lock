@@ -5249,9 +5249,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clientnode@npm:4.0.1456, clientnode@npm:^4.0.1456":
-  version: 4.0.1456
-  resolution: "clientnode@npm:4.0.1456"
+"clientnode@npm:4.0.1467, clientnode@npm:^4.0.1467":
+  version: 4.0.1467
+  resolution: "clientnode@npm:4.0.1467"
   peerDependencies:
     "@types/prop-types": "*"
     node-fetch: "*"
@@ -5263,7 +5263,7 @@ __metadata:
       optional: true
     prop-types:
       optional: true
-  checksum: 10c0/32d42556ae35d676d7e47f1e20a9c08423adb1cdcca6f55904a06c879e0355763d7eba679b8696850b1b10b5798a6f7c1013f8dc410d4a29a77db018b271c728
+  checksum: 10c0/10e1be5c1bdd5d746d363f80246ca90a3bff64945eaaa12293b81319c9521254fa9b15f6a58b6b83090a351d0ac2fcfc24fcfa5d9595111d818391c5413d622d
   languageName: node
   linkType: hard
 
@@ -10701,7 +10701,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.65.0"
     "@typescript-eslint/parser": "npm:^8.65.0"
     "@webcomponents/webcomponentsjs": "npm:^2.8.0"
-    clientnode: "npm:^4.0.1456"
+    clientnode: "npm:^4.0.1467"
     eslint: "npm:^10.7.0"
     eslint-config-google: "npm:^0.14.0"
     eslint-plugin-jsdoc: "npm:^63.2.0"
@@ -10712,7 +10712,7 @@ __metadata:
     react-dom: "npm:^19.2.8"
     typescript-eslint: "npm:^8.65.0"
     web-documentation: "npm:^1.0.42"
-    weboptimizer: "npm:^4.0.30"
+    weboptimizer: "npm:^4.0.34"
     webpack-dev-server: "npm:^6.0.0"
   peerDependencies:
     "@babel/runtime": "*"
@@ -10751,9 +10751,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"weboptimizer@npm:^4.0.30":
-  version: 4.0.30
-  resolution: "weboptimizer@npm:4.0.30"
+"weboptimizer@npm:^4.0.34":
+  version: 4.0.34
+  resolution: "weboptimizer@npm:4.0.34"
   dependencies:
     "@babel/core": "npm:^8.0.1"
     "@babel/plugin-proposal-decorators": "npm:^8.0.2"
@@ -10764,7 +10764,7 @@ __metadata:
     babel-loader: "npm:^10.1.1"
     babel-plugin-polyfill-corejs3: "npm:^1.0.0"
     babel-plugin-transform-rewrite-imports: "npm:^1.5.4"
-    clientnode: "npm:4.0.1456"
+    clientnode: "npm:4.0.1467"
     core-js: "npm:^3.49.0"
     ejs: "npm:^6.0.1"
     exports-loader: "npm:^5.0.0"
@@ -10901,7 +10901,7 @@ __metadata:
       optional: true
   bin:
     weboptimizer: index.js
-  checksum: 10c0/f8d8a710453d14407f98f8552e03d11ccc156e3ff89a4be480bd00bc88a0c7a948fd9f735ab9597c0f735b13fddb6e0909c628d7163a723fea8c29f1c69bbfe0
+  checksum: 10c0/c476a591de979ee5c8aceab411e2018b48dbc6da6f402bc7b89508ad68330a614ca1acca83954888d43290b863e1851baa2a1ee7dbf1bf614561f9a047323c46
   languageName: node
   linkType: hard
 
