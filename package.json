@@ -88,10 +88,10 @@
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "@webcomponents/webcomponentsjs": "^2.8.0",
-    "clientnode": "^4.0.1467",
+    "clientnode": "^4.0.1469",
     "eslint": "^10.7.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-plugin-jsdoc": "^63.2.0",
+    "eslint-plugin-jsdoc": "^63.2.2",
     "jest": "30.4.2",
     "jsdoc": "^4.0.5",
     "prop-types": "^15.8.1",
@@ -99,7 +99,7 @@
     "react-dom": "^19.2.8",
     "typescript-eslint": "^8.65.0",
     "web-documentation": "^1.0.42",
-    "weboptimizer": "^4.0.34",
+    "weboptimizer": "^4.0.36",
     "webpack-dev-server": "^6.0.0"
   },
   "peerDependencies": {
