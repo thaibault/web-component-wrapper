@@ -98,8 +98,8 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "typescript-eslint": "^8.65.0",
-    "web-documentation": "^1.0.42",
-    "weboptimizer": "^4.0.39",
+    "web-documentation": "^1.0.43",
+    "weboptimizer": "^4.0.40",
     "webpack-dev-server": "^6.0.0"
   },
   "peerDependencies": {
