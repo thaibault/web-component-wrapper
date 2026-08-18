@@ -19,23 +19,27 @@
   },
   "license": "CC-BY-3.0",
   "author": {
-    "name": "Torben Sickert",
     "email": "info@torben.website",
+    "name": "Torben Sickert",
     "url": "https://torben.website"
   },
-  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thaibault/web-component-wrapper"
+  },
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
     "./compatible": "./dist/compatible/index.js",
-    "./decorator": "./dist/decorator.js",
     "./compatible/decorator": "./dist/compatible/decorator.js",
-    "./ReactWeb": "./dist/ReactWeb.js",
     "./compatible/ReactWeb": "./dist/compatible/ReactWeb.js",
-    "./Web": "./dist/Web.js",
     "./compatible/Web": "./dist/compatible/Web.js",
-    "./type": "./dist/type.js"
+    "./decorator": "./dist/decorator.js",
+    "./ReactWeb": "./dist/ReactWeb.js",
+    "./type": "./dist/type.js",
+    "./Web": "./dist/Web.js"
   },
+  "main": "dist/index.js",
   "typesVersions": {
     "*": {
       "type": [
@@ -47,16 +51,13 @@
     "dist",
     "polyfill.html.ejs"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/thaibault/web-component-wrapper"
-  },
+  "sideEffects": false,
   "scripts": {
     "build": "yarn build:types; yarn build:plain; yarn build:compatible; yarn build:bundle; yarn build:bundle:compatible",
     "build:bundle": "weboptimizer build '{__reference__: \"target:bundle\"}'",
     "build:bundle:compatible": "weboptimizer build '{__reference__: [\"target:bundle\", \"target:compatible\", \"target:bundle:compatible\"]}'",
-    "build:plain": "weboptimizer build",
     "build:compatible": "weboptimizer build '{__reference__: \"target:compatible\"}'",
+    "build:plain": "weboptimizer build",
     "build:types": "weboptimizer build:types",
     "check": "yarn check:types; yarn lint",
     "check:types": "weboptimizer check:types",
@@ -127,18 +128,17 @@
       "optional": true
     }
   },
+  "resolutions": {
+    "colors": "1.4.0",
+    "globals@npm:^11.1.0": "patch:globals@npm%3A11.12.0#~/.yarn/patches/globals-npm-11.12.0-1fa7f41a6c.patch",
+    "globals@npm:^14.0.0": "patch:globals@npm%3A11.12.0#~/.yarn/patches/globals-npm-11.12.0-1fa7f41a6c.patch",
+    "globals@npm:^9.18.0": "patch:globals@npm%3A11.12.0#~/.yarn/patches/globals-npm-11.12.0-1fa7f41a6c.patch"
+  },
   "engines": {
     "node": ">=24",
     "npm": ">=11",
     "yarn": ">=4"
   },
-  "resolutions": {
-    "colors": "1.4.0",
-    "globals@npm:^9.18.0": "patch:globals@npm%3A11.12.0#~/.yarn/patches/globals-npm-11.12.0-1fa7f41a6c.patch",
-    "globals@npm:^11.1.0": "patch:globals@npm%3A11.12.0#~/.yarn/patches/globals-npm-11.12.0-1fa7f41a6c.patch",
-    "globals@npm:^14.0.0": "patch:globals@npm%3A11.12.0#~/.yarn/patches/globals-npm-11.12.0-1fa7f41a6c.patch"
-  },
-  "sideEffects": false,
   "webDocumentation": {
     "languages": [
       "deDE",
@@ -214,6 +214,13 @@
         }
       }
     },
+    "target:bundle:compatible": {
+      "path": {
+        "target": {
+          "base": "dist/bundle/compatible/"
+        }
+      }
+    },
     "target:compatible": {
       "generic": {
         "supportedBrowsers": [
@@ -225,13 +232,6 @@
       "path": {
         "target": {
           "base": "dist/compatible/"
-        }
-      }
-    },
-    "target:bundle:compatible": {
-      "path": {
-        "target": {
-          "base": "dist/bundle/compatible/"
         }
       }
     }
