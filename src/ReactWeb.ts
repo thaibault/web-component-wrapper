@@ -479,7 +479,7 @@ export class ReactWeb<
                 name === 'properties'
             ) {
                 const {error, originalScopeNames, templateFunction} =
-                    compile(value as string, knownScopeNames)
+                    compile(value as string, {scope: knownScopeNames})
 
                 if (error) {
                     log.warn(
@@ -515,7 +515,9 @@ export class ReactWeb<
                 */
                 const {
                     error, originalScopeNames, scopeNames, templateFunction
-                } = compile(value as string, knownScopeNames, true)
+                } = compile(
+                    value as string, {scope: knownScopeNames, execute: true}
+                )
 
                 if (error) {
                     log.warn(

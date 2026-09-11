@@ -17,12 +17,9 @@
     endregion
 */
 // region imports
-import {camelCaseToDelimited, Mapping, unique} from 'clientnode'
+import type {Mapping} from 'clientnode'
 
-import propertyImport from './decorator'
-import ReactWebImport, {api as reactWebAPIImport} from './ReactWeb'
-import WebImport, {api as webAPIImport} from './Web'
-import {
+import type {
     AttributesReflectionConfiguration,
     ComponentType,
     EventToPropertyMapping,
@@ -30,6 +27,12 @@ import {
     WebComponentAPI,
     WebComponentConfiguration
 } from './type'
+
+import {camelCaseToDelimited, unique} from 'clientnode'
+
+import propertyImport from './decorator'
+import ReactWebImport, {api as reactWebAPIImport} from './ReactWeb'
+import WebImport, {api as webAPIImport} from './Web'
 // endregion
 export const property = propertyImport
 export const ReactWeb = ReactWebImport
