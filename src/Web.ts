@@ -668,7 +668,7 @@ export class Web<
                     name.startsWith('property-')
                 ) {
                     const evaluated: EvaluationResult =
-                        evaluate(value, scope, false, true, domNode)
+                        evaluate(value, {scope, binding: domNode})
 
                     if (evaluated.error) {
                         log.warn(
@@ -710,7 +710,7 @@ export class Web<
                         usually be called more often than binded.
                     */
                     const compilation: CompilationResult = compile(
-                        value, scope, true, true, domNode
+                        value, {scope, execute: true, binding: domNode}
                     )
 
                     if (compilation.error)
@@ -837,7 +837,7 @@ export class Web<
 
             if (this.self.hasCode(template)) {
                 const result: CompilationResult =
-                    compile(`\`${template}\``, scope)
+                    compile(`\`${template}\``, {scope})
 
                 return {
                     domNode,
@@ -866,7 +866,7 @@ export class Web<
 
         if (template) {
             const compilationResult: CompilationResult =
-                compile(`\`${template}\``, scope)
+                compile(`\`${template}\``, {scope})
 
             result.error = compilationResult.error
             result.scopeNames = compilationResult.scopeNames
@@ -1747,7 +1747,7 @@ export class Web<
             if (preEvaluate) {
                 if (value) {
                     const result: EvaluationResult = evaluate(
-                        value, {...UTILITY_SCOPE}, false, true, this
+                        value, {scope: {...UTILITY_SCOPE}, binding: this}
                     )
 
                     if (result.error) {
@@ -1789,12 +1789,16 @@ export class Web<
                     if (value) {
                         const result: CompilationResult = compile(
                             value,
-                            (scopeNames as unknown as Array<string>).concat(
-                                'parameters', 'scope', UTILITY_SCOPE_NAMES
-                            ),
-                            true,
-                            true,
-                            this
+                            {
+                                scope: (scopeNames as unknown as Array<string>)
+                                    .concat(
+                                        'parameters',
+                                        'scope',
+                                        UTILITY_SCOPE_NAMES
+                                    ),
+                                execute: true,
+                                binding: this
+                            }
                         )
                         error = result.error
                         templateFunction = result.templateFunction
@@ -1932,9 +1936,8 @@ export class Web<
                 case symbol:
                 default: {
                     if (value) {
-                        const evaluated: EvaluationResult = evaluate(
-                            value, {}, false, true, this
-                        )
+                        const evaluated: EvaluationResult =
+                            evaluate(value, {binding: this})
                         if (evaluated.error) {
                             log.warn(
                                 'Error occurred during processing given',
@@ -2110,7 +2113,7 @@ export class Web<
         }
 
         const evaluated: EvaluationResult = evaluate(
-            `\`${this.self.content as string}\``, this.scope
+            `\`${this.self.content as string}\``, {scope: this.scope}
         )
         if (evaluated.error) {
             log.warn(`Failed to process template: ${evaluated.error}`)
