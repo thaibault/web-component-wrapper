@@ -28,6 +28,7 @@ Project status
 [![deploy web documentation](https://img.shields.io/github/actions/workflow/status/thaibault/web-component-wrapper/deploy-web-documentation.yaml?label=deploy%20web%20documentation&style=for-the-badge)](https://github.com/thaibault/web-component-wrapper/actions/workflows/deploy-web-documentation.yaml)
 [![web documentation](https://img.shields.io/website-up-down-green-red/https/torben.website/web-component-wrapper.svg?label=web-documentation&style=for-the-badge)](https://torben.website/web-component-wrapper)
 
+<!--|deDE:Einsatz-->
 Use case
 --------
 

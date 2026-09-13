@@ -1736,13 +1736,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^8.0.5":
-  version: 8.0.5
-  resolution: "@babel/runtime@npm:8.0.5"
-  checksum: 10c0/f4a310b6d2839a5350d6282805702040024b490b8456ca58de2abf5b329dba9ef19ece1d89304c39b1538177f311290512f88d7be4cc7925e4a9c9c00adab5b9
-  languageName: node
-  linkType: hard
-
 "@babel/template@npm:^7.25.9":
   version: 7.25.9
   resolution: "@babel/template@npm:7.25.9"
@@ -11318,7 +11311,6 @@ __metadata:
   resolution: "web-component-wrapper@workspace:."
   dependencies:
     "@babel/eslint-parser": "npm:^8.0.5"
-    "@babel/runtime": "npm:^8.0.5"
     "@eslint/js": "npm:^10.0.1"
     "@stylistic/eslint-plugin": "npm:^5.10.0"
     "@types/ejs": "npm:^3.1.5"
@@ -11345,15 +11337,12 @@ __metadata:
     weboptimizer: "npm:^4.0.81"
     webpack-dev-server: "npm:^6.0.0"
   peerDependencies:
-    "@babel/runtime": "*"
     "@types/react": "*"
     "@types/react-dom": "*"
     clientnode: "*"
     react: "*"
     react-dom: "*"
   peerDependenciesMeta:
-    "@babel/runtime":
-      optional: true
     "@types/react":
       optional: true
     "@types/react-dom":
