@@ -76,7 +76,6 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^8.0.5",
-    "@babel/runtime": "^8.0.5",
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/ejs": "^3.1.5",
@@ -104,7 +103,6 @@
     "webpack-dev-server": "^6.0.0"
   },
   "peerDependencies": {
-    "@babel/runtime": "*",
     "@types/react": "*",
     "@types/react-dom": "*",
     "clientnode": "*",
@@ -112,9 +110,6 @@
     "react-dom": "*"
   },
   "peerDependenciesMeta": {
-    "@babel/runtime": {
-      "optional": true
-    },
     "@types/react": {
       "optional": true
     },
@@ -197,17 +192,6 @@
           "normal": true
         }
       },
-      "module": {
-        "preprocessor": {
-          "javaScript": {
-            "options": {
-              "plugins": {
-                "__remove__": "@babel/plugin-transform-runtime"
-              }
-            }
-          }
-        }
-      },
       "path": {
         "target": {
           "base": "dist/bundle/"
@@ -232,6 +216,20 @@
       "path": {
         "target": {
           "base": "dist/compatible/"
+        }
+      }
+    },
+    "webpack": {
+      "snapshot": {
+        "unmanagedPaths": [
+          {
+            "__evaluate__": "/^.+?[\\/]node_modules[\\/]clientnode[\\/]/"
+          }
+        ]
+      },
+      "watchOptions": {
+        "ignored": {
+          "__remove__": "**/node_modules"
         }
       }
     }
