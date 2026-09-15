@@ -26,7 +26,9 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>if(typeof window==='undefined'||window===null)var window=(typeof globalThis==='undefined'||globalThis===null)?{}:globalThis;/******/ var __webpack_modules__ = ([
+            <pre class="prettyprint source linenums"><code>if(typeof window==='undefined'||window===null)var window=(typeof globalThis==='undefined'||globalThis===null)?{}:globalThis;/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ([
 /* 0 */
 /***/ ((module) => {
 
@@ -39,63 +41,63 @@ module.exports = window["clientnode"];
 module.exports = window["clientnodePropertyTypes"];
 
 /***/ })
-/******/ ]);
+/******/ 	]);
 /************************************************************************/
-/******/ // The module cache
-/******/ const __webpack_module_cache__ = {};
-/******/ 
-/******/ // The require function
-/******/ function __webpack_require__(moduleId) {
-/******/ 	// Check if module is in cache
-/******/ 	const cachedModule = __webpack_module_cache__[moduleId];
-/******/ 	if (cachedModule !== undefined) {
-/******/ 		return cachedModule.exports;
-/******/ 	}
-/******/ 	// Create a new module (and put it into the cache)
-/******/ 	const module = __webpack_module_cache__[moduleId] = {
-/******/ 		// no module.id needed
-/******/ 		// no module.loaded needed
-/******/ 		exports: {}
-/******/ 	};
-/******/ 
-/******/ 	// Execute the module function
-/******/ 	__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 
-/******/ 	// Return the exports of the module
-/******/ 	return module.exports;
-/******/ }
-/******/ 
-/************************************************************************/
-/******/ /* webpack/runtime/compat get default export */
-/******/ // getDefaultExport function for compatibility with non-harmony modules
-/******/ __webpack_require__.n = (module) => {
-/******/ 	const getter = module &amp;&amp; module.__esModule ?
-/******/ 		() => (module['default']) :
-/******/ 		() => (module);
-/******/ 	__webpack_require__.d(getter, { a: getter });
-/******/ 	return getter;
-/******/ };
-/******/ 
-/******/ /* webpack/runtime/define property getters */
-/******/ // define getter/value functions for harmony exports
-/******/ __webpack_require__.d = (exports, definition) => {
-/******/ 	for(var key in definition) {
-/******/ 		if(__webpack_require__.o(definition, key) &amp;&amp; !__webpack_require__.o(exports, key)) {
-/******/ 			Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 	// The module cache
+/******/ 	const __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		const cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		const module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
 /******/ 	}
-/******/ };
-/******/ 
-/******/ /* webpack/runtime/hasOwnProperty shorthand */
-/******/ __webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop));
-/******/ 
-/******/ /* webpack/runtime/make namespace object */
-/******/ // define __esModule on exports
-/******/ __webpack_require__.r = (exports) => {
-/******/ 	Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 	Object.defineProperty(exports, '__esModule', { value: true });
-/******/ };
-/******/ 
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = (module) => {
+/******/ 		const getter = module &amp;&amp; module.__esModule ?
+/******/ 			() => (module['default']) :
+/******/ 			() => (module);
+/******/ 		__webpack_require__.d(getter, { a: getter });
+/******/ 		return getter;
+/******/ 	};
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	// define getter/value functions for harmony exports
+/******/ 	__webpack_require__.d = (exports, definition) => {
+/******/ 		for(var key in definition) {
+/******/ 			if(__webpack_require__.o(definition, key) &amp;&amp; !__webpack_require__.o(exports, key)) {
+/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 			}
+/******/ 		}
+/******/ 	};
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop));
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = (exports) => {
+/******/ 		Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/ 	
 /************************************************************************/
 let __webpack_exports__ = {};
 __webpack_require__.r(__webpack_exports__);
@@ -147,7 +149,8 @@ __webpack_require__.r(__webpack_exports__);
      * @param name - Field name to apply.
      */return function(target,name){if(typeof name!=="string")return;const self=target.self||target.constructor;if(options.readAttribute){if(!Object.prototype.hasOwnProperty.call(self,"observedAttributes"))self.observedAttributes=self.observedAttributes?[...self.observedAttributes]:[];const attributeName=(0,clientnode__WEBPACK_IMPORTED_MODULE_0__.camelCaseToDelimited)(name);if(self.observedAttributes&amp;&amp;!self.observedAttributes.includes(attributeName))self.observedAttributes.push(attributeName)}if(options.type){if(!Object.prototype.hasOwnProperty.call(self,"propertyTypes"))self.propertyTypes=self.propertyTypes?{...self.propertyTypes}:{};if(self.propertyTypes&amp;&amp;(options.update||!Object.prototype.hasOwnProperty.call(self,name)))self.propertyTypes[name]=options.type}if(options.writeAttribute){if(!Object.prototype.hasOwnProperty.call(self,"propertiesToReflectAsAttributes"))self.propertiesToReflectAsAttributes=self.propertiesToReflectAsAttributes?(0,clientnode__WEBPACK_IMPORTED_MODULE_0__.copy)(self.propertiesToReflectAsAttributes):[];if(options.update||self.propertiesToReflectAsAttributes instanceof Map&amp;&amp;!self.propertiesToReflectAsAttributes.has(name)||Array.isArray(self.propertiesToReflectAsAttributes)&amp;&amp;!self.propertiesToReflectAsAttributes.includes(name)||typeof self.propertiesToReflectAsAttributes==="object"&amp;&amp;!Object.prototype.hasOwnProperty.call(self.propertiesToReflectAsAttributes,name)){let result;if(typeof options.writeAttribute==="boolean"){if(options.writeAttribute&amp;&amp;self.propertyTypes&amp;&amp;Object.prototype.hasOwnProperty.call(self.propertyTypes,name))result=self.propertyTypes[name]}else result=options.writeAttribute;if(result!==undefined){if(Array.isArray(self.propertiesToReflectAsAttributes))if(options.writeAttribute===true)self.propertiesToReflectAsAttributes.push(name);else if(self.normalizePropertyTypeList)self.propertiesToReflectAsAttributes=self.normalizePropertyTypeList(self.propertiesToReflectAsAttributes);if(self.propertiesToReflectAsAttributes instanceof Map)self.propertiesToReflectAsAttributes.set(name,result);if(typeof self.propertiesToReflectAsAttributes==="object")self.propertiesToReflectAsAttributes[name]=result}}}if(options.alias){if(!Object.prototype.hasOwnProperty.call(self,"propertyAliases"))self.propertyAliases=self.propertyAliases?{...self.propertyAliases}:{};if(self.propertyAliases&amp;&amp;(options.update||!Object.prototype.hasOwnProperty.call(self,name)))self.propertyAliases[name]=options.alias}}}/* harmony default export */ const decorator = (property);
 (((window.ReactWeb = window.ReactWeb || {}).Web = window.ReactWeb.Web || {}).decorator = window.ReactWeb.Web.decorator || {}).index = __webpack_exports__;
-</code></pre>
+/******/ })()
+;</code></pre>
         </article>
     </section>
 
@@ -157,13 +160,13 @@ __webpack_require__.r(__webpack_exports__);
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-decorator.html">decorator</a></li><li><a href="module-index.html">index</a></li><li><a href="module-react.html">react</a></li><li><a href="module-web.html">web</a></li></ul><h3>Classes</h3><ul><li><a href="-_anonymous_-Web._class-_Web.html">_Web</a></li><li><a href="module-index-ConcreteComponent.html">ConcreteComponent</a></li><li><a href="module-web-_Web.html">_Web</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-decorator.html">decorator</a></li><li><a href="module-index.html">index</a></li><li><a href="module-react.html">react</a></li><li><a href="module-web.html">web</a></li></ul><h3>Classes</h3><ul><li><a href="-_anonymous_-Web._class-_Web.html">_Web</a></li><li><a href="module-index-ConcreteComponent.html">ConcreteComponent</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Sep 15 2026 15:57:43 GMT+0200 (Mitteleuropäische Sommerzeit)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Sep 15 2026 18:03:16 GMT+0200 (Mitteleuropäische Sommerzeit)
 </footer>
 
 <script> prettyPrint(); </script>
