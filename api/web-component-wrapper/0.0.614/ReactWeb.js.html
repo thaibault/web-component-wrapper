@@ -26,7 +26,9 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>if(typeof window==='undefined'||window===null)var window=(typeof globalThis==='undefined'||globalThis===null)?{}:globalThis;/******/ var __webpack_modules__ = ([
+            <pre class="prettyprint source linenums"><code>if(typeof window==='undefined'||window===null)var window=(typeof globalThis==='undefined'||globalThis===null)?{}:globalThis;/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ([
 /* 0 */
 /***/ ((module) => {
 
@@ -571,63 +573,63 @@ this.setInternalPropertyValue(name,evaluated.result);this.setExternalPropertyVal
 },_defineProperty(_Web,"applyRootBinding",true),_defineProperty(_Web,"pendingRenderPromises",[]),_defineProperty(_Web,"content","&lt;slot>Please provide a template to transclude.&lt;/slot>"),_defineProperty(_Web,"determineRootBinding",true),_defineProperty(_Web,"shadowDOM",null),_defineProperty(_Web,"observedAttributes",[]),_defineProperty(_Web,"controllableProperties",[]),_defineProperty(_Web,"eventToPropertyMapping",{}),_defineProperty(_Web,"propertyAliases",{}),_defineProperty(_Web,"propertyTypes",{onClick:clientnode_property_types__WEBPACK_IMPORTED_MODULE_1__.func}),_defineProperty(_Web,"propertiesToReflectAsAttributes",[]),_defineProperty(_Web,"renderProperties",["children"]),_defineProperty(_Web,"doRender",false),_defineProperty(_Web,"cloneSlots",false),_defineProperty(_Web,"evaluateSlots",false),_defineProperty(_Web,"renderSlots",true),_defineProperty(_Web,"trimSlots",true),_defineProperty(_Web,"renderUnsafe",false),_defineProperty(_Web,"_name","BaseWeb"),_defineProperty(_Web,"_propertyAliasIndex",void 0),_defineProperty(_Web,"_propertiesToReflectAsAttributes",void 0),_Web),_descriptor=_applyDecoratedDescriptor(_class.prototype,"isRoot",[_dec],{configurable:true,enumerable:true,writable:true,initializer:function(){return true}}),_class);const api=(/* unused pure expression or super */ null &amp;&amp; ({component:Web,register:(tagName=camelCaseToDelimited(Web._name))=>{customElements.define(tagName,Web)}}));/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Web);
 
 /***/ })
-/******/ ]);
+/******/ 	]);
 /************************************************************************/
-/******/ // The module cache
-/******/ const __webpack_module_cache__ = {};
-/******/ 
-/******/ // The require function
-/******/ function __webpack_require__(moduleId) {
-/******/ 	// Check if module is in cache
-/******/ 	const cachedModule = __webpack_module_cache__[moduleId];
-/******/ 	if (cachedModule !== undefined) {
-/******/ 		return cachedModule.exports;
-/******/ 	}
-/******/ 	// Create a new module (and put it into the cache)
-/******/ 	const module = __webpack_module_cache__[moduleId] = {
-/******/ 		// no module.id needed
-/******/ 		// no module.loaded needed
-/******/ 		exports: {}
-/******/ 	};
-/******/ 
-/******/ 	// Execute the module function
-/******/ 	__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 
-/******/ 	// Return the exports of the module
-/******/ 	return module.exports;
-/******/ }
-/******/ 
-/************************************************************************/
-/******/ /* webpack/runtime/compat get default export */
-/******/ // getDefaultExport function for compatibility with non-harmony modules
-/******/ __webpack_require__.n = (module) => {
-/******/ 	const getter = module &amp;&amp; module.__esModule ?
-/******/ 		() => (module['default']) :
-/******/ 		() => (module);
-/******/ 	__webpack_require__.d(getter, { a: getter });
-/******/ 	return getter;
-/******/ };
-/******/ 
-/******/ /* webpack/runtime/define property getters */
-/******/ // define getter/value functions for harmony exports
-/******/ __webpack_require__.d = (exports, definition) => {
-/******/ 	for(var key in definition) {
-/******/ 		if(__webpack_require__.o(definition, key) &amp;&amp; !__webpack_require__.o(exports, key)) {
-/******/ 			Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 	// The module cache
+/******/ 	const __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		const cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		const module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
 /******/ 	}
-/******/ };
-/******/ 
-/******/ /* webpack/runtime/hasOwnProperty shorthand */
-/******/ __webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop));
-/******/ 
-/******/ /* webpack/runtime/make namespace object */
-/******/ // define __esModule on exports
-/******/ __webpack_require__.r = (exports) => {
-/******/ 	Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 	Object.defineProperty(exports, '__esModule', { value: true });
-/******/ };
-/******/ 
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = (module) => {
+/******/ 		const getter = module &amp;&amp; module.__esModule ?
+/******/ 			() => (module['default']) :
+/******/ 			() => (module);
+/******/ 		__webpack_require__.d(getter, { a: getter });
+/******/ 		return getter;
+/******/ 	};
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	// define getter/value functions for harmony exports
+/******/ 	__webpack_require__.d = (exports, definition) => {
+/******/ 		for(var key in definition) {
+/******/ 			if(__webpack_require__.o(definition, key) &amp;&amp; !__webpack_require__.o(exports, key)) {
+/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 			}
+/******/ 		}
+/******/ 	};
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop));
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = (exports) => {
+/******/ 		Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/ 	
 /************************************************************************/
 let __webpack_exports__ = {};
 // ESM COMPAT FLAG
@@ -872,7 +874,8 @@ return (0,external_react_namespaceObject.createElement)(target,properties)};/// 
 for(const name of["isRoot","isTrusted","__composed"])if(Object.prototype.hasOwnProperty.call(properties,name)&amp;&amp;(Object.prototype.hasOwnProperty.call(target.content,"propTypes")&amp;&amp;!Object.prototype.hasOwnProperty.call(target.content.propTypes,name)||Object.prototype.hasOwnProperty.call(target.content,"wrapped")&amp;&amp;Object.prototype.hasOwnProperty.call(target.content.wrapped,"propTypes")&amp;&amp;!Object.prototype.hasOwnProperty.call(target.content.wrapped.propTypes,name)))delete properties[name]}// endregion
 }_defineProperty(ReactWeb,"attachWebComponentAdapterIfNotExists",true);_defineProperty(ReactWeb,"content","div");_defineProperty(ReactWeb,"react",(external_react_default()));_defineProperty(ReactWeb,"_name","ReactWebComponent");const api={component:ReactWeb,register:(tagName=(0,external_clientnode_.camelCaseToDelimited)(ReactWeb._name))=>{customElements.define(tagName,ReactWeb)}};/* harmony default export */ const src_ReactWeb = (ReactWeb);
 (((window.ReactWeb = window.ReactWeb || {}).Web = window.ReactWeb.Web || {}).decorator = window.ReactWeb.Web.decorator || {}).index = __webpack_exports__;
-</code></pre>
+/******/ })()
+;</code></pre>
         </article>
     </section>
 
@@ -882,13 +885,13 @@ for(const name of["isRoot","isTrusted","__composed"])if(Object.prototype.hasOwnP
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-decorator.html">decorator</a></li><li><a href="module-index.html">index</a></li><li><a href="module-react.html">react</a></li><li><a href="module-web.html">web</a></li></ul><h3>Classes</h3><ul><li><a href="-_anonymous_-Web._class-_Web.html">_Web</a></li><li><a href="module-index-ConcreteComponent.html">ConcreteComponent</a></li><li><a href="module-web-_Web.html">_Web</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-decorator.html">decorator</a></li><li><a href="module-index.html">index</a></li><li><a href="module-react.html">react</a></li><li><a href="module-web.html">web</a></li></ul><h3>Classes</h3><ul><li><a href="-_anonymous_-Web._class-_Web.html">_Web</a></li><li><a href="module-index-ConcreteComponent.html">ConcreteComponent</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Sep 15 2026 15:57:43 GMT+0200 (Mitteleuropäische Sommerzeit)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Sep 15 2026 18:03:16 GMT+0200 (Mitteleuropäische Sommerzeit)
 </footer>
 
 <script> prettyPrint(); </script>
