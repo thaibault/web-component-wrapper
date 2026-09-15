@@ -139,7 +139,7 @@ Examples
 
 ```JavaScript
 import {
-    Web
+    property, Web 
 } from 'https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js'
 
 class MyGreeting extends Web {
@@ -149,7 +149,7 @@ class MyGreeting extends Web {
     static content = '<div>Hello ${rootInstance.greetingName}</div>'
 }
 // Alternative to the decorator syntax:
-webComponentWrapper.property()({self: MyGreeting}, 'greetingName')
+property()({self: MyGreeting}, 'greetingName')
 
 customElements.define('my-greeting', MyGreeting)
 ```
@@ -165,7 +165,7 @@ customElements.define('my-greeting', MyGreeting)
 
 ```JavaScript
 import {
-    ReactWeb
+    property, ReactWeb
 } from 'https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js'
 
 class MyReactGreeting extends ReactWeb {
@@ -175,7 +175,7 @@ class MyReactGreeting extends ReactWeb {
     static content = ({name}) => <div>Hello {name}</div>
 }
 // Alternative to the decorator syntax:
-webComponentWrapper.property()({self: MyReactGreeting}, 'name')
+property()({self: MyReactGreeting}, 'name')
 
 customElements.define('my-react-greeting', MyReactGreeting)
 ```
