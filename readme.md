@@ -139,6 +139,7 @@ Examples
 
 ```HTML
 <script
+    type="module"
     src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js"
 ></script>
 ```
