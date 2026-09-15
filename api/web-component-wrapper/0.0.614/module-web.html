@@ -1,0 +1,3153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Module: web</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Module: web</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="module-web-_Web.html">_Web</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="~Web"><span class="type-signature">(inner) </span>Web<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    Generic web component to render a content against instance-specific values.
+</div>
+
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>applyRootBinding</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">If determined itself as root declarative event
+and property bindings will be applied to itself.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>content</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Content to render when changes happened.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>determineRootBinding</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">If checked this component determines if it
+is a root component (not wrapped by another web-component).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>shadowDOM</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configures if a shadow dom should be used during
+web-component instantiation. Can hold initialize configuration.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>observedAttributes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Attribute names to observe for changes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>controllableProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A list of controllable property names.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eventToPropertyMapping</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Explicitly defined output events (a
+mapping of event names to a potential parameter to properties-transformer).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propertyAliases</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A mapping of property names to be treated as
+equal.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propertyTypes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configuration defining how to convert attributes
+into properties and reflect property changes back to attributes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propertiesToReflectAsAttributes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An Item, List, or Mapping of
+properties to reflect as attributes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List of known render properties.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cloneSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to clone slot before to transclude
+content into them. If a slot should be used multiple times (for example,
+when it works as a template node.) they should be copied to avoid unexpected
+mutations.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>doRender</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configures whether this component instance should
+evaluate its given body content.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>evaluateSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to evaluate slot content when
+before rendering them.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether determined slots should be
+rendered into root node.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>trimSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Ignore empty text nodes while applying slots.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderUnsafe</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Defines default render behavior.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_name</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Name to access instance-evaluated content or used
+to derive default component name. This is also useful for logging.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_propertyAliasIndex</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Internal alias index to quickly match
+properties in both directions.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_propertiesToReflectAsAttributes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A mapping of property names to
+set as attributes when they are set/updated. Uses a map to hold order and
+determine if a property exists in constant runtime.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderState</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds data about currently running render state.
+                <h6>Properties</h6>
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>promise</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Promise resolving when next rendering has
+been finished.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pending</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether a rendering task is
+performing.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resolve</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Callback to trigger when rendering has been
+finished.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>childComponentInstances</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List of direct child components (needed
+to wait for them to finish dom manipulation).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchAttributeUpdates</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to directly update dom
+after each attribute mutation or to wait and batch mutations after current
+queue has been finished.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchPropertyUpdates</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to directly update dom
+after each property mutation or to wait and batch mutations after current
+queue has been finished.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchUpdates</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to directly perform a
+re-rendering after changes on properties have been made.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchedAttributeUpdateRunning</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A boolean indicator to identify if
+an attribute update is currently batched.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchedPropertyUpdateRunning</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A boolean indicator to identify if
+a property update is currently batched.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchedUpdateRunning</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether a batched render update
+is currently running.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>parentInstance</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Parent component instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>rootInstance</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Root component instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>scope</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Render scope.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>domNodeEventBindings</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds a mapping from nodes with registered
+event handlers mapped to their deregistration function.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>domNodeTemplateCache</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Caches template compilation results.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>externalProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds currently evaluated or seen properties.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ignoreAttributeUpdateObservations</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether attribute
+updates should be considered (usually only needed internally).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>internalProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds currently evaluated properties which
+are owned by this instance and should always be delegated.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>outputEventNames</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Set of determined output event names.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>instance</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Wrapped component instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isRoot</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether their exists another web-derived
+component up the tree or not.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>root</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Hosting dom node.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>runDomConnectionAndRenderingInSameEventQueue</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether
+we should render initial dom immediately after the component is connected to
+dom. Deactivating this allows wrapped components to detect their parents
+since their parent-connected callback will be called before the children's
+render method.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>self</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Back-reference to this class.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>slots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Grabbed slots that where present in the connecting phase.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Web.js.html">Web.js</a>, <a href="Web.js.html#line248">line 248</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="module-web-_Web.html">_Web</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="~Web"><span class="type-signature">(inner) </span>Web<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    Generic web component to render a content against instance-specific values.
+</div>
+
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>applyRootBinding</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">If determined itself as root declarative event
+and property bindings will be applied to itself.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>content</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Content to render when changes happened.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>determineRootBinding</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">If checked this component determines if it
+is a root component (not wrapped by another web-component).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>shadowDOM</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configures if a shadow dom should be used during
+web-component instantiation. Can hold initialize configuration.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>observedAttributes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Attribute names to observe for changes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>controllableProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A list of controllable property names.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eventToPropertyMapping</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Explicitly defined output events (a
+mapping of event names to a potential parameter to properties-transformer).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propertyAliases</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A mapping of property names to be treated as
+equal.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propertyTypes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configuration defining how to convert attributes
+into properties and reflect property changes back to attributes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propertiesToReflectAsAttributes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An Item, List, or Mapping of
+properties to reflect as attributes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List of known render properties.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cloneSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to clone slot before to transclude
+content into them. If a slot should be used multiple times (for example,
+when it works as a template node.) they should be copied to avoid unexpected
+mutations.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>doRender</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configures whether this component instance should
+evaluate its given body content.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>evaluateSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to evaluate slot content when
+before rendering them.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether determined slots should be
+rendered into root node.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>trimSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Ignore empty text nodes while applying slots.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderUnsafe</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Defines default render behavior.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_name</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Name to access instance-evaluated content or used
+to derive default component name. This is also useful for logging.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_propertyAliasIndex</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Internal alias index to quickly match
+properties in both directions.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_propertiesToReflectAsAttributes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A mapping of property names to
+set as attributes when they are set/updated. Uses a map to hold order and
+determine if a property exists in constant runtime.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderState</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds data about currently running render state.
+                <h6>Properties</h6>
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>promise</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Promise resolving when next rendering has
+been finished.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pending</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether a rendering task is
+performing.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resolve</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Callback to trigger when rendering has been
+finished.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>childComponentInstances</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List of direct child components (needed
+to wait for them to finish dom manipulation).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchAttributeUpdates</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to directly update dom
+after each attribute mutation or to wait and batch mutations after current
+queue has been finished.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchPropertyUpdates</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to directly update dom
+after each property mutation or to wait and batch mutations after current
+queue has been finished.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchUpdates</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to directly perform a
+re-rendering after changes on properties have been made.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchedAttributeUpdateRunning</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A boolean indicator to identify if
+an attribute update is currently batched.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchedPropertyUpdateRunning</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A boolean indicator to identify if
+a property update is currently batched.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchedUpdateRunning</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether a batched render update
+is currently running.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>parentInstance</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Parent component instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>rootInstance</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Root component instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>scope</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Render scope.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>domNodeEventBindings</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds a mapping from nodes with registered
+event handlers mapped to their deregistration function.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>domNodeTemplateCache</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Caches template compilation results.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>externalProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds currently evaluated or seen properties.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ignoreAttributeUpdateObservations</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether attribute
+updates should be considered (usually only needed internally).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>internalProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds currently evaluated properties which
+are owned by this instance and should always be delegated.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>outputEventNames</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Set of determined output event names.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>instance</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Wrapped component instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isRoot</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether their exists another web-derived
+component up the tree or not.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>root</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Hosting dom node.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>runDomConnectionAndRenderingInSameEventQueue</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether
+we should render initial dom immediately after the component is connected to
+dom. Deactivating this allows wrapped components to detect their parents
+since their parent-connected callback will be called before the children's
+render method.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>self</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Back-reference to this class.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>slots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Grabbed slots that where present in the connecting phase.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Web.js.html">Web.js</a>, <a href="Web.js.html#line248">line 248</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="module-web-_Web.html">_Web</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="~Web"><span class="type-signature">(inner) </span>Web<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    Generic web component to render a content against instance-specific values.
+</div>
+
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>applyRootBinding</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">If determined itself as root declarative event
+and property bindings will be applied to itself.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>content</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Content to render when changes happened.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>determineRootBinding</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">If checked this component determines if it
+is a root component (not wrapped by another web-component).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>shadowDOM</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configures if a shadow dom should be used during
+web-component instantiation. Can hold initialize configuration.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>observedAttributes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Attribute names to observe for changes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>controllableProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A list of controllable property names.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eventToPropertyMapping</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Explicitly defined output events (a
+mapping of event names to a potential parameter to properties-transformer).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propertyAliases</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A mapping of property names to be treated as
+equal.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propertyTypes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configuration defining how to convert attributes
+into properties and reflect property changes back to attributes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propertiesToReflectAsAttributes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An Item, List, or Mapping of
+properties to reflect as attributes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List of known render properties.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cloneSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to clone slot before to transclude
+content into them. If a slot should be used multiple times (for example,
+when it works as a template node.) they should be copied to avoid unexpected
+mutations.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>doRender</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configures whether this component instance should
+evaluate its given body content.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>evaluateSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to evaluate slot content when
+before rendering them.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether determined slots should be
+rendered into root node.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>trimSlots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Ignore empty text nodes while applying slots.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderUnsafe</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Defines default render behavior.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_name</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Name to access instance-evaluated content or used
+to derive default component name. This is also useful for logging.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_propertyAliasIndex</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Internal alias index to quickly match
+properties in both directions.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_propertiesToReflectAsAttributes</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A mapping of property names to
+set as attributes when they are set/updated. Uses a map to hold order and
+determine if a property exists in constant runtime.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderState</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds data about currently running render state.
+                <h6>Properties</h6>
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>promise</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Promise resolving when next rendering has
+been finished.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pending</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether a rendering task is
+performing.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resolve</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Callback to trigger when rendering has been
+finished.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>childComponentInstances</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List of direct child components (needed
+to wait for them to finish dom manipulation).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchAttributeUpdates</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to directly update dom
+after each attribute mutation or to wait and batch mutations after current
+queue has been finished.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchPropertyUpdates</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to directly update dom
+after each property mutation or to wait and batch mutations after current
+queue has been finished.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchUpdates</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether to directly perform a
+re-rendering after changes on properties have been made.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchedAttributeUpdateRunning</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A boolean indicator to identify if
+an attribute update is currently batched.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchedPropertyUpdateRunning</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A boolean indicator to identify if
+a property update is currently batched.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>batchedUpdateRunning</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether a batched render update
+is currently running.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>parentInstance</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Parent component instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>rootInstance</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Root component instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>scope</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Render scope.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>domNodeEventBindings</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds a mapping from nodes with registered
+event handlers mapped to their deregistration function.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>domNodeTemplateCache</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Caches template compilation results.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>externalProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds currently evaluated or seen properties.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ignoreAttributeUpdateObservations</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether attribute
+updates should be considered (usually only needed internally).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>internalProperties</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Holds currently evaluated properties which
+are owned by this instance and should always be delegated.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>outputEventNames</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Set of determined output event names.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>instance</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Wrapped component instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isRoot</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether their exists another web-derived
+component up the tree or not.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>root</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Hosting dom node.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>runDomConnectionAndRenderingInSameEventQueue</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates whether
+we should render initial dom immediately after the component is connected to
+dom. Deactivating this allows wrapped components to detect their parents
+since their parent-connected callback will be called before the children's
+render method.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>self</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Back-reference to this class.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>slots</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Grabbed slots that where present in the connecting phase.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Web.js.html">Web.js</a>, <a href="Web.js.html#line248">line 248</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-decorator.html">decorator</a></li><li><a href="module-index.html">index</a></li><li><a href="module-react.html">react</a></li><li><a href="module-web.html">web</a></li></ul><h3>Classes</h3><ul><li><a href="-_anonymous_-Web._class-_Web.html">_Web</a></li><li><a href="module-index-ConcreteComponent.html">ConcreteComponent</a></li><li><a href="module-web-_Web.html">_Web</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Sep 15 2026 15:34:54 GMT+0200 (Mitteleuropäische Sommerzeit)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
