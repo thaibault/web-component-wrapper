@@ -132,25 +132,17 @@ customElements.define('my-web-component', MyWebComponent)
 Examples
 --------
 
-<!--|deDE:Lade via CDN-->
-### Load via CDN
-
-<!--showExample:hidden-->
-
-```HTML
-<script
-    type="module"
-    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js"
-></script>
-```
-
 <!--|deDE:Einfaches Web-Component Beispiel-->
 ### Simple Web-Component
 
 <!--showExample:JavaScript-->
 
 ```JavaScript
-class MyGreeting extends webComponentWrapper.Web {
+import {
+    Web
+} from 'https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js'
+
+class MyGreeting extends Web {
     static doRender = true
     static evaluateSlots = true
     static determineRootBinding = false
@@ -172,7 +164,11 @@ customElements.define('my-greeting', MyGreeting)
 ### Simple React-Web-Component
 
 ```JavaScript
-class MyReactGreeting extends webComponentWrapper.ReactWeb {
+import {
+    ReactWeb
+} from 'https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js'
+
+class MyReactGreeting extends ReactWeb {
     static doRender = true
     static evaluateSlots = true
     // Content has a react component to wrap.
