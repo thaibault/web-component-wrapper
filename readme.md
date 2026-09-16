@@ -10,7 +10,8 @@ This library written by Torben Sickert stands under a creative commons naming
 3.0 unported license. See https://creativecommons.org/licenses/by/3.0/deed.de
 endregion -->
 
-Project status
+<!--|deDE:Projektstatus-->
+Project Status
 --------------
 
 [![npm](https://img.shields.io/npm/v/web-component-wrapper?color=%23d55e5d&label=npm%20package%20version&logoColor=%23d55e5d&style=for-the-badge)](https://www.npmjs.com/package/web-component-wrapper)
@@ -28,7 +29,7 @@ Project status
 [![deploy web documentation](https://img.shields.io/github/actions/workflow/status/thaibault/web-component-wrapper/deploy-web-documentation.yaml?label=deploy%20web%20documentation&style=for-the-badge)](https://github.com/thaibault/web-component-wrapper/actions/workflows/deploy-web-documentation.yaml)
 [![web documentation](https://img.shields.io/website-up-down-green-red/https/torben.website/web-component-wrapper.svg?label=web-documentation&style=for-the-badge)](https://torben.website/web-component-wrapper)
 
-<!--|deDE:Einsatz-->
+<!--|deDE:Verwendung-->
 Use case
 --------
 
@@ -39,7 +40,6 @@ Encapsulate your components as web-components.
     <!--wd-table-of-contents-->
 </div>
 
-<!--|deDE:Installation-->
 Installation
 ------------
 
@@ -54,6 +54,11 @@ zip file here and inject or request via cdn in HTML:
 ```bash
 npm install web-component-wrapper
 ```
+
+<!--|deDE:Beispiele-->
+<!--|frFR:Exemples-->
+Examples
+--------
 
 ```TypeScript
 import {func, object} from 'clientnode/property-types'
@@ -126,10 +131,6 @@ export class MyWebComponent<
 
 customElements.define('my-web-component', MyWebComponent)
 ```
-
-<!--|deDE:Beispiele-->
-Examples
---------
 
 <!--|deDE:Einfaches Web-Component Beispiel-->
 ### Simple Web-Component
