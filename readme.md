@@ -10,7 +10,8 @@ This library written by Torben Sickert stands under a creative commons naming
 3.0 unported license. See https://creativecommons.org/licenses/by/3.0/deed.de
 endregion -->
 
-Project status
+<!--|deDE:Projektstatus-->
+Project Status
 --------------
 
 [![npm](https://img.shields.io/npm/v/web-component-wrapper?color=%23d55e5d&label=npm%20package%20version&logoColor=%23d55e5d&style=for-the-badge)](https://www.npmjs.com/package/web-component-wrapper)
@@ -28,7 +29,7 @@ Project status
 [![deploy web documentation](https://img.shields.io/github/actions/workflow/status/thaibault/web-component-wrapper/deploy-web-documentation.yaml?label=deploy%20web%20documentation&style=for-the-badge)](https://github.com/thaibault/web-component-wrapper/actions/workflows/deploy-web-documentation.yaml)
 [![web documentation](https://img.shields.io/website-up-down-green-red/https/torben.website/web-component-wrapper.svg?label=web-documentation&style=for-the-badge)](https://torben.website/web-component-wrapper)
 
-<!--|deDE:Einsatz-->
+<!--|deDE:Verwendung-->
 Use case
 --------
 
@@ -39,7 +40,6 @@ Encapsulate your components as web-components.
     <!--wd-table-of-contents-->
 </div>
 
-<!--|deDE:Installation-->
 Installation
 ------------
 
@@ -55,10 +55,14 @@ zip file here and inject or request via cdn in HTML:
 npm install web-component-wrapper
 ```
 
+<!--|deDE:Beispiele-->
+<!--|frFR:Exemples-->
+Examples
+--------
+
 ```TypeScript
 import {func, object} from 'clientnode/property-types'
-import {property} from 'web-component-wrapper/decorator'
-import {Web} from 'web-component-wrapper/Web'
+import {property, Web} from 'web-component-wrapper'
 
 export class MyWebComponent<
     TElement = HTMLElement,
@@ -128,35 +132,24 @@ export class MyWebComponent<
 customElements.define('my-web-component', MyWebComponent)
 ```
 
-<!--|deDE:Beispiele-->
-Examples
---------
-
-<!--|deDE:Lade via CDN-->
-### Load via CDN
-
-<!--showExample:hidden-->
-
-```HTML
-<script
-    src="https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js"
-></script>
-```
-
 <!--|deDE:Einfaches Web-Component Beispiel-->
 ### Simple Web-Component
 
 <!--showExample:JavaScript-->
 
 ```JavaScript
-class MyGreeting extends webComponentWrapper.Web {
+import {
+    property, Web 
+} from 'https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js'
+
+class MyGreeting extends Web {
     static doRender = true
     static evaluateSlots = true
     static determineRootBinding = false
     static content = '<div>Hello ${rootInstance.greetingName}</div>'
 }
 // Alternative to the decorator syntax:
-webComponentWrapper.property()({self: MyGreeting}, 'greetingName')
+property()({self: MyGreeting}, 'greetingName')
 
 customElements.define('my-greeting', MyGreeting)
 ```
@@ -171,14 +164,18 @@ customElements.define('my-greeting', MyGreeting)
 ### Simple React-Web-Component
 
 ```JavaScript
-class MyReactGreeting extends webComponentWrapper.ReactWeb {
+import {
+    property, ReactWeb
+} from 'https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js'
+
+class MyReactGreeting extends ReactWeb {
     static doRender = true
     static evaluateSlots = true
     // Content has a react component to wrap.
     static content = ({name}) => <div>Hello {name}</div>
 }
 // Alternative to the decorator syntax:
-webComponentWrapper.property()({self: MyReactGreeting}, 'name')
+property()({self: MyReactGreeting}, 'name')
 
 customElements.define('my-react-greeting', MyReactGreeting)
 ```
