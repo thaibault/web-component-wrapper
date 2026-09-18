@@ -482,7 +482,7 @@ export class ReactWeb<
                     compile(value as string, {scope: knownScopeNames})
 
                 if (error) {
-                    log.warn(
+                    void log.warn(
                         'Error occurred during compiling given attribute',
                         `binding "${attributeName}" on node:`,
                         domNode,
@@ -520,7 +520,7 @@ export class ReactWeb<
                 )
 
                 if (error) {
-                    log.warn(
+                    void log.warn(
                         'Error occurred during compiling given event',
                         `binding "${attributeName}" on node:`,
                         domNode,
@@ -551,7 +551,7 @@ export class ReactWeb<
                             )
                         )
                     } catch (error) {
-                        log.warn(
+                        void log.warn(
                             'Error occurred during processing given',
                             `event binding "${attributeName}" on node: `,
                             domNode,
