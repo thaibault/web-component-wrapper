@@ -12,16 +12,16 @@
     "webcomponent",
     "web-component"
   ],
-  "homepage": "https://torben.website/web-component-wrapper",
+  "homepage": "https://tsickert.com/web-component-wrapper",
   "bugs": {
-    "email": "info@torben.website",
+    "email": "info@tsickert.com",
     "url": "https://github.com/thaibault/web-component-wrapper/issues"
   },
   "license": "CC-BY-3.0",
   "author": {
-    "email": "info@torben.website",
+    "email": "info@tsickert.com",
     "name": "Torben Sickert",
-    "url": "https://torben.website"
+    "url": "https://tsickert.com"
   },
   "repository": {
     "type": "git",
