@@ -5585,11 +5585,11 @@ __metadata:
   linkType: hard
 
 "baseline-browser-mapping@npm:^2.9.0":
-  version: 2.10.20
-  resolution: "baseline-browser-mapping@npm:2.10.20"
+  version: 2.11.29
+  resolution: "baseline-browser-mapping@npm:2.11.29"
   bin:
     baseline-browser-mapping: dist/cli.cjs
-  checksum: 10c0/3d60c9656c4c4673593aa8d0ae9aa6b69b4e018c2f585874a0e8a40cb28d0559f57ee1b2e7e44cb1e7f6aac66f658a4a3c1285901b8836d8ae31e189e30aa816
+  checksum: 10c0/da4394fe1fdb3902de73542ce892aa4278ddd345a39eed1568092919a267881268c9e55d4f25ae7ca5fc3ad320f933c880fc7c49a343a195339c96ce5caffec1
   languageName: node
   linkType: hard
 
@@ -5878,9 +5878,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30000844, caniuse-lite@npm:^1.0.30001669, caniuse-lite@npm:^1.0.30001759":
-  version: 1.0.30001790
-  resolution: "caniuse-lite@npm:1.0.30001790"
-  checksum: 10c0/eec0adc1dcb35d51e57bcfa0657493cb57ef43f0ceb03c1edcfee34d43e7a938e6beed2781118c7a5ee99d4f71d443977f08ca5a549005cf89260733af9ad3f8
+  version: 1.0.30001816
+  resolution: "caniuse-lite@npm:1.0.30001816"
+  checksum: 10c0/5d39f36f73181906fd25d0cd61030308540d38ed1162eb730d4e69dc75ab94434a5977ab08d4721351bd855f99d19eb5fc488c58ec49272484868c0f3bc97243
   languageName: node
   linkType: hard
 
@@ -5985,25 +5985,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clientnode@npm:4.0.1521":
-  version: 4.0.1521
-  resolution: "clientnode@npm:4.0.1521"
-  peerDependencies:
-    "@types/prop-types": "*"
-    node-fetch: "*"
-    prop-types: "*"
-  peerDependenciesMeta:
-    "@types/prop-types":
-      optional: true
-    node-fetch:
-      optional: true
-    prop-types:
-      optional: true
-  checksum: 10c0/cd7cd0944c67b6d873713d6777b92ebd04b815e78b4cd22df1457cd324334c2608925a3e6bd33289aeeb472db93e65a9e3bc90703191610fed667d2db68439f2
-  languageName: node
-  linkType: hard
-
-"clientnode@npm:^4.0.1522":
+"clientnode@npm:4.0.1522":
   version: 4.0.1522
   resolution: "clientnode@npm:4.0.1522"
   peerDependencies:
@@ -6018,6 +6000,24 @@ __metadata:
     prop-types:
       optional: true
   checksum: 10c0/fcb644abc88a6a8090658d74b23af677c5e77c73d8450e522752496ab80193a9193df0a853b87384e241606dbb593da4ba54eb303feea118d1ebf66345ed7363
+  languageName: node
+  linkType: hard
+
+"clientnode@npm:^4.0.1523":
+  version: 4.0.1523
+  resolution: "clientnode@npm:4.0.1523"
+  peerDependencies:
+    "@types/prop-types": "*"
+    node-fetch: "*"
+    prop-types: "*"
+  peerDependenciesMeta:
+    "@types/prop-types":
+      optional: true
+    node-fetch:
+      optional: true
+    prop-types:
+      optional: true
+  checksum: 10c0/43fc4332bb1a947d1a6db23f8f370d2650e550cff96d779ab0fd509355aefc8a3d4efe901161ae07e8221f4e9d3e8910134d20698ad40ff90a2c3b73fe363caf
   languageName: node
   linkType: hard
 
@@ -6756,9 +6756,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-jsdoc@npm:^65.3.6":
-  version: 65.3.6
-  resolution: "eslint-plugin-jsdoc@npm:65.3.6"
+"eslint-plugin-jsdoc@npm:^65.3.8":
+  version: 65.3.8
+  resolution: "eslint-plugin-jsdoc@npm:65.3.8"
   dependencies:
     "@es-joy/jsdoccomment": "npm:~0.98.0"
     "@es-joy/resolve.exports": "npm:1.2.0"
@@ -6781,7 +6781,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/0240bf50b4a7ce190f7eee782b3630214f1d738fd16ce7ca49cb8a54fdb5fc8ced06fbaafb6d4d021e449938e629db85f4debc5a7112d7b2631c2b9029315dda
+  checksum: 10c0/0d1a71c265faee5b897467d26bca81f6d667de0d67e94a0437c76cac74aa1e9e1421795c9c110f2c5afe8afe51b61aa7ff3297ca4a9d4573775dc7d5d7084c73
   languageName: node
   linkType: hard
 
@@ -6825,9 +6825,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^10.12.0":
-  version: 10.12.0
-  resolution: "eslint@npm:10.12.0"
+"eslint@npm:^10.13.0":
+  version: 10.13.0
+  resolution: "eslint@npm:10.13.0"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.8.0"
     "@eslint-community/regexpp": "npm:^4.12.2"
@@ -6866,7 +6866,7 @@ __metadata:
       optional: true
   bin:
     eslint: bin/eslint.js
-  checksum: 10c0/1302ce8a7df2f67fe8f4014b2f9449bd38eb86903ba7b841d9a8ca5a5daf8ee15442861ab870e96c0074d5f333b405d7b2f16388981f807db410cc3a02178af9
+  checksum: 10c0/4a28e85de458f13306d30f07df21b58109056bd8bd691b6158952d95e126cf742db2eb09562e3f1c1cc0154ee44dedc789f8ced8d0d8da48e82a689aa9cb1c0d
   languageName: node
   linkType: hard
 
@@ -11497,10 +11497,10 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.71.2"
     "@typescript-eslint/parser": "npm:^8.71.2"
     "@webcomponents/webcomponentsjs": "npm:^2.8.0"
-    clientnode: "npm:^4.0.1522"
-    eslint: "npm:^10.12.0"
+    clientnode: "npm:^4.0.1523"
+    eslint: "npm:^10.13.0"
     eslint-config-google: "npm:^0.14.0"
-    eslint-plugin-jsdoc: "npm:^65.3.6"
+    eslint-plugin-jsdoc: "npm:^65.3.8"
     jest: "npm:30.5.2"
     jsdoc: "npm:^4.0.5"
     prop-types: "npm:^15.8.1"
@@ -11508,7 +11508,7 @@ __metadata:
     react-dom: "npm:^19.3.1"
     typescript-eslint: "npm:^8.71.2"
     web-documentation: "npm:^1.0.61"
-    weboptimizer: "npm:^4.0.87"
+    weboptimizer: "npm:^4.0.89"
     webpack-dev-server: "npm:^6.0.0"
   peerDependencies:
     "@types/react": "*"
@@ -11544,9 +11544,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"weboptimizer@npm:^4.0.87":
-  version: 4.0.87
-  resolution: "weboptimizer@npm:4.0.87"
+"weboptimizer@npm:^4.0.89":
+  version: 4.0.89
+  resolution: "weboptimizer@npm:4.0.89"
   dependencies:
     "@babel/core": "npm:^8.0.7"
     "@babel/plugin-proposal-decorators": "npm:^8.0.2"
@@ -11558,7 +11558,7 @@ __metadata:
     babel-loader: "npm:^10.1.1"
     babel-plugin-polyfill-corejs3: "npm:^1.0.0"
     babel-plugin-transform-rewrite-imports: "npm:^1.5.4"
-    clientnode: "npm:4.0.1521"
+    clientnode: "npm:4.0.1522"
     core-js: "npm:^3.50.0"
     ejs: "npm:^7.0.1"
     exports-loader: "npm:^5.0.0"
@@ -11692,7 +11692,7 @@ __metadata:
       optional: true
   bin:
     weboptimizer: index.js
-  checksum: 10c0/2ece15d761d4b12c387de1dca59c363dcb66db1d932b7f2210e3ae93db55060a21843698c1ab1d11540bda3ec4a4646f98febf6129d8e1086140f3de4fa7357b
+  checksum: 10c0/9cc16abf13d17f7eec0ae577c0fd24a8ec933f2a110e8f005fe701c7ef2ac688d9b4cf39ad10c4ca993c019b0e8dae43aa585b1da38b27dc3612ab868c009c4e
   languageName: node
   linkType: hard
 
