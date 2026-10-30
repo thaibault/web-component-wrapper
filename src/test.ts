@@ -444,6 +444,22 @@ describe('Web', (): void => {
         window.dispatchEvent(new Event('resize'))
         expect(secondHandler).toHaveBeenCalledTimes(1)
         expect(focusHandler).not.toHaveBeenCalled()
+
+        // Replacing the only handler of a node keeps it registered.
+        const outdatedDeregister =
+            web.addSecureEventListener(domNode, 'click', firstHandler)
+        web.addSecureEventListener(domNode, 'click', secondHandler)
+        expect(web.domNodeEventBindings.get(domNode)?.size).toStrictEqual(1)
+
+        // Outdated deregister functions do not affect their successor.
+        outdatedDeregister()
+        expect(web.domNodeEventBindings.get(domNode)?.size).toStrictEqual(1)
+
+        web.unregisterDomNodeEventBindings()
+        expect(web.domNodeEventBindings.size).toStrictEqual(0)
+        domNode.dispatchEvent(new Event('click'))
+        expect(firstHandler).toHaveBeenCalledTimes(1)
+        expect(secondHandler).toHaveBeenCalledTimes(1)
     })
     /// endregion
     /// region templates
@@ -876,6 +892,18 @@ describe('decorator', (): void => {
         property({type: number, update: true})(Target.prototype, 'existing')
         expect(Target.propertyTypes).toHaveProperty('existing', number)
 
+        // Members every class owns do not count as existing static members.
+        property({alias: 'title', writeAttribute: true})(
+            Target.prototype, 'name'
+        )
+        property({type: number})(Target.prototype, 'length')
+        expect(Target.propertyTypes).toHaveProperty('name', string)
+        expect(Target.propertyTypes).toHaveProperty('length', number)
+        expect(Target).toHaveProperty(
+            'propertiesToReflectAsAttributes', ['name']
+        )
+        expect(Target).toHaveProperty('propertyAliases', {name: 'title'})
+
         // Explicitly given "self" references are respected.
         /**
          * Mock self class.
@@ -894,10 +922,13 @@ describe('decorator', (): void => {
             static propertyAliases = {base: 'alternateBase'}
         }
         property({writeAttribute: true})(ArrayTarget.prototype, 'label')
-        property({writeAttribute: true})(ArrayTarget.prototype, 'label')
+        property({update: true, writeAttribute: true})(
+            ArrayTarget.prototype, 'label'
+        )
         property({alias: 'alternateName'})(ArrayTarget.prototype, 'other')
 
-        expect(Array.from(ArrayTarget.propertiesToReflectAsAttributes))
+        // NOTE: Strict equality also ensures no named array properties.
+        expect(ArrayTarget.propertiesToReflectAsAttributes)
             .toStrictEqual(['base', 'label'])
         expect(ArrayTarget.propertyAliases)
             .toStrictEqual({base: 'alternateBase', other: 'alternateName'})
@@ -921,6 +952,8 @@ describe('decorator', (): void => {
             (MapTarget.propertiesToReflectAsAttributes as Map<string, unknown>)
                 .entries()
         )).toStrictEqual([['isRoot', boolean], ['count', number]])
+        expect(MapTarget.propertiesToReflectAsAttributes)
+            .not.toHaveProperty('count')
 
         /**
          * Mock object based class.

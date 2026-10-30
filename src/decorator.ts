@@ -17,13 +17,27 @@
     endregion
 */
 // region imports
-import type {PropertiesConfiguration, PropertyConfiguration} from './type'
+import type {PropertyConfiguration} from './type'
 
 import {camelCaseToDelimited, copy} from 'clientnode'
 import {string} from 'clientnode/property-types'
 
 import Web from './Web'
 // endregion
+/*
+    NOTE: Every class owns these members, so they do not indicate an existing
+    static configuration.
+*/
+const INTRINSIC_CLASS_MEMBER_NAMES = ['length', 'name', 'prototype']
+/**
+ * Checks if given class defines an own static member with given name.
+ * @param self - Class to check.
+ * @param name - Member name to check.
+ * @returns A boolean indicating whether given member exists.
+ */
+const hasOwnStaticMember = (self: object, name: string): boolean =>
+    Object.prototype.hasOwnProperty.call(self, name) &&
+    !INTRINSIC_CLASS_MEMBER_NAMES.includes(name)
 /**
  * Generates a decorator based on given configuration.
  * @param options - Property configuration to define how to transfer attributes
@@ -93,7 +107,7 @@ export function property(
                 self.propertyTypes &&
                 (
                     options.update ||
-                    !Object.prototype.hasOwnProperty.call(self, name)
+                    !hasOwnStaticMember(self, name)
                 )
             )
                 self.propertyTypes[name] = options.type
@@ -108,15 +122,19 @@ export function property(
                         copy(self.propertiesToReflectAsAttributes) :
                         []
 
+            const reflectionConfiguration =
+                self.propertiesToReflectAsAttributes
             if (
                 options.update ||
-                self.propertiesToReflectAsAttributes instanceof Map &&
-                !self.propertiesToReflectAsAttributes.has(name) ||
-                Array.isArray(self.propertiesToReflectAsAttributes) &&
-                !self.propertiesToReflectAsAttributes.includes(name) ||
-                typeof self.propertiesToReflectAsAttributes === 'object' &&
-                !Object.prototype.hasOwnProperty.call(
-                    self.propertiesToReflectAsAttributes, name
+                (
+                    reflectionConfiguration instanceof Map ?
+                        !reflectionConfiguration.has(name) :
+                        Array.isArray(reflectionConfiguration) ?
+                            !reflectionConfiguration.includes(name) :
+                            typeof reflectionConfiguration === 'object' &&
+                            !Object.prototype.hasOwnProperty.call(
+                                reflectionConfiguration, name
+                            )
                 )
             ) {
                 let result: PropertyConfiguration | undefined
@@ -134,9 +152,12 @@ export function property(
 
                 if (result !== undefined) {
                     if (Array.isArray(self.propertiesToReflectAsAttributes))
-                        if (options.writeAttribute === true)
-                            self.propertiesToReflectAsAttributes.push(name)
-                        else if (self.normalizePropertyTypeList)
+                        if (options.writeAttribute === true) {
+                            if (!self.propertiesToReflectAsAttributes
+                                .includes(name)
+                            )
+                                self.propertiesToReflectAsAttributes.push(name)
+                        } else if (self.normalizePropertyTypeList)
                             self.propertiesToReflectAsAttributes =
                                 self.normalizePropertyTypeList(
                                     self.propertiesToReflectAsAttributes
@@ -144,14 +165,12 @@ export function property(
 
                     if (self.propertiesToReflectAsAttributes instanceof Map)
                         self.propertiesToReflectAsAttributes.set(name, result)
-                    if (
+                    else if (
+                        !Array.isArray(self.propertiesToReflectAsAttributes) &&
                         typeof self.propertiesToReflectAsAttributes ===
                             'object'
                     )
-                        (
-                            self.propertiesToReflectAsAttributes as
-                                PropertiesConfiguration
-                        )[name] = result
+                        self.propertiesToReflectAsAttributes[name] = result
                 }
             }
         }
@@ -166,7 +185,7 @@ export function property(
                 self.propertyAliases &&
                 (
                     options.update ||
-                    !Object.prototype.hasOwnProperty.call(self, name)
+                    !hasOwnStaticMember(self, name)
                 )
             )
                 self.propertyAliases[name] = options.alias
