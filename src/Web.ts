@@ -508,8 +508,8 @@ export class Web<
             this.instance?.current?.properties &&
             (
                 // NOTE: Base properties should not be shadowed.
-                Object.prototype.hasOwnProperty.call(
-                    !Web.propertyTypes, name
+                !Object.prototype.hasOwnProperty.call(
+                    Web.propertyTypes, name
                 ) ||
                 Object.prototype.hasOwnProperty.call(
                     this.instance.current.properties, name
@@ -1056,9 +1056,9 @@ export class Web<
         const eventMap =
             this.domNodeEventBindings.get(domNode) as EventCallbackMapping
 
-        const oldHandler = eventMap.get(name)
-        if (oldHandler && oldHandler !== handler)
-            oldHandler()
+        const oldDeregister = eventMap.get(name)
+        if (oldDeregister && oldDeregister !== handler)
+            oldDeregister()
         const deregister = () => {
             domNode.removeEventListener(
                 name,
@@ -1333,7 +1333,7 @@ export class Web<
             before template code has been evaluated.
         */
         const element: Element | null =
-            (node as Element).firstElementChild ? slot as Element : null
+            (slot as Element).firstElementChild ? slot as Element : null
         if (
             element &&
             element.firstElementChild?.nodeName.toLowerCase() === 'textarea' &&
