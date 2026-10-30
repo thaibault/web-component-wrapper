@@ -1,6 +1,6 @@
 {
   "name": "web-component-wrapper",
-  "version": "0.0.619",
+  "version": "0.0.620",
   "description": "Generic web-component base class and framework specific wrapper.",
   "keywords": [
     "component",
@@ -25,7 +25,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/thaibault/web-component-wrapper"
+    "url": "git+https://github.com/thaibault/web-component-wrapper.git"
   },
   "type": "module",
   "exports": {
