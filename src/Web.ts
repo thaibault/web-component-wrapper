@@ -508,8 +508,8 @@ export class Web<
             this.instance?.current?.properties &&
             (
                 // NOTE: Base properties should not be shadowed.
-                Object.prototype.hasOwnProperty.call(
-                    !Web.propertyTypes, name
+                !Object.prototype.hasOwnProperty.call(
+                    Web.propertyTypes, name
                 ) ||
                 Object.prototype.hasOwnProperty.call(
                     this.instance.current.properties, name
@@ -1047,6 +1047,12 @@ export class Web<
         options?: boolean | AddEventListenerOptions,
         removeOptions?: EventListenerOptions
     ): () => void {
+        /*
+            NOTE: Has to be done before retrieving the event map since it may
+            be removed when the old handler was the last one registered.
+        */
+        this.domNodeEventBindings.get(domNode)?.get(name)?.()
+
         if (!this.domNodeEventBindings.has(domNode))
             this.domNodeEventBindings.set(
                 // eslint-disable-next-line func-call-spacing
@@ -1056,9 +1062,6 @@ export class Web<
         const eventMap =
             this.domNodeEventBindings.get(domNode) as EventCallbackMapping
 
-        const oldHandler = eventMap.get(name)
-        if (oldHandler && oldHandler !== handler)
-            oldHandler()
         const deregister = () => {
             domNode.removeEventListener(
                 name,
@@ -1066,9 +1069,14 @@ export class Web<
                 removeOptions
             )
 
-            eventMap.delete(name)
+            // NOTE: An outdated deregister should not remove its successor.
+            if (eventMap.get(name) === deregister)
+                eventMap.delete(name)
 
-            if (eventMap.size === 0)
+            if (
+                eventMap.size === 0 &&
+                this.domNodeEventBindings.get(domNode) === eventMap
+            )
                 this.domNodeEventBindings.delete(domNode)
         }
         eventMap.set(name, deregister)
@@ -1333,7 +1341,7 @@ export class Web<
             before template code has been evaluated.
         */
         const element: Element | null =
-            (node as Element).firstElementChild ? slot as Element : null
+            (slot as Element).firstElementChild ? slot as Element : null
         if (
             element &&
             element.firstElementChild?.nodeName.toLowerCase() === 'textarea' &&
