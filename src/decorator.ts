@@ -105,10 +105,7 @@ export function property(
 
             if (
                 self.propertyTypes &&
-                (
-                    options.update ||
-                    !hasOwnStaticMember(self, name)
-                )
+                (options.update || !hasOwnStaticMember(self, name))
             )
                 self.propertyTypes[name] = options.type
         }
