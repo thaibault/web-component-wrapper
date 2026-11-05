@@ -139,8 +139,7 @@
       "deDE",
       "enUS"
     ],
-    "tagline": "Encapsulate your components as web-components.",
-    "trackingCode": "TODO"
+    "tagline": "Encapsulate your components as web-components."
   },
   "webOptimizer": {
     "commandLine": {
