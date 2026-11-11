@@ -136,8 +136,9 @@
   },
   "webDocumentation": {
     "languages": [
+      "enUS",
       "deDE",
-      "enUS"
+      "frFR"
     ],
     "tagline": "Encapsulate your components as web-components."
   },
