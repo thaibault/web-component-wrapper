@@ -1156,7 +1156,13 @@ export class Web<
                 */
                 this.setPropertyValue('isRoot', false)
 
-            currentElement = currentElement.parentNode
+            /*
+                NOTE: Continue with the shadow root's host to find components
+                which rendered us into their (even closed) shadow DOM.
+            */
+            currentElement = isInShadowDOM ?
+                (currentElement as ShadowRoot).host :
+                currentElement.parentNode
         }
     }
     /**
