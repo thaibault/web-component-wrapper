@@ -641,8 +641,16 @@ export class Web<
      * Binds properties and event handler to the given dom node.
      * @param domNode - Node to start traversing from.
      * @param scope - Scope to render property value again.
+     * @param eventBindings - Indicates whether to bind event handler.
+     * @param valueBindings - Indicates whether to bind attribute and property
+     * values.
      */
-    applyBinding(domNode: Node, scope: Mapping<unknown>): void {
+    applyBinding(
+        domNode: Node,
+        scope: Mapping<unknown>,
+        eventBindings = true,
+        valueBindings = true
+    ): void {
         if (!(domNode as Partial<HTMLElement>).getAttributeNames)
             return
 
@@ -664,8 +672,11 @@ export class Web<
                     continue
 
                 if (
-                    name.startsWith('attribute-') ||
-                    name.startsWith('property-')
+                    valueBindings &&
+                    (
+                        name.startsWith('attribute-') ||
+                        name.startsWith('property-')
+                    )
                 ) {
                     const evaluated: EvaluationResult =
                         evaluate(value, {scope, binding: domNode})
@@ -694,7 +705,7 @@ export class Web<
                             name.substring('property-'.length)
                         ) as 'textContent'] =
                             (evaluated as PositiveEvaluationResult).result
-                } else if (name.startsWith('on-')) {
+                } else if (eventBindings && name.startsWith('on-')) {
                     name =
                         delimitedToCamelCase(name.substring('on-'.length)) as
                             KnownEventName
@@ -769,22 +780,37 @@ export class Web<
      * @param scope - Scope to render property value again.
      * @param renderSlots - Indicates whether to render nested elements of
      * slots (determined by an existing corresponding attribute).
+     * @param eventBindings - Indicates whether to bind event handler.
+     * @param valueBindings - Indicates whether to bind attribute and property
+     * values.
      */
     applyBindings(
-        domNode: Node | null, scope: Mapping<unknown>, renderSlots = true
+        domNode: Node | null,
+        scope: Mapping<unknown>,
+        renderSlots = true,
+        eventBindings = true,
+        valueBindings = true
     ) {
         while (domNode) {
             if (
                 (domNode as Partial<HTMLElement>).attributes?.length &&
                 (renderSlots || !(domNode as HTMLElement).getAttribute('slot'))
             )
-                this.applyBinding(domNode, scope)
+                this.applyBinding(
+                    domNode, scope, eventBindings, valueBindings
+                )
             /*
                 NOTE: Slots of nested custom components (recognized by their
                 dash in name) should be rendered by their own.
             */
             if (!domNode.nodeName.toLowerCase().includes('-'))
-                this.applyBindings(domNode.firstChild, scope)
+                this.applyBindings(
+                    domNode.firstChild,
+                    scope,
+                    true,
+                    eventBindings,
+                    valueBindings
+                )
 
             domNode = domNode.nextSibling
         }
@@ -2109,6 +2135,14 @@ export class Web<
 
         this.determineRenderScope()
 
+        /*
+            NOTE: "unRender" has removed all registered event listeners
+            including root ones so we have to bind them again (with the newly
+            determined scope) before dispatching the "render" event.
+        */
+        if (this.self.applyRootBinding && this.isRoot)
+            this.applyBinding(this, this.scope)
+
         if (!(
             this.self.doRender &&
             this.dispatchEvent(new CustomEvent(
@@ -2152,6 +2186,20 @@ export class Web<
         this.hostDomNode.innerHTML = renderTargetDomNode.innerHTML
 
         /*
+            NOTE: Event handler have to be bound before nested components
+            dispatch their first events (like "render"). Nested components
+            render in a later event queue so binding them synchronously here
+            is early enough.
+        */
+        this.applyBindings(
+            this.hostDomNode.firstChild,
+            this.scope,
+            this.self.renderSlots,
+            true,
+            false
+        )
+
+        /*
             NOTE: Wait until nested components have registered themselves to be
             able to wait for their rendering.
         */
@@ -2159,7 +2207,11 @@ export class Web<
 
         void this.waitForNestedComponentRendering().then(() => {
             this.applyBindings(
-                this.hostDomNode.firstChild, this.scope, this.self.renderSlots
+                this.hostDomNode.firstChild,
+                this.scope,
+                this.self.renderSlots,
+                false,
+                true
             )
         })
 
