@@ -11872,6 +11872,7 @@ __metadata:
     "@typescript-eslint/parser": "npm:^8.72.1"
     "@webcomponents/webcomponentsjs": "npm:^2.8.0"
     clientnode: "npm:^4.0.1529"
+    core-js: "npm:^3.51.0"
     eslint: "npm:^10.14.0"
     eslint-config-google: "npm:^0.14.0"
     eslint-plugin-jsdoc: "npm:^65.4.2"
@@ -11888,6 +11889,7 @@ __metadata:
     "@types/react": "*"
     "@types/react-dom": "*"
     clientnode: "*"
+    core-js: "*"
     react: "*"
     react-dom: "*"
   peerDependenciesMeta:
