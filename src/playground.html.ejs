@@ -24,11 +24,10 @@
         <!--region script-->
         <script>
             window.onload = async function() {
-                const {
-                    camelCaseToDelimited,
-                    POLYFILL_TEMPLATE_STRINGS,
-                    represent
-                } = await webComponentWrapper.clientnode
+                const {Logger, POLYFILL_TEMPLATE_STRINGS, represent} =
+                    await webComponentWrapper.clientnode
+
+                Logger.configureAllInstances({level: 'info'})
 
                 // region prepare web-component
                 const index = await webComponentWrapper.index
