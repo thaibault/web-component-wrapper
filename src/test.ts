@@ -36,7 +36,7 @@ import property from './decorator'
 import wrapAsWebComponent from './index'
 import ReactWeb from './ReactWeb'
 
-import Web, {log} from './Web'
+import Web, {determineTagName, log} from './Web'
 // endregion
 // region helper
 let tagNameCounter = 0
@@ -128,6 +128,19 @@ describe('Web', (): void => {
             .toStrictEqual(new Map())
         expect(Web.normalizePropertyTypeList({a: string, b: 'number'}))
             .toStrictEqual(new Map([['a', string], ['b', 'number']]))
+
+        // NOTE: Types of derived components are respected.
+        class Derived extends Web {
+            static propertyTypes = {...Web.propertyTypes, count: number}
+        }
+        expect(Derived.normalizePropertyTypeList(['count', 'isRoot']))
+            .toStrictEqual(new Map<string, unknown>(
+                [['count', number], ['isRoot', boolean]]
+            ))
+    })
+    test('determineTagName', (): void => {
+        expect(determineTagName('TextInput')).toStrictEqual('text-input')
+        expect(determineTagName('Counter')).toStrictEqual('web-counter')
     })
     /// endregion
     /// region properties
@@ -1118,6 +1131,12 @@ describe('index', (): void => {
             component, 'RegisterTest'
         ).register('custom-tag')
         expect(customElements.get('custom-tag')).toBeDefined()
+
+        // NOTE: Single word names get a prefix to become valid tag names.
+        wrapAsWebComponent<FunctionComponent<unknown>>(
+            component, 'Single'
+        ).register()
+        expect(customElements.get('web-single')).toBeDefined()
     })
 })
 //  endregion

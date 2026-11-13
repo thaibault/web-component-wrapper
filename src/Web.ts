@@ -92,6 +92,18 @@ import {
 import property from './decorator'
 // endregion
 export const log = new Logger({name: 'web-component-wrapper.web'})
+/**
+ * Derives a valid custom element tag name from given component name. Custom
+ * element names have to contain a hyphen, so "web-" is prepended to names
+ * without one.
+ * @param name - Component name to derive tag name from.
+ * @returns Determined tag name.
+ */
+export const determineTagName = (name: string): string => {
+    const tagName: string = camelCaseToDelimited(name)
+
+    return tagName.includes('-') ? tagName : `web-${tagName}`
+}
 /*
     NOTE: We mock HTMLElement to be able to load this class and derived one
     into node environments.
@@ -1194,11 +1206,12 @@ export class Web<
             const givenValue: Array<string> = value
             const newValue: NormalizedAttributesReflectionConfiguration =
                 new Map<string, PropertyConfiguration>()
+            // NOTE: Respect types of the concrete (derived) component.
             for (const name of givenValue)
                 if (Object.prototype.hasOwnProperty.call(
-                    Web.propertyTypes, name
+                    this.propertyTypes, name
                 ))
-                    newValue.set(name, Web.propertyTypes[name])
+                    newValue.set(name, this.propertyTypes[name])
 
             return newValue
         }
@@ -2238,7 +2251,7 @@ export const api: WebComponentAPI<
     HTMLElement, Mapping<unknown>, Mapping<unknown>, typeof Web
 > = {
     component: Web,
-    register: (tagName: string = camelCaseToDelimited(Web._name)) => {
+    register: (tagName: string = determineTagName(Web._name)) => {
         customElements.define(tagName, Web)
     }
 }
