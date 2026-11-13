@@ -12,6 +12,7 @@ See https://creativecommons.org/licenses/by/4.0/deed.de
 endregion -->
 
 <!--|deDE:Projektstatus-->
+<!--|frFR:Statut du projet-->
 Project Status
 --------------
 
@@ -30,171 +31,318 @@ Project Status
 [![deploy web documentation](https://img.shields.io/github/actions/workflow/status/thaibault/web-component-wrapper/deploy-web-documentation.yaml?label=deploy%20web%20documentation&style=for-the-badge)](https://github.com/thaibault/web-component-wrapper/actions/workflows/deploy-web-documentation.yaml)
 [![web documentation](https://img.shields.io/website-up-down-green-red/https/tsickert.com/web-component-wrapper.svg?label=web-documentation&style=for-the-badge)](https://tsickert.com/web-component-wrapper)
 
-<!--|deDE:Verwendung-->
+<!--|deDE:Einsatzmöglichkeiten-->
+<!--|frFR:Cas d'utilisation-->
 Use case
 --------
 
-Encapsulate your components as web-components.
+Write web components with little code or turn existing React components into
+web components. Attributes are converted into typed properties, callbacks of
+the component become DOM events and templates are re-rendered when
+properties change. The resulting custom elements work in plain HTML and in
+any framework.
+<!--deDE:
+    Schreiben Sie Web Components mit wenig Code oder machen Sie aus
+    bestehenden React-Komponenten Web Components. Attribute werden in
+    typisierte Eigenschaften umgewandelt, Callbacks der Komponente werden zu
+    DOM-Ereignissen und Templates werden neu gerendert, wenn sich
+    Eigenschaften ändern. Die entstehenden Custom Elements funktionieren in
+    reinem HTML und in jedem Framework.
+-->
+<!--frFR:
+    Écrivez des web components avec peu de code ou transformez des
+    composants React existants en web components. Les attributs sont
+    convertis en propriétés typées, les callbacks du composant deviennent des
+    événements DOM et les templates sont rendus à nouveau lorsque les
+    propriétés changent. Les custom elements obtenus fonctionnent en HTML pur
+    et dans n'importe quel framework.
+-->
 
 <div class="wd-table-of-contents">
-    <h2 id="content">Content<!--deDE:Inhalt--></h2>
+    <h2 id="content">Content<!--deDE:Inhalt--><!--frFR:Contenu--></h2>
     <!--wd-table-of-contents-->
 </div>
 
 Installation
 ------------
 
-You can install via package manager, simply download the compiled version as
-zip file here and inject or request via cdn in HTML:
+```bash
+npm install web-component-wrapper clientnode core-js
+```
+
+Wrapping React components additionally needs "react" and "react-dom". The
+bundle "dist/bundle/index.js" already contains all dependencies, including
+React, and can be loaded from a CDN like
+"https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js". For
+older browsers use the "compatible" variants.
 <!--deDE:
-    Sie können das Paket über den Paketmanager installieren oder einfach die
-    kompilierte Version als ZIP-Datei hier herunterladen und in HTML einbinden
-    oder über ein CDN abrufen:
+    Das Einbinden von React-Komponenten benötigt zusätzlich "react" und
+    "react-dom". Das Bundle "dist/bundle/index.js" enthält bereits alle
+    Abhängigkeiten einschließlich React und kann über ein CDN wie
+    "https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js"
+    geladen werden. Für ältere Browser verwenden Sie die
+    "compatible"-Varianten.
+-->
+<!--frFR:
+    L'encapsulation de composants React nécessite en plus "react" et
+    "react-dom". Le bundle "dist/bundle/index.js" contient déjà toutes les
+    dépendances, React compris, et peut être chargé depuis un CDN comme
+    "https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js".
+    Pour les navigateurs plus anciens, utilisez les variantes "compatible".
 -->
 
-```bash
-npm install web-component-wrapper
-```
+<!--|deDE:Eigene Web Components-->
+<!--|frFR:Web components personnalisés-->
+Own web components
+------------------
 
-<!--|deDE:Beispiele-->
-<!--|frFR:Exemples-->
-Examples
---------
-
-```TypeScript
-import {func, object} from 'clientnode/property-types'
-import {property, Web} from 'web-component-wrapper'
-
-export class MyWebComponent<
-    TElement = HTMLElement,
-    ExternalProperties extends Mapping<unknown> = Mapping<unknown>,
-    InternalProperties extends Mapping<unknown> = Mapping<unknown>
-> extends Web<TElement, ExternalProperties, InternalProperties> {
-    static content = `
-        <div class="wrapper" on-click="this.rootInstance.onClick(event)">
-            <slot>Please provide a template to transclude.</slot>
-        </div>
-    `
-    
-    @property({type: object})
-    options = {} as Options
-
-    @property({type: func})
-    onClick: (event: MouseEvent) => Promise<void> = NOOP
-    /**
-     * Defines dynamic getter and setter interface and resolves a configuration
-     * object. Initializes the map implementation.
-     */
-    constructor() {
-        super()
-        /*
-            Babel property declaration transformation overwrites defined
-            properties at the end of an implicit constructor. So we have to
-            redefine them as long as we want to declare expected component
-            interface properties to enable static type checks.
-        */
-        this.defineGetterAndSetterInterface()
-    }
-    /**
-     * Triggered when ever a given attribute has changed and triggers to update
-     * configured dom content.
-     * @param name - Attribute name which was updates.
-     * @param newValue - New updated value.
-     * @returns Returns when attribute has been updated.
-     */
-    async onUpdateAttribute(name: string, newValue: string): Promise<void> {
-        await super.onUpdateAttribute(name, newValue)
-
-        // ...
-    }
-    /**
-     * Updates controlled dom elements.
-     * @param reason - Why an update has been triggered.
-     * @param resolveRendering - Indicates whether rendering should be resolved
-     * finally. Should be set to "false" via super calls in inherited render
-     * methods which do further dom manipulations afterward and resolve the
-     * rendering process by their own.
-     * @returns A promise resolving when rendering has finished. A promise may
-     * be needed for classes inheriting from this class.
-     */
-    async render(reason = 'unknown', resolveRendering = true): Promise<void> {
-        await super.render(reason, false)
-
-        await this.waitForNestedComponentRendering()
-
-        // ...
-
-        await this.resolveRenderingPromiseIfSet(reason, resolveRendering)
-    }
-    
-    // ...
-}
-
-customElements.define('my-web-component', MyWebComponent)
-```
-
-<!--|deDE:Einfaches Web-Component Beispiel-->
-### Simple Web-Component
-
-<!--showExample:JavaScript-->
+Derive from "Web", set "doRender" and describe the markup in "content".
+Expressions in "${...}" see all properties and are evaluated again whenever
+a property changes. "property" declares a property, its attribute is the
+name in kebab case:
+<!--deDE:
+    Leiten Sie von "Web" ab, setzen Sie "doRender" und beschreiben Sie das
+    Markup in "content". Ausdrücke in "${...}" sehen alle Eigenschaften und
+    werden bei jeder Änderung einer Eigenschaft neu ausgewertet. "property"
+    deklariert eine Eigenschaft, ihr Attribut ist der Name in
+    Kebab-Schreibweise:
+-->
+<!--frFR:
+    Dérivez de "Web", activez "doRender" et décrivez le balisage dans
+    "content". Les expressions dans "${...}" voient toutes les propriétés et
+    sont réévaluées à chaque changement d'une propriété. "property" déclare
+    une propriété, son attribut est le nom en kebab case:
+-->
 
 ```JavaScript
-import {
-    property, Web 
-} from 'https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js'
+import {string} from 'clientnode/property-types'
+import {property, Web} from 'web-component-wrapper'
 
 class MyGreeting extends Web {
     static doRender = true
-    static evaluateSlots = true
-    static determineRootBinding = false
-    static content = '<div>Hello ${rootInstance.greetingName}</div>'
+    // NOTE: No template literal, "${...}" is evaluated when rendering.
+    static content =
+        '<button bind-on-click="self.greetingName = \'you\'">' +
+        'Hello ${greetingName}!' +
+        '</button>'
 }
-// Alternative to the decorator syntax:
-property()({self: MyGreeting}, 'greetingName')
+property({type: string})(MyGreeting.prototype, 'greetingName')
 
 customElements.define('my-greeting', MyGreeting)
 ```
-
-<!--showExample-->
 
 ```HTML
 <my-greeting greeting-name="World"></my-greeting>
 ```
 
-<!--|deDE:Einfaches React-Web-Component Beispiel-->
-### Simple React-Web-Component
+Values are inserted as HTML, so do not render untrusted input this way.
+With TypeScript you can use "@property" as decorator on class fields. Then
+call "this.defineGetterAndSetterInterface()" in the constructor, since class
+field initialization would otherwise overwrite the generated accessors.
+<!--deDE:
+    Werte werden als HTML eingefügt, rendern Sie auf diese Weise also keine
+    unsicheren Eingaben. Mit TypeScript können Sie "@property" als Decorator
+    an Klassenfeldern verwenden. Rufen Sie dann im Konstruktor
+    "this.defineGetterAndSetterInterface()" auf, da die Initialisierung der
+    Klassenfelder sonst die erzeugten Zugriffsmethoden überschreibt.
+-->
+<!--frFR:
+    Les valeurs sont insérées en HTML, n'affichez donc pas de cette manière
+    des saisies non fiables. Avec TypeScript, vous pouvez utiliser
+    "@property" comme décorateur sur des champs de classe. Appelez alors
+    "this.defineGetterAndSetterInterface()" dans le constructeur, car
+    l'initialisation des champs de classe écraserait sinon les accesseurs
+    générés.
+-->
+
+<!--|deDE:React-Komponenten einbinden-->
+<!--|frFR:Encapsuler des composants React-->
+Wrapping React components
+-------------------------
+
+"wrapAsWebComponent" turns a React component into a web component. Its
+"propTypes" define the properties. Callbacks like "onChange" are dispatched
+as DOM events ("change"):
+<!--deDE:
+    "wrapAsWebComponent" macht aus einer React-Komponente eine Web
+    Component. Ihre "propTypes" legen die Eigenschaften fest. Callbacks wie
+    "onChange" werden als DOM-Ereignisse ("change") ausgelöst:
+-->
+<!--frFR:
+    "wrapAsWebComponent" transforme un composant React en web component. Ses
+    "propTypes" définissent les propriétés. Les callbacks comme "onChange"
+    sont émis comme événements DOM ("change"):
+-->
 
 ```JavaScript
-import {
-    property, ReactWeb
-} from 'https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js'
+import {func, number, string} from 'clientnode/property-types'
+import {createElement} from 'react'
+import {wrapAsWebComponent} from 'web-component-wrapper'
 
-class MyReactGreeting extends ReactWeb {
-    static doRender = true
-    static evaluateSlots = true
-    // Content has a react component to wrap.
-    static content = ({name}) => <div>Hello {name}</div>
-}
-// Alternative to the decorator syntax:
-property()({self: MyReactGreeting}, 'name')
+const Counter = ({count = 0, label = 'Clicks', onChange}) =>
+    createElement(
+        'button',
+        {onClick: () => onChange?.({count: count + 1})},
+        `${label}: ${count}`
+    )
+Counter.propTypes = {count: number, label: string, onChange: func}
 
-customElements.define('my-react-greeting', MyReactGreeting)
+wrapAsWebComponent(
+    Counter,
+    'Counter',
+    {
+        controllableProperties: ['count'],
+        propertiesToReflectAsAttributes: {count: number}
+    }
+).register('my-counter')
 ```
 
-### Data-Flow
+```HTML
+<my-counter count="2" label="Votes"></my-counter>
 
-Data can flow into a component via
+<script>
+    document.querySelector('my-counter').addEventListener(
+        'change', (event) => console.log(event.detail.parameters[0].count)
+    )
+</script>
+```
 
-- External property set `instance.value = 'value'`
-- Trigger Events `instance.triggerEvent('click')`
+An object passed to a callback updates the matching properties.
+"controllableProperties" lists those the web component manages itself, so
+the button counts up without any surrounding code.
+"propertiesToReflectAsAttributes" writes them back as attributes. Further
+options:
+<!--deDE:
+    Ein an einen Callback übergebenes Objekt aktualisiert die passenden
+    Eigenschaften. "controllableProperties" listet die, die die Web
+    Component selbst verwaltet, sodass der Button ohne umgebenden Code
+    hochzählt. "propertiesToReflectAsAttributes" schreibt sie als Attribute
+    zurück. Weitere Optionen:
+-->
+<!--frFR:
+    Un objet passé à un callback met à jour les propriétés correspondantes.
+    "controllableProperties" liste celles que le web component gère
+    lui-même, de sorte que le bouton compte sans code environnant.
+    "propertiesToReflectAsAttributes" les réécrit en attributs. Autres
+    options:
+-->
 
-Data can be communicated back via:
+- "eventToPropertyMapping": Maps callback arguments to properties per event,
+  e.g. {onChange: (value) => ({value})}.<!--deDE:"eventToPropertyMapping": Bildet Callback-Argumente je Ereignis auf Eigenschaften ab, z. B. {onChange: (value) => ({value})}.--><!--frFR:"eventToPropertyMapping": Associe les arguments des callbacks aux propriétés par événement, par exemple {onChange: (value) => ({value})}.-->
+- "propertyAliases": Alternative property names.<!--deDE:"propertyAliases": Alternative Eigenschaftsnamen.--><!--frFR:"propertyAliases": Noms de propriété alternatifs.-->
+- "internalProperties": Fixed properties passed to the React component.<!--deDE:"internalProperties": Feste Eigenschaften, die an die React-Komponente übergeben werden.--><!--frFR:"internalProperties": Propriétés fixes transmises au composant React.-->
+- "propTypes": Property types if the component does not define them.<!--deDE:"propTypes": Eigenschaftstypen, falls die Komponente keine definiert.--><!--frFR:"propTypes": Types de propriétés si le composant n'en définit pas.-->
 
-- Properties `log.info(instance.value)`
-- Observable events `instance.addEventListener('click', (event) => console.log(event.detail.value))`
+"register" without argument derives the tag name from the component name,
+e.g. "TextInput" becomes "text-input". Single words like "Counter" are no
+valid tag names, so give one explicitly.
+<!--deDE:
+    "register" ohne Argument leitet den Tag-Namen aus dem
+    Komponentennamen ab, z. B. wird "TextInput" zu "text-input". Einzelne
+    Wörter wie "Counter" sind keine gültigen Tag-Namen, geben Sie dann
+    einen explizit an.
+-->
+<!--frFR:
+    "register" sans argument dérive le nom de balise du nom du composant,
+    par exemple "TextInput" devient "text-input". Les mots seuls comme
+    "Counter" ne sont pas des noms de balise valides, indiquez-en alors un
+    explicitement.
+-->
 
-#### Configuring Data-Flow
+<!--|deDE:Attribute und Eigenschaften-->
+<!--|frFR:Attributs et propriétés-->
+Attributes and properties
+-------------------------
 
-A Web-Component-Wrapper component forwards (transformed) given properties into
-a wrapped React component via `props` and reads data via provided callbacks
-as part of `props` or as part of reacts `ref` object.
+The type of a property decides how its attribute is read:
+<!--deDE:Der Typ einer Eigenschaft bestimmt, wie ihr Attribut gelesen wird:-->
+<!--frFR:Le type d'une propriété détermine la lecture de son attribut:-->
+
+- "string": Taken as it is.<!--deDE:"string": Wird unverändert übernommen.--><!--frFR:"string": Repris tel quel.-->
+- "boolean": Set by the presence of the attribute.<!--deDE:"boolean": Wird durch das Vorhandensein des Attributs gesetzt.--><!--frFR:"boolean": Activé par la présence de l'attribut.-->
+- "func": The attribute value is a function body. "event" and "parameters"
+  hold the arguments of a call.<!--deDE:"func": Der Attributwert ist ein Funktionsrumpf. "event" und "parameters" enthalten die Argumente eines Aufrufs.--><!--frFR:"func": La valeur de l'attribut est un corps de fonction. "event" et "parameters" contiennent les arguments d'un appel.-->
+- All other types, like "number", "object" or "array": Evaluated as
+  JavaScript expression.<!--deDE:Alle anderen Typen wie "number", "object" oder "array": Werden als JavaScript-Ausdruck ausgewertet.--><!--frFR:Tous les autres types, comme "number", "object" ou "array": Évalués comme expression JavaScript.-->
+
+For a component with the properties "title" (string), "highlighted"
+(boolean), "options" (object) and "onSelect" (func):
+<!--deDE:
+    Für eine Komponente mit den Eigenschaften "title" (string),
+    "highlighted" (boolean), "options" (object) und "onSelect" (func):
+-->
+<!--frFR:
+    Pour un composant avec les propriétés "title" (string), "highlighted"
+    (boolean), "options" (object) et "onSelect" (func):
+-->
+
+```HTML
+<my-card
+    highlighted
+    on-select="console.log('Selected', parameters)"
+    options="{size: 2 * 21}"
+    title="Welcome"
+></my-card>
+```
+
+Setting a property via JavaScript ("element.title = 'New'") renders again as
+well.
+<!--deDE:
+    Auch das Setzen einer Eigenschaft per JavaScript
+    ("element.title = 'New'") rendert erneut.
+-->
+<!--frFR:
+    Définir une propriété en JavaScript ("element.title = 'New'") déclenche
+    également un nouveau rendu.
+-->
+
+<!--|deDE:Bindungen in Templates-->
+<!--|frFR:Liaisons dans les templates-->
+### Bindings in templates
+
+Elements inside "content" can bind to the component. Expressions see the
+properties, "self" (the component), "parentInstance", "rootInstance" and
+for events "event" and "parameters":
+<!--deDE:
+    Elemente innerhalb von "content" können sich an die Komponente binden.
+    Ausdrücke sehen die Eigenschaften, "self" (die Komponente),
+    "parentInstance", "rootInstance" und bei Ereignissen "event" und
+    "parameters":
+-->
+<!--frFR:
+    Les éléments dans "content" peuvent se lier au composant. Les
+    expressions voient les propriétés, "self" (le composant),
+    "parentInstance", "rootInstance" et, pour les événements, "event" et
+    "parameters":
+-->
+
+- "bind-on-&lt;event&gt;": Runs code on an event, e.g. "bind-on-click".<!--deDE:"bind-on-&lt;event&gt;": Führt Code bei einem Ereignis aus, z. B. "bind-on-click".--><!--frFR:"bind-on-&lt;event&gt;": Exécute du code lors d'un événement, par exemple "bind-on-click".-->
+- "bind-attribute-&lt;name&gt;": Sets an attribute to the expression's value.<!--deDE:"bind-attribute-&lt;name&gt;": Setzt ein Attribut auf den Wert des Ausdrucks.--><!--frFR:"bind-attribute-&lt;name&gt;": Définit un attribut à la valeur de l'expression.-->
+- "bind-property-&lt;name&gt;": Sets a DOM property to the expression's
+  value.<!--deDE:"bind-property-&lt;name&gt;": Setzt eine DOM-Eigenschaft auf den Wert des Ausdrucks.--><!--frFR:"bind-property-&lt;name&gt;": Définit une propriété DOM à la valeur de l'expression.-->
+
+Each of them can also be written with a "data-" prefix to keep the markup
+valid HTML.
+<!--deDE:
+    Alle lassen sich auch mit dem Präfix "data-" schreiben, damit das Markup
+    gültiges HTML bleibt.
+-->
+<!--frFR:
+    Toutes peuvent aussi s'écrire avec le préfixe "data-" pour garder un
+    balisage HTML valide.
+-->
+
+<!--|deDE:Entwicklung-->
+<!--|frFR:Développement-->
+Development
+-----------
+
+```bash
+yarn install
+yarn start
+yarn test
+```
+
+"yarn start" serves a playground with examples.
+<!--deDE:"yarn start" stellt eine Spielwiese mit Beispielen bereit.-->
+<!--frFR:"yarn start" sert un terrain de jeu avec des exemples.-->
