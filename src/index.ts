@@ -32,7 +32,7 @@ import {camelCaseToDelimited, unique} from 'clientnode'
 
 import propertyImport from './decorator'
 import ReactWebImport, {api as reactWebAPIImport} from './ReactWeb'
-import WebImport, {api as webAPIImport} from './Web'
+import WebImport, {api as webAPIImport, determineTagName} from './Web'
 // endregion
 export const property = propertyImport
 export const ReactWeb = ReactWebImport
@@ -194,7 +194,7 @@ export const wrapAsWebComponent = <
         typeof ReactWeb<Type, ExternalProperties, InternalProperties>
     > = {
         component: ConcreteComponent,
-        register: (tagName: string = camelCaseToDelimited(name)) => {
+        register: (tagName: string = determineTagName(name)) => {
             customElements.define(tagName, ConcreteComponent)
         }
     }

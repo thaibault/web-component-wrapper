@@ -71,22 +71,23 @@ npm install web-component-wrapper clientnode core-js
 ```
 
 Wrapping React components additionally needs "react" and "react-dom". The
-bundle "dist/bundle/index.js" already contains all dependencies, including
-React, and can be loaded from a CDN like
+bundle "web-component-wrapper/bundle" already contains all dependencies,
+including React, and can also be loaded from a CDN like
 "https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js". For
 older browsers use the "compatible" variants.
 <!--deDE:
     Das Einbinden von React-Komponenten benötigt zusätzlich "react" und
-    "react-dom". Das Bundle "dist/bundle/index.js" enthält bereits alle
-    Abhängigkeiten einschließlich React und kann über ein CDN wie
+    "react-dom". Das Bundle "web-component-wrapper/bundle" enthält bereits
+    alle Abhängigkeiten einschließlich React und kann auch über ein CDN wie
     "https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js"
     geladen werden. Für ältere Browser verwenden Sie die
     "compatible"-Varianten.
 -->
 <!--frFR:
     L'encapsulation de composants React nécessite en plus "react" et
-    "react-dom". Le bundle "dist/bundle/index.js" contient déjà toutes les
-    dépendances, React compris, et peut être chargé depuis un CDN comme
+    "react-dom". Le bundle "web-component-wrapper/bundle" contient déjà
+    toutes les dépendances, React compris, et peut aussi être chargé depuis
+    un CDN comme
     "https://unpkg.com/web-component-wrapper@latest/dist/bundle/index.js".
     Pour les navigateurs plus anciens, utilisez les variantes "compatible".
 -->
@@ -234,19 +235,19 @@ options:
 - "propTypes": Property types if the component does not define them.<!--deDE:"propTypes": Eigenschaftstypen, falls die Komponente keine definiert.--><!--frFR:"propTypes": Types de propriétés si le composant n'en définit pas.-->
 
 "register" without argument derives the tag name from the component name,
-e.g. "TextInput" becomes "text-input". Single words like "Counter" are no
-valid tag names, so give one explicitly.
+e.g. "TextInput" becomes "text-input". Since tag names need a hyphen, single
+words get the prefix "web-", e.g. "Counter" becomes "web-counter".
 <!--deDE:
     "register" ohne Argument leitet den Tag-Namen aus dem
-    Komponentennamen ab, z. B. wird "TextInput" zu "text-input". Einzelne
-    Wörter wie "Counter" sind keine gültigen Tag-Namen, geben Sie dann
-    einen explizit an.
+    Komponentennamen ab, z. B. wird "TextInput" zu "text-input". Da
+    Tag-Namen einen Bindestrich benötigen, erhalten einzelne Wörter das
+    Präfix "web-", z. B. wird "Counter" zu "web-counter".
 -->
 <!--frFR:
     "register" sans argument dérive le nom de balise du nom du composant,
-    par exemple "TextInput" devient "text-input". Les mots seuls comme
-    "Counter" ne sont pas des noms de balise valides, indiquez-en alors un
-    explicitement.
+    par exemple "TextInput" devient "text-input". Les noms de balise
+    exigeant un trait d'union, les mots seuls reçoivent le préfixe "web-",
+    par exemple "Counter" devient "web-counter".
 -->
 
 <!--|deDE:Attribute und Eigenschaften-->
@@ -300,18 +301,21 @@ well.
 <!--|frFR:Liaisons dans les templates-->
 ### Bindings in templates
 
-Elements inside "content" can bind to the component. Expressions see the
-properties, "self" (the component), "parentInstance", "rootInstance" and
-for events "event" and "parameters":
+Elements inside "content" can bind to the component, and so can the
+component's own element in HTML. Expressions see the properties, "self"
+(the component), "parentInstance", "rootInstance" and for events "event" and
+"parameters":
 <!--deDE:
-    Elemente innerhalb von "content" können sich an die Komponente binden.
-    Ausdrücke sehen die Eigenschaften, "self" (die Komponente),
+    Elemente innerhalb von "content" können sich an die Komponente binden,
+    ebenso das Element der Komponente selbst im HTML. Ausdrücke sehen die
+    Eigenschaften, "self" (die Komponente),
     "parentInstance", "rootInstance" und bei Ereignissen "event" und
     "parameters":
 -->
 <!--frFR:
-    Les éléments dans "content" peuvent se lier au composant. Les
-    expressions voient les propriétés, "self" (le composant),
+    Les éléments dans "content" peuvent se lier au composant, tout comme
+    l'élément du composant lui-même dans le HTML. Les expressions voient les
+    propriétés, "self" (le composant),
     "parentInstance", "rootInstance" et, pour les événements, "event" et
     "parameters":
 -->
@@ -320,6 +324,12 @@ for events "event" and "parameters":
 - "bind-attribute-&lt;name&gt;": Sets an attribute to the expression's value.<!--deDE:"bind-attribute-&lt;name&gt;": Setzt ein Attribut auf den Wert des Ausdrucks.--><!--frFR:"bind-attribute-&lt;name&gt;": Définit un attribut à la valeur de l'expression.-->
 - "bind-property-&lt;name&gt;": Sets a DOM property to the expression's
   value.<!--deDE:"bind-property-&lt;name&gt;": Setzt eine DOM-Eigenschaft auf den Wert des Ausdrucks.--><!--frFR:"bind-property-&lt;name&gt;": Définit une propriété DOM à la valeur de l'expression.-->
+
+```HTML
+<my-counter
+    bind-on-change="console.log(event.detail.parameters[0].count)"
+></my-counter>
+```
 
 Each of them can also be written with a "data-" prefix to keep the markup
 valid HTML.

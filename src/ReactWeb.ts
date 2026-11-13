@@ -48,7 +48,6 @@ import type {
 } from './type'
 
 import {
-    camelCaseToDelimited,
     compile,
     copy,
     delimitedToCamelCase,
@@ -68,7 +67,7 @@ import React, {
 import {flushSync} from 'react-dom'
 import {createRoot} from 'react-dom/client'
 
-import Web from './Web'
+import Web, {determineTagName} from './Web'
 // endregion
 export const log = new Logger({name: 'web-component-wrapper.react-web'})
 /*
@@ -927,7 +926,7 @@ export const api: WebComponentAPI<
     typeof ReactWeb
 > = {
     component: ReactWeb,
-    register: (tagName: string = camelCaseToDelimited(ReactWeb._name)) => {
+    register: (tagName: string = determineTagName(ReactWeb._name)) => {
         customElements.define(tagName, ReactWeb)
     }
 }
