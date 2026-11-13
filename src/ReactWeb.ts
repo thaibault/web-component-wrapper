@@ -175,6 +175,16 @@ export class ReactWeb<
     async render(reason = 'unknown', resolveRendering = true): Promise<void> {
         super.unRender('reRender', reason)
 
+        /*
+            NOTE: "unRender" has removed all registered event listeners
+            including root ones so we have to bind them again (with the newly
+            determined scope) before dispatching the "render" event.
+        */
+        if (this.self.applyRootBinding && this.isRoot) {
+            this.determineRenderScope()
+            this.applyBinding(this, this.scope)
+        }
+
         this.childComponentInstances = []
         this.renderState.pending = true
 
