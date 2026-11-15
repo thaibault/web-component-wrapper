@@ -110,7 +110,7 @@
     "watch": "weboptimizer build --watch"
   },
   "devDependencies": {
-    "@babel/core": "^8.1.0",
+    "@babel/core": "^8.1.2",
     "@babel/eslint-parser": "^8.1.2",
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
@@ -124,11 +124,11 @@
     "@typescript-eslint/eslint-plugin": "^8.72.2",
     "@typescript-eslint/parser": "^8.72.2",
     "@webcomponents/webcomponentsjs": "^2.8.0",
-    "clientnode": "^4.0.1531",
+    "clientnode": "^4.0.1532",
     "core-js": "^3.51.0",
-    "eslint": "^10.14.0",
+    "eslint": "^10.15.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-plugin-jsdoc": "^65.4.5",
+    "eslint-plugin-jsdoc": "^65.4.7",
     "jest": "30.5.2",
     "jsdoc": "^4.0.5",
     "prop-types": "^15.8.1",
@@ -136,7 +136,7 @@
     "react-dom": "^19.3.1",
     "typescript-eslint": "^8.72.2",
     "web-documentation": "^1.0.74",
-    "weboptimizer": "^4.0.115",
+    "weboptimizer": "^4.0.118",
     "webpack-dev-server": "^6.1.0"
   },
   "peerDependencies": {
