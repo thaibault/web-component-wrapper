@@ -52,7 +52,24 @@ const createInstance = <Type extends Web>(type: new () => Type): Type => {
 
     customElements.define(tagName, type)
 
-    return document.createElement(tagName) as Type
+    return createRegisteredElement(tagName, type)
+}
+/**
+ * Creates a dom node by given tag name and ensures that it is an instance of
+ * given (already registered) web component type.
+ * @param tagName - Tag name to create a dom node for.
+ * @param type - Expected web component class.
+ * @returns Created instance.
+ */
+function createRegisteredElement<Type extends Web>(
+    tagName: string, type: new () => Type
+): Type {
+    const element = document.createElement(tagName)
+
+    if (!(element instanceof type))
+        throw new Error(`"${tagName}" is not registered as "${type.name}".`)
+
+    return element
 }
 /**
  * Silences and returns a spy on the web component logger's warn method.
@@ -80,7 +97,7 @@ describe('Web', (): void => {
         expect(WebTest).toHaveProperty('observedAttributes')
 
         customElements.define('test-web', WebTest)
-        const web = document.createElement('test-web') as
+        const web = createRegisteredElement('test-web', WebTest) as
             WebTest & {onClick: () => void}
 
         expect(web).not.toHaveProperty('clicked')
@@ -757,7 +774,7 @@ describe('ReactWeb', (): void => {
         expect(TestReactWeb).toHaveProperty('observedAttributes')
 
         customElements.define('test-react', TestReactWeb)
-        const react = document.createElement('test-react') as
+        const react = createRegisteredElement('test-react', TestReactWeb) as
             TestReactWeb &
             {
                 property: string

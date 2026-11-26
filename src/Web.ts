@@ -1150,9 +1150,22 @@ export class Web<
                 /* eslint-enable @typescript-eslint/no-base-to-string */
 
             if (isComponent) {
+                /*
+                    NOTE: Custom elements created by another copy of this
+                    library are no "Web" instances of this realm but are
+                    treated as parent components as well.
+                */
+                /* eslint-disable
+                    @typescript-eslint/no-unsafe-class-instance-assignment
+                */
+                const component = currentElement as Web
+                /* eslint-enable
+                    @typescript-eslint/no-unsafe-class-instance-assignment
+                */
+
                 // Check whether we found the first parent component.
                 if (this.rootInstance === this) {
-                    this.parentInstance = currentElement as Web
+                    this.parentInstance = component
                     /*
                         NOTE: There is at least one parent, so we can set
                         "isRoot" to "false".
@@ -1160,7 +1173,7 @@ export class Web<
                     this.setPropertyValue('isRoot', false)
                 }
 
-                this.rootInstance = currentElement as Web
+                this.rootInstance = component
             } else if (isInShadowDOM)
                 /*
                     NOTE: Assume none root if determined a wrapped closed

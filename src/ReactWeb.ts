@@ -437,13 +437,13 @@ export class ReactWeb<
         const staticProperties = {} as PreCompiledInternalProperties
         let target: ComponentType | string
 
-        const isComponent: boolean = this.self.isReactComponent(domNode)
+        const isComponent = this.self.isReactComponent(domNode)
         if (isComponent) {
             // region pre-compile nested render context
-            (domNode as ReactWeb).determineRenderScope()
+            domNode.determineRenderScope()
 
             if (Object.keys(this.compiledSlots).length === 0)
-                (domNode as ReactWeb).preCompileSlots()
+                domNode.preCompileSlots()
             // endregion
             /*
                 NOTE: Nested components are already instantiated and connected,
@@ -653,7 +653,7 @@ export class ReactWeb<
                     scope, should be marked via the "bind-property-" prefix.
                 */
                 properties = {
-                    ...(domNode as ReactWeb).internalProperties as
+                    ...domNode.internalProperties as
                         PreCompiledInternalProperties,
                     ...properties
                 }
@@ -661,8 +661,8 @@ export class ReactWeb<
                     ...properties, ...runtimeScope, parentInstance: domNode
                 }
 
-                ;(domNode as ReactWeb).evaluateSlots(runtimeScope)
-                ;(domNode as ReactWeb).prepareProperties(properties)
+                domNode.evaluateSlots(runtimeScope)
+                domNode.prepareProperties(properties)
                 // endregion
             } else if (properties.children)
                 properties.children = this.evaluatePreCompiledDomNodes(
@@ -750,7 +750,7 @@ export class ReactWeb<
      * @param domNode - Node to determine from.
      * @returns Boolean indicator.
      */
-    static isReactComponent(domNode: Node): boolean {
+    static isReactComponent(domNode: Node): domNode is ReactWeb {
         const type: typeof ReactWeb = domNode.constructor as typeof ReactWeb
 
         return (
@@ -771,7 +771,7 @@ export class ReactWeb<
         let currentElement: Node | null = this.parentNode
         while (currentElement) {
             if (this.self.isReactComponent(currentElement)) {
-                this.rootReactInstance = currentElement as ReactWeb
+                this.rootReactInstance = currentElement
                 break
             }
 
